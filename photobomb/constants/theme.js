@@ -27,5 +27,12 @@ export const theme = {
         lg: 16,
         xl: 18,
         xxl: 22,
-    }
+    },
+    buttonGradient: {
+        default: ['#8A2BE2', '#DA70D6'], // Default gradient
+        primary: ['#3B82F6', '#6366F1'], // Blue to Indigo
+        secondary: ['#8B5CF6', '#EC4899'], // Purple to Pink
+        success: ['#34D399', '#10B981'], // Green gradient
+        danger: ['#EF4444', '#DC2626'], // Red gradient
+    },
 }
