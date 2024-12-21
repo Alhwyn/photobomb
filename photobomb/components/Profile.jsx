@@ -2,16 +2,20 @@ import { StyleSheet, Text,TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 
-export const Profile = () => {
+export const Profile = ({profileSize=48}) => {
   return (
     <TouchableOpacity style={styles.profileContainer}>
         <View style={styles.avatarContainer}>
             <LinearGradient
-            colors={['#3B82F6', '#6366F1', '#A855F7']}
-            style={styles.avatar}
+                colors={['#3B82F6', '#6366F1', '#A855F7']}
+                style={{
+                    width: profileSize,
+                    height: profileSize,
+                    borderRadius: 16,
+                    justifyContent: 'center',
+                    }}
             >
             </LinearGradient>
-       
         </View>
 
     </TouchableOpacity>
@@ -26,13 +30,6 @@ const styles = StyleSheet.create({
     },
     avatarContainer: {
         position: 'relative',
-    },
-    avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
     },
     avatarText: {
     color: '#fff',

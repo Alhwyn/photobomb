@@ -23,15 +23,19 @@ const GameSelector = () => {
           </Text>
         </View>
         <View style={styles.inputContainer}>
-          <Profile/>
-          <Input
-            placeholder='Enter your Username...'
-          />
-          <Button 
-            title='Create' 
-            colors={theme.buttonGradient.secondary} 
-            onPress={()=> console.log('Pressed Join game')}
-          />
+            <View style={styles.profileContainer}>
+                <Profile
+                    profileSize={64}
+                />
+            </View>
+            <Input
+                placeholder='Enter your Username...'
+            />
+            <Button 
+                title='Create' 
+                colors={theme.buttonGradient.secondary} 
+                onPress={()=> console.log('Pressed Join game')}
+            />
         </View>
        
       </View>
@@ -61,7 +65,10 @@ const styles = StyleSheet.create({
     gap: 20,
     paddingLeft: 20,
     paddingRight: 20,
-    marginBottom: 80, 
+    marginBottom: 250, 
+  },
+  profileContainer: {
+    alignItems: 'center',
   }
   
 

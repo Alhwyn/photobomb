@@ -25,6 +25,11 @@ export const Input = (props) => {
     }).start();
   };
 
+  const handleChangeText = (text) => {
+    if (props.charLimit && text.length > props.charLimit) return;
+    props.onChangeText && props.onChangeText(text);
+  };
+
   const borderColor = animatedBorder.interpolate({
     inputRange: [0, 1],
     outputRange: ['white', '#8A2BE2'], // Default color to purple gradient color
@@ -41,11 +46,12 @@ export const Input = (props) => {
     >
       {props.icon && props.icon}
       <TextInput
-        style={[{ flex: 1 }, {color: 'white'}]}
+        style={[{ flex: 1 }, { color: 'white' }]}
         placeholderTextColor={'white'}
         ref={props.inputRef && props.inputRef}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onChangeText={handleChangeText}
         {...props}
       />
     </Animated.View>
