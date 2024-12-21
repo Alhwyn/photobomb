@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { hp, wp } from '../helpers/common';
 import { theme } from '../constants/theme';
 
-const Input = (props) => {
+export const Input = (props) => {
   const [isFocused, setIsFocused] = useState(false);
   const animatedBorder = useRef(new Animated.Value(0)).current;
 
@@ -42,7 +42,7 @@ const Input = (props) => {
       {props.icon && props.icon}
       <TextInput
         style={[{ flex: 1 }, {color: 'white'}]}
-        placeholderTextColor={theme.colors.textLight}
+        placeholderTextColor={'white'}
         ref={props.inputRef && props.inputRef}
         onFocus={handleFocus}
         onBlur={handleBlur}

@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground } from 're
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
+import { useRouter } from 'expo-router';
 
 
 
@@ -10,10 +11,13 @@ import BackButton from '../components/BackButton';
 const gameModes = [
   { id: '1', name: 'Classic', image: require('../assets/images/mode1.png'), gradient: ['#0000FF', '#1E90FF']},
 ];
-
+// console.log(`Selected ${item.name}`
 const GameSelector = () => {
+  const router = useRouter();
+
+
   const renderItem = ({ item }) => (
-    <Pressable style={styles.item} onPress={() => console.log(`Selected ${item.name}`)}>
+    <Pressable style={styles.item} onPress={()=> router.push('CreateUser')}>
         <LinearGradient colors={item.gradient} style={styles.image} imageStyle={styles.imageBorder}>
             <View style={styles.textContainer}>
                 <Text style={styles.text}>{item.name}</Text>      

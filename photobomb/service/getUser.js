@@ -1,10 +1,13 @@
 import { supabase } from '../constants/index';
+import * as Application from 'expo-application';
+
+
 
 
 export const getDeviceID = async () => {
-    const deviceID = await getUniqueId();
+    const deviceID = await Application.getInstallationIdAsync();
     return deviceID;
-  };
+};
   
 
 export const fetchUser = async (deviceID) => {
