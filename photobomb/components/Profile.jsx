@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text,TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 
 const Profile = () => {
   return (
-    <View style={styles.profileContainer}>
+    <TouchableOpacity style={styles.profileContainer}>
         <View style={styles.avatarContainer}>
             <LinearGradient
             colors={['#3B82F6', '#6366F1', '#A855F7']}
@@ -17,7 +17,7 @@ const Profile = () => {
         <View>
             <Text style={styles.username}>Alhwyn</Text>
         </View>
-    </View>
+    </TouchableOpacity>
   )
 }
 

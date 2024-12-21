@@ -20,9 +20,6 @@ const lobby = () => {
         <View style={styles.header}> 
             {/* Profile Pic Compnonent */}
             <Profile/>
-          <TouchableOpacity style={styles.iconButton}>
-            <Text style={{color: 'white'}}>Setting</Text>
-          </TouchableOpacity>
         </View>
         <View style={styles.textCenter}>
             <Text style={styles.bombText}>Photo</Text>
@@ -42,7 +39,7 @@ const lobby = () => {
             <Button 
                 title='Join Game' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={() => console.log('Join Game Pressed')}
+                onPress={()=> router.push('joinGame')}
             />
         </View>
     </SafeAreaView>

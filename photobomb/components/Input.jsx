@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
     height: hp(7.2),
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 0.4, // Default border width
-    borderColor: theme.colors.text, // Default border color
+    borderWidth: 2, // Default border width
+    borderColor: 'white', // Default border color
     borderRadius: theme.radius.xxl,
     borderCurve: 'continuous',
     paddingHorizontal: 18,

@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground } from 're
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
+import Input from '../components/Input';
 
 
 
@@ -27,15 +28,14 @@ const GameSelector = () => {
       <BackButton/>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>
-          Select Game 
+          Join Game 
         </Text>
       </View>
-      <FlatList style={{backgroundColor: '#121212'}}
-        data={gameModes}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.container}
-      />
+      <View style={styles.inputContainer}>
+        <Input />
+      </View>
+      
+      
     </View>
   );
 };
@@ -87,5 +87,14 @@ const styles = StyleSheet.create({
   headerContainer: {
     alignItems: 'center',
     paddingTop: 10,
+  }, 
+  inputContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 20,
+    paddingRight: 20,
   }
+  
+
 });
