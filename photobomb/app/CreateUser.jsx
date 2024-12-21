@@ -1,15 +1,22 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useRouter } from 'expo-router';
 import Profile from '../components/Profile';
+import * as Application from 'expo-application';
+import { supabase } from '../lib/supabase';
 
 
-const GameSelector = () => {
+const CreateUser = () => {
+    const [username, setUsername] = useState(''); // State for username
+    const router = useRouter();
+
+    const handleCreateUser = async () => {
+        
+    }
 
 
 
@@ -43,7 +50,7 @@ const GameSelector = () => {
   );
 };
 
-export default GameSelector;
+export default CreateUser;
 
 const styles = StyleSheet.create({
   bigContainer: {

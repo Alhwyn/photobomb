@@ -1,2 +1,4 @@
+
+
 export const supabaseUrl = 'https://uvymgyurfxhefkxtuiag.supabase.co'
-export const supabaseAnonKey = process.env.SUPABASE_KEY;
+export const supabaseKey  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2eW1neXVyZnhoZWZreHR1aWFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3NjQ2OTYsImV4cCI6MjA1MDM0MDY5Nn0._HrE9Uw3odR_1kqtNbVFx0MHRIeWi8xyZW-vDZj5tfw"
