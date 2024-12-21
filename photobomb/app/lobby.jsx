@@ -69,6 +69,8 @@ const styles = StyleSheet.create({
         marginBottom: 150, // Add some space between the buttons and the bottom
         justifyContent: 'flex-end', // Push the buttons to the bottom
         flex: 1, // Let this container take up all remaining space
+        paddingLeft: 20,
+        paddingRight: 20,
     },
     textCenter: {
         flex: 1,

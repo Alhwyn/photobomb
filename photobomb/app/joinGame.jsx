@@ -1,44 +1,37 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import NumberInput from '../components/NumberInput';
+import Button from '../components/Button';
+import { useRouter } from 'expo-router';
 
-
-
-
-const gameModes = [
-  { id: '1', name: 'Classic', image: require('../assets/images/mode1.png'), gradient: ['#0000FF', '#1E90FF']},
-];
 
 const GameSelector = () => {
-  const renderItem = ({ item }) => (
-    <Pressable style={styles.item} onPress={() => console.log(`Selected ${item.name}`)}>
-        <LinearGradient colors={item.gradient} style={styles.image} imageStyle={styles.imageBorder}>
-            <View style={styles.textContainer}>
-                <Text style={styles.text}>{item.name}</Text>      
-            </View>
-        </LinearGradient>
-    </Pressable>
-  );
+  const router = useRouter();
+
 
   return (
-    <View style={styles.bigContainer}>
-      <BackButton/>
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>
-          Join Game 
-        </Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.bigContainer}>
+        <BackButton/>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>
+            Join Game  
+          </Text>
+        </View>
+        <View style={styles.inputContainer}>
+          <NumberInput/>
+          <Button 
+            title='Join' 
+            colors={theme.buttonGradient.secondary} 
+            onPress={()=> console.log('Pressed Join game')}
+          />
+        </View>
+       
       </View>
-      <View style={styles.inputContainer}>
-        <NumberInput/>
-
-
-      </View>
-      
-      
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -48,38 +41,6 @@ const styles = StyleSheet.create({
   bigContainer: {
     flex: 1,
     backgroundColor: '#121212',
-  },
-  container: {
-    padding: 16,
-    backgroundColor: '#121212', // Sleek dark background
-  },
-  item: {
-    flex: 1,
-    margin: 12,
-    borderRadius: 16,
-    overflow: 'hidden', // Ensures images don't overflow
-  },
-  image: {
-    height: 150,
-    justifyContent: 'flex-end', // Align text container at the bottom
-  },
-  imageBorder: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 0, // Flat bottom edge
-    borderBottomRightRadius: 0,
-  },
-  textContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.007)', // Semi-transparent black for text background
-    paddingVertical: 8,
-    paddingLeft: 15
-
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#ffffff', // Clean white text for contrast
-    fontFamily: 'System',
   },
   title: {
     color: '#ffffff', 
@@ -93,11 +54,10 @@ const styles = StyleSheet.create({
   inputContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    gap: 20,
     paddingLeft: 20,
     paddingRight: 20,
-    marginBottom: 80, // Adjust the value to move the Input down
-    // Or use marginBottom to move it up
+    marginBottom: 80, 
   }
   
 

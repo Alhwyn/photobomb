@@ -42,7 +42,7 @@ const NumberInput = (props) => {
       {props.icon && props.icon}
       <TextInput
         style={[
-            { flex: 1, color: 'white', textAlign: 'center' }, // Center-align the text
+            { flex: 1, color: 'white', textAlign: 'center', fontWeight: theme.fonts.extraBold }, // Center-align the text
         ]}
         placeholder="Enter 6-digit PIN"
         placeholderTextColor={theme.colors.textLight}
@@ -53,7 +53,6 @@ const NumberInput = (props) => {
         onBlur={handleBlur}
         {...props}
       />
-
     </Animated.View>
   );
 };
