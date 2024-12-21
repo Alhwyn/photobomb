@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { hp, wp } from '../helpers/common';
 import { theme } from '../constants/theme';
 
-const Input = (props) => {
+const NumberInput = (props) => {
   const [isFocused, setIsFocused] = useState(false);
   const animatedBorder = useRef(new Animated.Value(0)).current;
 
@@ -41,18 +41,24 @@ const Input = (props) => {
     >
       {props.icon && props.icon}
       <TextInput
-        style={[{ flex: 1 }, {color: 'white'}]}
+        style={[
+            { flex: 1, color: 'white', textAlign: 'center' }, // Center-align the text
+        ]}
+        placeholder="Enter 6-digit PIN"
         placeholderTextColor={theme.colors.textLight}
         ref={props.inputRef && props.inputRef}
+        keyboardType="numeric" // Restrict to numeric keyboard
+        maxLength={6} // Limit input to 6 characters
         onFocus={handleFocus}
         onBlur={handleBlur}
         {...props}
       />
+
     </Animated.View>
   );
 };
 
-export default Input;
+export default NumberInput;
 
 const styles = StyleSheet.create({
   container: {

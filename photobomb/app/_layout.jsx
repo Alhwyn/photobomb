@@ -6,7 +6,7 @@ const _layout = () => {
   return (
     <Stack
         screenOptions={{
-            headerShown: true
+            headerShown: false
         }}
     />
 

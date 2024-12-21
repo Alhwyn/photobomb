@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground } from 're
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
-import Input from '../components/Input';
+import NumberInput from '../components/NumberInput';
 
 
 
@@ -32,7 +32,9 @@ const GameSelector = () => {
         </Text>
       </View>
       <View style={styles.inputContainer}>
-        <Input />
+        <NumberInput/>
+
+
       </View>
       
       
@@ -94,6 +96,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 20,
     paddingRight: 20,
+    marginBottom: 80, // Adjust the value to move the Input down
+    // Or use marginBottom to move it up
   }
   
 
