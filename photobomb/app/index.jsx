@@ -1,36 +1,38 @@
-import { Text, View } from 'react-native'
-import React, { useEffect } from 'react'
-import { useRouter } from 'expo-router'
-import Button from '../components/Button'
-import { getDeviceID, fetchUser } from '../service/userService'
+import { useEffect } from 'react';
+import { View, Text } from 'react-native';
+import { useRouter } from 'expo-router';
+import { verifyUserFromStorage } from '../service/userService';
 
-const index = () => {
-
-
+const Index = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const checkUser = async () => {
-      const deviceID = await getDeviceId();
-      const user = await fetchUser(deviceID);
-      
-      if (user) {
-        router.push('Lobby', { imageUrl: user.imageUrl, username: user.username });
-      } else {
-        router.push('CreateUser');
+    const initializeApp = async () => {
+      try {
+        // Verify user from local storage
+        const response = await verifyUserFromStorage();
+
+        if (response.success) {
+          console.log('User verified successfully:', response.payload);
+          router.replace('lobby'); // Navigate to lobby.jsx if verification is successful
+        } else {
+          console.log('User verification failed:', response.msg);
+          router.replace('CreateUser'); // Navigate to CreateUser.jsx if verification fails
+        }
+      } catch (error) {
+        console.log('Error during initialization:', error.message);
+        router.replace('CreateUser'); // Navigate to CreateUser.jsx on unexpected errors
       }
     };
 
-    checkUser();
-  }, []);
+    initializeApp();
+  }, [router]);
 
   return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-      <Button title="press me" onPress={()=> router.push('lobby')}/>
-     {/*  <Loading /> */}
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text>Loading...</Text>
     </View>
-  )
-}
+  );
+};
 
- 
-export default index
+export default Index;

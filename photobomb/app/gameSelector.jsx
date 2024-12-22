@@ -17,7 +17,7 @@ const GameSelector = () => {
 
 
   const renderItem = ({ item }) => (
-    <Pressable style={styles.item} onPress={()=> router.push('CreateUser')}>
+    <Pressable style={styles.item} onPress={()=> console.log('Pressed Create game')}>
         <LinearGradient colors={item.gradient} style={styles.image} imageStyle={styles.imageBorder}>
             <View style={styles.textContainer}>
                 <Text style={styles.text}>{item.name}</Text>      
