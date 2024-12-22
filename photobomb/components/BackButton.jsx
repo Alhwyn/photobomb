@@ -20,7 +20,6 @@ const styles = StyleSheet.create({
       padding: 3,
       borderRadius: theme.radius.sm,
       backgroundColor: 'rgba(0,0,0,0.07)',
-      marginTop: 50,
       marginLeft: 20,
   
     }

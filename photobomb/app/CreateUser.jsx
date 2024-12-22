@@ -35,7 +35,6 @@ const CreateUser = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.bigContainer}>
-        <BackButton/>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>
             Create User

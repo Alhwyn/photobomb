@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
@@ -18,7 +18,7 @@ const GameSelector = () => {
 
 
   const renderItem = ({ item }) => (
-    <Pressable style={styles.item} onPress={()=> console.log('Pressed Create game')}>
+    <Pressable style={styles.item} onPress={() => router.push('Lobby')}> 
         <LinearGradient colors={item.gradient} style={styles.image} imageStyle={styles.imageBorder}>
             <View style={styles.textContainer}>
                 <Text style={styles.text}>{item.name}</Text>      
@@ -28,7 +28,7 @@ const GameSelector = () => {
   );
 
   return (
-    <View style={styles.bigContainer}>
+    <SafeAreaView style={styles.bigContainer}>
       <BackButton/>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>
@@ -41,7 +41,9 @@ const GameSelector = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.container}
       />
-    </View>
+
+
+    </SafeAreaView>
   );
 };
 

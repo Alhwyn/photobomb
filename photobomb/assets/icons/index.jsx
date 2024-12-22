@@ -1,11 +1,14 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import ArrowLeft from './ArrowLeft';
+import Exit from './exit';
 import { theme } from '../../constants/theme';
+
 
 
 const icons = {
   arrowLeft: ArrowLeft,
+  Exit: Exit,
   }
 
 const Icon = ({ name, ...props }) => {

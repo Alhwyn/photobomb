@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, TouchableWithoutFeedback, Keyboard, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
@@ -14,7 +14,7 @@ const GameSelector = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.bigContainer}>
+      <SafeAreaView style={styles.bigContainer}>
         <BackButton/>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>
@@ -30,7 +30,7 @@ const GameSelector = () => {
           />
         </View>
        
-      </View>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
