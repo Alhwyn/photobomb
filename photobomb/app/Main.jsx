@@ -3,9 +3,7 @@ import React, { useEffect, useState } from 'react'
 import Button from '../components/Button'
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar'
-import { wp } from '../helpers/common'
 import { useRouter } from 'expo-router'
-import Input from '../components/Input'
 import Profile from '../components/Profile';
 import { theme } from '../constants/theme';
 import { getUserPayloadFromStorage } from '../service/userService'

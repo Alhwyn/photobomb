@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Alert, SafeAreaView } from 'react-native';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import Input from '../components/Input';
@@ -34,7 +34,7 @@ const CreateUser = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.bigContainer}>
+      <SafeAreaView style={styles.bigContainer}>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>
             Create User
@@ -60,7 +60,7 @@ const CreateUser = () => {
             />
         </View>
        
-      </View>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };

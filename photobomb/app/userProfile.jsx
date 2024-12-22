@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import BackButton from '../components/BackButton'
 import { theme } from '../constants/theme'
@@ -34,7 +34,7 @@ const userProfile = () => {
 
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
         <BackButton/>
         <View style={styles.headerContainer}>
             <Text style={styles.title}>
@@ -59,7 +59,7 @@ const userProfile = () => {
             
         </View>
       
-    </View>
+    </SafeAreaView>
   )
 }
 
