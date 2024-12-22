@@ -1,10 +1,10 @@
-import { StyleSheet, Text,TouchableOpacity, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 
 export const Profile = ({profileSize=48}) => {
   return (
-    <TouchableOpacity style={styles.profileContainer}>
+    <View style={styles.profileContainer}>
         <View style={styles.avatarContainer}>
             <LinearGradient
                 colors={['#3B82F6', '#6366F1', '#A855F7']}
@@ -18,7 +18,7 @@ export const Profile = ({profileSize=48}) => {
             </LinearGradient>
         </View>
 
-    </TouchableOpacity>
+    </View>
   )
 }
 

@@ -36,17 +36,35 @@ export const handleCreateUser = async ({ username, imageUrl = null, status = 'ac
   }
 };
 
-export const verifyUserFromStorage = async () => {
+export const getUserPayloadFromStorage = async () => {
   try {
-    // Retrieve the user payload from AsyncStorage
     const userPayloadString = await AsyncStorage.getItem('userPayload');
 
     if (!userPayloadString) {
       console.log('No user data found in local storage.');
+      return null; // Return null if no data is found
+    }
+
+    return JSON.parse(userPayloadString); // Parse and return the user payload
+  } catch (error) {
+    console.log('Error retrieving user payload from storage:', error.message);
+    return null;
+  }
+};
+
+
+
+export const verifyUserFromStorage = async () => {
+  try {
+    // Retrieve the user payload from AsyncStorage
+    const userPayload = await getUserPayloadFromStorage();
+
+    if (!userPayload) {
+      console.log('No user data found in local storage.');
       return { success: false, msg: 'No user data in storage' };
     }
 
-    const userPayload = JSON.parse(userPayloadString);
+    
     const { id: uuid } = userPayload;
 
     // Fetch the user from the database

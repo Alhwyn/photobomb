@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 
 
 
+
 const gameModes = [
   { id: '1', name: 'Classic', image: require('../assets/images/mode1.png'), gradient: ['#0000FF', '#1E90FF']},
 ];

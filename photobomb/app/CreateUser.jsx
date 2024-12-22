@@ -24,7 +24,7 @@ const CreateUser = () => {
     
         if (response.success) {
           Alert.alert('Success', 'User created successfully!');
-          router.push('lobby'); // Navigate to the lobby on success
+          router.push('Main'); // Navigate to the lobby on success
         } else {
           Alert.alert('Error', response.msg || 'Failed to create user');
         }

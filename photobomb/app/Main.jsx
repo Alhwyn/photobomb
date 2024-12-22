@@ -1,5 +1,5 @@
 import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Button from '../components/Button'
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar'
@@ -8,10 +8,28 @@ import { useRouter } from 'expo-router'
 import Input from '../components/Input'
 import Profile from '../components/Profile';
 import { theme } from '../constants/theme';
+import { getUserPayloadFromStorage } from '../service/userService'
 // Setting
 
-const lobby = () => {
+const Main = () => {
     const router = useRouter();
+
+    const [userPayload, setUserPayload] = useState(null); 
+    
+    
+    
+    // fetching the user data form the local storage
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const data = await getUserPayloadFromStorage();
+            if (data) {
+                setUserPayload(data);
+            }
+        };
+        fetchUserData();
+    }, []);
+    
 
   return (
     <SafeAreaView style={styles.container}>
@@ -19,7 +37,10 @@ const lobby = () => {
         {/* Header with Profile */}
         <View style={styles.header}> 
             {/* Profile Pic Compnonent */}
-            <Profile/>
+            <TouchableOpacity onPress={() => router.push('userProfile')}>
+                <Profile/>
+            </TouchableOpacity>
+            <Text style={styles.usernameText}>{userPayload?.username}</Text>
         </View>
         <View style={styles.textCenter}>
             <Text style={styles.bombText}>Photo</Text>
@@ -53,12 +74,12 @@ const styles = StyleSheet.create({
       paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
-    marginTop: '10',
+        marginTop: '10',
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
+      gap: 5,
       marginBottom: 32,
-      marginLeft: 10,
+      marginLeft: 20,
     },
     iconButton: {
       padding: 8,
@@ -66,9 +87,9 @@ const styles = StyleSheet.create({
     },
     touchContainer: {
         gap: 20,
-        marginBottom: 150, // Add some space between the buttons and the bottom
-        justifyContent: 'flex-end', // Push the buttons to the bottom
-        flex: 1, // Let this container take up all remaining space
+        marginBottom: 150, 
+        justifyContent: 'flex-end', 
+        flex: 1,
         paddingLeft: 20,
         paddingRight: 20,
     },
@@ -79,7 +100,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     bombTextGradient: {
-        borderRadius: 8, // Round the corners of the gradient background
+        borderRadius: 8,
         paddingVertical: 10,
         paddingHorizontal: 20,
     },
@@ -89,7 +110,14 @@ const styles = StyleSheet.create({
         fontWeight: '600', // Semi-bold for "pop"
         textAlign: 'center',
     },
+    usernameText: {
+        color: 'white',
+        fontWeight: theme.fonts.extraBold,
+        fontSize: 16,
+
+
+    }
   });
   
   
-export default lobby
+export default Main

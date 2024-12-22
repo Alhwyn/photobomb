@@ -14,7 +14,7 @@ const Index = () => {
 
         if (response.success) {
           console.log('User verified successfully:', response.payload);
-          router.replace('lobby'); // Navigate to lobby.jsx if verification is successful
+          router.replace('Main'); // Navigate to lobby.jsx if verification is successful
         } else {
           console.log('User verification failed:', response.msg);
           router.replace('CreateUser'); // Navigate to CreateUser.jsx if verification fails
