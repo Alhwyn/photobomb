@@ -1,23 +1,35 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import React, {useState} from 'react';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useRouter } from 'expo-router';
 import Profile from '../components/Profile';
-import * as Application from 'expo-application';
-import { supabase } from '../lib/supabase';
+import { handleCreateUser } from '../service/userService';
 
 
 const CreateUser = () => {
     const [username, setUsername] = useState(''); // State for username
     const router = useRouter();
 
-    const handleCreateUser = async () => {
-        
-    }
-
+    const onCreateUserPress = async () => {
+        console.log('username: ', username);
+        if (!username.trim()) {
+          Alert.alert('Error', 'Please enter a username');
+          return;
+        }
+    
+        const response = await handleCreateUser({ username });
+    
+        if (response.success) {
+          Alert.alert('Success', 'User created successfully!');
+          router.push('lobby'); // Navigate to the lobby on success
+        } else {
+          Alert.alert('Error', response.msg || 'Failed to create user');
+        }
+    };
+    
 
 
   return (
@@ -37,11 +49,15 @@ const CreateUser = () => {
             </View>
             <Input
                 placeholder='Enter your Username...'
+                onChangeText={(text) => setUsername(text)}
+                value={username}
             />
             <Button 
                 title='Create' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={()=> console.log('Pressed Join game')}
+                onPress={onCreateUserPress} // Call the function here
+                value={username}
+
             />
         </View>
        

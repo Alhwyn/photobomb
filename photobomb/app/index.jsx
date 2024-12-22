@@ -2,7 +2,7 @@ import { Text, View } from 'react-native'
 import React, { useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import Button from '../components/Button'
-import { getDeviceID, fetchUser } from '../service/getUser'
+import { getDeviceID, fetchUser } from '../service/userService'
 
 const index = () => {
 

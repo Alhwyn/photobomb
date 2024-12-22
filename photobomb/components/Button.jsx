@@ -25,16 +25,16 @@ const Button = ({
     }
 
   return (
-    <View >
-      <Pressable onPress={onPress} style={styles.pressable}>
-        <LinearGradient
-          colors={colors}
-          style={[styles.gradient, { width }]}
-        >
-          <Text style={[styles.text, textStyle]}>{title}</Text>
-        </LinearGradient>
-      </Pressable>
-    </View>
+
+    <Pressable onPress={onPress} style={styles.pressable}>
+      <LinearGradient
+        colors={colors}
+        style={[styles.gradient, { width }]}
+      >
+        <Text style={[styles.text, textStyle]}>{title}</Text>
+      </LinearGradient>
+    </Pressable>
+
   )
 }
 
