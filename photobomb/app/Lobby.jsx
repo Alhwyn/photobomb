@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Alert, BackHandler } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useState } from 'react';
 import { theme } from '../constants/theme'
@@ -7,6 +7,8 @@ import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
 import { getGameId } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
+import ExitButton from '../components/ExitButton';
+import { useFocusEffect } from 'expo-router';
 
 
 const Lobby = () => {
@@ -28,13 +30,11 @@ const Lobby = () => {
                         is_creator: true,
                         payload: {
                             username: userData?.username,
-                            image_url: null,
+                            image_url: userData?.image_url,
                         }
                     }]);
 
                 }
-
-
                 console.log('retrieveGameData: ', gameData);
             } catch (error) {
                 console.error('Error in retrieveGameData:', error);
@@ -48,6 +48,7 @@ const Lobby = () => {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
+            <ExitButton/>
             <Text style={styles.title}>
                 Game Pin
             </Text>
