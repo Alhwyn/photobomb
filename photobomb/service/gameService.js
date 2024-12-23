@@ -58,6 +58,7 @@ export const CreateGameID = async (pin, payload) => {
                 status: 'lobby',
                 game_creator: payload?.id,
                 game_pin: pin,
+                current_round: 0,
             },
         ]);
         if (error) {

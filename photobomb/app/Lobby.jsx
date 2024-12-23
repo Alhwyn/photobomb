@@ -5,14 +5,44 @@ import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
-
-
-
-
-
+import { getGameId } from '../service/gameService';
+import { getUserPayloadFromStorage } from '../service/userService';
 
 
 const Lobby = () => {
+
+    const [gamePin, setGamePin] = useState(null);
+    const [UserCreator, setUserCreator] = useState(null);
+
+
+
+    useEffect(() => {
+        const retrieveGameData = async () => {
+            try {
+                const userData = await getUserPayloadFromStorage();
+                const gameData = await getGameId(userData?.id);
+        
+                if (gameData.success) {
+                    setGamePin(gameData?.data?.[0]?.game_pin);
+                    setUserCreator([{
+                        is_creator: true,
+                        payload: {
+                            username: userData?.username,
+                            image_url: null,
+                        }
+                    }]);
+
+                }
+
+
+                console.log('retrieveGameData: ', gameData);
+            } catch (error) {
+                console.error('Error in retrieveGameData:', error);
+            }
+        };
+        
+        retrieveGameData();
+    }, []); 
 
 
   return (
@@ -25,11 +55,13 @@ const Lobby = () => {
                 colors={['#8A2BE2', '#DA70D6']}
                 style={styles.gradient}
             >
-                <Text style={styles.text}>123456</Text>
+                <Text style={styles.text}>{gamePin}</Text>
             </LinearGradient>
         </View>
         
-        <UserLobby/>
+        <UserLobby
+            users={UserCreator}
+        />
 
         <View style={styles.bottomContainer}>
             <Button 
