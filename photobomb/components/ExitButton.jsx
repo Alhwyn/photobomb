@@ -4,7 +4,7 @@ import Icon from '../assets/icons'; // Ensure this import points to a valid Icon
 import { theme } from '../constants/theme';
 import { router } from 'expo-router';
 
-const ExitButton = ({ size = 26 }) => {
+const ExitButton = ({ size = 26, onExit }) => {
     const handleExit = () => {
         Alert.alert(
             'Exit Lobby',
@@ -13,8 +13,11 @@ const ExitButton = ({ size = 26 }) => {
                 { text: 'Cancel', style: 'cancel' }, // User cancels exit
                 {
                     text: 'Exit',
-                    onPress: () => {
-                        router.back(); // Navigate back to the previous screen
+                    onPress: async () => {
+                        if (onExit) {
+                            await onExit();
+                        }
+                        router.back();
                     },
                     style: 'destructive'
                 },

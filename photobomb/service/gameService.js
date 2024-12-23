@@ -72,3 +72,26 @@ export const CreateGameID = async (pin, payload) => {
     }
 
 }
+
+export const deleteGame = async (gameId) => {
+    try {
+        if (!gameId) {
+            console.error('gameService.jsx: No game available to delete');
+            return;
+        }
+
+        const { error } = await supabase
+        .from('games')
+        .delete()
+        .eq('id', gameId);
+
+        if (error) {
+            console.error('Error deleting game: ', error.message);
+            return;
+            
+        }
+        console.log('Game deleted successfully')
+    } catch(error) {
+        console.error('gameService.js unexpected error while deteting the game: ', error.message);
+    }
+}

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Alert, BackHandler } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useState } from 'react';
 import { theme } from '../constants/theme'
@@ -8,13 +8,14 @@ import Button from '../components/Button'
 import { getGameId } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
-import { useFocusEffect } from 'expo-router';
+import { deleteGame } from '../service/gameService';
 
 
 const Lobby = () => {
 
     const [gamePin, setGamePin] = useState(null);
     const [UserCreator, setUserCreator] = useState(null);
+    const [gameId, setGameId] = useState(null);
 
 
 
@@ -26,6 +27,7 @@ const Lobby = () => {
         
                 if (gameData.success) {
                     setGamePin(gameData?.data?.[0]?.game_pin);
+                    setGameId(gameData?.data?.[0]?.id);
                     setUserCreator([{
                         is_creator: true,
                         payload: {
@@ -48,7 +50,7 @@ const Lobby = () => {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
-            <ExitButton/>
+        <ExitButton onExit={() => deleteGame(gameId)} />
             <Text style={styles.title}>
                 Game Pin
             </Text>
@@ -113,13 +115,13 @@ const styles = StyleSheet.create({
         fontSize: 30,
     },
    bottomContainer: {
-        position: 'absolute',  // Makes it fixed
-        bottom: 20,            // Adjust distance from the bottom
-        left: 0,               // Align to the left edge
-        right: 0,              // Align to the right edge
+        position: 'absolute',  
+        bottom: 20,            
+        left: 0,               
+        right: 0,              
         paddingTop: 20,
-        paddingVertical: 10,   // Vertical padding for the container
-        alignItems: 'center',  // Center the button horizontally
+        paddingVertical: 10,   
+        alignItems: 'center',  
         backgroundColor: '#121212', 
 
     }
