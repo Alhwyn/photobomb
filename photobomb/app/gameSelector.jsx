@@ -4,9 +4,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import { useRouter } from 'expo-router';
+import { getUserPayloadFromStorage } from '../service/userService';
+import { checkGamePin, CreateGameID } from '../service/gameService';
 
 
+// Function to generate unique six digit game ID
+const generateUniquePin = async () => {
+    let unique = false;
+    let pin;
 
+    while (!unique) {
+        pin = Math.floor(100000 + Math.random() * 900000).toString();
+        unique = !(await checkGamePin(pin));
+    }
+    return pin; // return the unique PIN
+}
 
 
 const gameModes = [
@@ -16,9 +28,36 @@ const gameModes = [
 const GameSelector = () => {
   const router = useRouter();
 
+  const createGame = async (gameMode) => {
+    console.log("Running createGame function...");
+    try {
+      const data = await getUserPayloadFromStorage();
+
+      
+      if (!data) throw new Error('User ID not found in AsyncStorage.');
+
+      // Generate a unique PIN
+      const pin = await generateUniquePin();
+
+      const result = await CreateGameID(pin, data);
+
+      console.log("Game created:", result);
+
+      // Navigate to Lobby screen with game details
+      router.push({
+        pathname: 'Lobby'
+    });
+
+    } catch(error) {
+      console.log('Game Creation has Failed', error.message);
+    }
+    
+    
+}
+
 
   const renderItem = ({ item }) => (
-    <Pressable style={styles.item} onPress={() => router.push('Lobby')}> 
+    <Pressable style={styles.item} onPress={() => createGame(item)}> 
         <LinearGradient colors={item.gradient} style={styles.image} imageStyle={styles.imageBorder}>
             <View style={styles.textContainer}>
                 <Text style={styles.text}>{item.name}</Text>      
