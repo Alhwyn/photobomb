@@ -1,16 +1,35 @@
 import { StyleSheet, Text, View, SafeAreaView, ScrollView } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import React from 'react'
+import React, {useEffect, useState } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button'
+import { supabase } from '../lib/supabase'
+import { useEffect, useState } from 'react'
+import { checkGamePin } from '../service/gameService'
 
 
-const users = [
-    { is_creator: true, payload: { username: 'test', image_url: require('../assets/images/mode1.png') } },
+// Function to generate unique six digit game ID
 
-  ];
+const generateUniquePin = async () => {
+    let unique = false;
+    let pin;
+
+    while (!unique) {
+
+        pin = Math.floor(100000 + Math.random() * 900000).toString();
+
+        unique = !(await checkGamePin(pin));
+    }
+    return pin; // return the unique PIN
+}
+
+
+
+
+
 
 const Lobby = () => {
   return (
