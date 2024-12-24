@@ -1,17 +1,21 @@
 import React from 'react';
 import { StyleSheet, Text, View, FlatList, Image } from 'react-native';
-import Profile from './Profile'; // Assuming you have a Profile component for the profile picture
 import { theme } from '../constants/theme';
+import Profile from './Profile';
 
-const UserLobby = ({ users }) => {
+const UserLobby = ({ lobbyData }) => {
+
+  console.log(lobbyData)
+  // Render each user item
   const renderItem = ({ item }) => {
-    const { is_creator, payload } = item;
-    const { username, image_url } = payload;
+    const { is_creator, users } = item; // Extract is_creator and users from item
+    const { username, image_url } = users; // Extract username and image_url from users
 
     return (
       <View style={styles.itemContainer}>
         {/* Profile Picture */}
         <Profile image_url={image_url} style={styles.profileImage} />
+
         
         {/* User Information */}
         <View style={styles.infoContainer}>
@@ -24,9 +28,9 @@ const UserLobby = ({ users }) => {
 
   return (
     <FlatList
-      data={users} // Array of user objects
+      data={lobbyData} // Pass the lobbyData array
       renderItem={renderItem}
-      keyExtractor={(item, index) => index.toString()} // Unique key for each item
+      keyExtractor={(item) => item.player_id} // Use player_id as the unique key
     />
   );
 };
@@ -40,14 +44,26 @@ const styles = StyleSheet.create({
     padding: 10,
     margin: 5,
     backgroundColor: 'rgba(39, 39, 46, 0.26)',
-    borderRadius: theme.radius.xxl
-
+    borderRadius: theme.radius.xxl,
   },
   profileImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginRight: 10,
+  },
+  profilePlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#555',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  placeholderText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   infoContainer: {
     flex: 1,

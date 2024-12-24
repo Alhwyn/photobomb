@@ -9,53 +9,75 @@ import { getGameId, deleteGame, checkUserInLobby, deletePlayerGame } from '../se
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
+import { supabase } from '../lib/supabase';
 
 
 
 const Lobby = () => {
     const router = useRouter();
     const [gamePin, setGamePin] = useState(null);
-    const [UserCreator, setUserCreator] = useState(null);
+    const [players, setPlayers] = useState([]);
     const [gameId, setGameId] = useState(null);
 
-    useEffect(() => {
-        const retrieveGameData = async () => {
-            try {
-                // 
-                const userId = await getUserPayloadFromStorage();
-                console.log('asdfaldfjaslf', userId?.id);
-                //gameData
-                // get the data
-                const userData = await checkUserInLobby(userId?.id);
-                
-                console.log('userData userData', userData);
-        
-                if (userData.success) {
-                    setGamePin(userData?.data?.games?.game_pin);
-                    setGameId(userData?.data?.game_id);
-                    setUserCreator([{
-                        is_creator: userData?.data?.is_creator,
-                        payload: {
-                            username: userData?.data?.users?.username,
-                            image_url: userData?.data?.users?.image_url
-                        }
-                    }]);
+    // Fetch player in hte game of the game_id
+    const fetchPlayers = async () => {
+        try {
+            console.log('starting fetchplay');
 
-                }
-            } catch (error) {
-                console.error('Error in retrieveGameData:', error);
+
+            const { data, error } = await supabase
+                .from('playerGame')
+                .select(`player_id, 
+                         game_id,
+                         is_creator,
+                         users (username, image_url),
+                         games (game_pin)
+                `)
+
+
+
+            if (error) {
+                console.log('Error fetching the players: ', error.message);
+                return;
             }
+            console.log(data);
+            setGamePin(data?.[0]?.games?.game_pin);
+            setGameId(data?.[0]?.game_id);
+
+            setPlayers(data);
+
+        } catch(error) {
+            console.log('Error fetching the players: ', error.message);
+            return;
+        }
+    };
+
+    useEffect(() => {
+        fetchPlayers();
+
+        // subscribe to the realtime updates
+        const channel = supabase
+        .channel('playerGame-channel') // Name your channel
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'playerGame', filter: `game_id=eq.${gameId}` },
+            (payload) => {
+            console.log('Real-time update received:', payload.new);
+            fetchPlayers(); // Refetch players when a new user joins
+            }
+        )
+        .subscribe();
+
+        // Cleanup subscription on unmount
+        return () => {
+            supabase.removeChannel(channel);
         };
-        
-        retrieveGameData();
-    }, []); 
+    
+    }, [gameId]); 
 
     const handleExitLobby = async () => {
         // get user ID
         console.log('handleExitLobby called with gameId:', gameId); // Debug log
-
-
-
         const gamePayload = await getGameId(userId);
 
         if (gamePayload.success) {
@@ -65,14 +87,10 @@ const Lobby = () => {
             if (deletePlayerGameInLobby.success && deleteLobbyGame.success ) console.log('Succesfully removed the game ');
             return;
         } else {
-
             const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
-
             if (deletePlayerGameInLobby.success) console.log('User successfully left the game');
         }
-
         router.back()
-
     }
     
   return (
@@ -91,7 +109,7 @@ const Lobby = () => {
         </View>
         
         <UserLobby
-            users={UserCreator}
+            lobbyData={players}
         />
 
         <View style={styles.bottomContainer}>
