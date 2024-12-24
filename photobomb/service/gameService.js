@@ -29,7 +29,9 @@ export const getGameId = async (userId) => {
         const { data, error } = await supabase
         .from('games')
         .select('*')
-        .eq('game_creator', userId);
+        .eq('game_creator', userId)
+        .single();
+
         if (error) {
             console.log('Failed to retrieve game connection', error.message);
             return { success: false, msg: error.message};
@@ -99,7 +101,8 @@ export const deleteGame = async (gameId) => {
 
 export const addUserToLobby = async (playerId, gameId) => {
     try {
-        const {data, error} = await supabase
+
+        const { data, error } = await supabase
         .from('playerGame')
         .insert([
             {
@@ -107,15 +110,16 @@ export const addUserToLobby = async (playerId, gameId) => {
                 game_id: gameId,
                 score: 0,
                 turn_order: null,
-            }
-        ]);
-
+            },
+        ])
         if (error) {
             console.log('GameService.jsx Error when user joining the lobby: ', error.message);
             return {success: false, msg: error.message};
         }
 
-        return {success: true, data: data};
+        console.log('User added to playerGame successfully:', data);
+        return {success: true, data: data}
+       
     } catch(error) {
         console.log('GameService.jsx Error when user joining the lobby: ', error.message);
         return {success: false, msg: error.message};
@@ -149,9 +153,21 @@ export const checkUserInLobby = async (userId, gameId) => {
 export const deletePlayerGame = async (playerId, gameId) => {
     try {
         const {data, error} = await supabase
-        .form
+        .from('playerGame')
+        .delete()
+        .eq('player_id', playerId)
+        .eq('game_id', gameId)
+
+
+        if (error) {
+            console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
+            return {success: false, msg: error.message}
+        }
+    } catch(error) {
+        console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
+        return {success: false, msg: error.message}
     }
-}
+};
 
 
 

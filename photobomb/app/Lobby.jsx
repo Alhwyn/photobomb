@@ -12,15 +12,12 @@ import { useRouter } from 'expo-router';
 
 
 
-
 const Lobby = () => {
     const router = useRouter();
     const [gamePin, setGamePin] = useState(null);
     const [UserCreator, setUserCreator] = useState(null);
     const [gameId, setGameId] = useState(null);
     const [isValidLobby, setisValidLobby] = useState(false);
-
-
 
     useEffect(() => {
         const retrieveGameData = async () => {
@@ -32,8 +29,8 @@ const Lobby = () => {
                 const gameData = await getGameId(userData?.id);
         
                 if (gameData.success) {
-                    setGamePin(gameData?.data?.[0]?.game_pin);
-                    setGameId(gameData?.data?.[0]?.id);
+                    setGamePin(gameData?.data?.game_pin);
+                    setGameId(gameData?.data?.id);
                     setUserCreator([{
                         is_creator: true,
                         payload: {
@@ -51,6 +48,16 @@ const Lobby = () => {
         
         retrieveGameData();
     }, []); 
+
+    const handleExitLobby = async (gameId) => {
+        // get user ID
+        const userData = await getUserPayloadFromStorage();
+
+
+
+    
+    }
+    
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
