@@ -80,9 +80,8 @@ export const deleteGame = async (gameId) => {
     try {
         if (!gameId) {
             console.error('gameService.jsx: No game available to delete');
-            return;
+            return {success: true, message: 'Succesfully deleted the game from the game tables'};
         }
-
         const { error } = await supabase
         .from('games')
         .delete()
@@ -90,10 +89,10 @@ export const deleteGame = async (gameId) => {
 
         if (error) {
             console.error('Error deleting game: ', error.message);
-            return;
+            return {success: true, message: 'Succesfully deleted the game from the game tables'};
             
         }
-        console.log('Game deleted successfully')
+        return {success: true, message: 'Succesfully deleted the game from the game tables'};
     } catch(error) {
         console.error('gameService.js unexpected error while deteting the game: ', error.message);
     }
@@ -163,6 +162,8 @@ export const deletePlayerGame = async (playerId, gameId) => {
             console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
             return {success: false, msg: error.message}
         }
+
+        return {success: true, message: 'Succesfully deleted the game from the playerGames tables'};
     } catch(error) {
         console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
         return {success: false, msg: error.message}

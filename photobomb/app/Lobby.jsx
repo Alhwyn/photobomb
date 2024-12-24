@@ -5,7 +5,7 @@ import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
-import { getGameId, deleteGame, checkUserInLobby } from '../service/gameService';
+import { getGameId, deleteGame, checkUserInLobby, deletePlayerGame } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
@@ -49,19 +49,35 @@ const Lobby = () => {
         retrieveGameData();
     }, []); 
 
-    const handleExitLobby = async (gameId) => {
+    const handleExitLobby = async () => {
         // get user ID
+        console.log('handleExitLobby called with gameId:', gameId); // Debug log
         const userData = await getUserPayloadFromStorage();
 
+        const userId = userData?.id
 
+        const gamePayload = await getGameId(userId);
 
-    
+        if (gamePayload.success) {
+            const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
+            const deleteLobbyGame = await deleteGame(gameId);
+
+            if (deletePlayerGameInLobby.success && deleteLobbyGame.success ) console.log('Succesfully removed the game ');
+            return;
+        } else {
+            const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
+
+            if (deletePlayerGameInLobby.success) console.log('User successfully left the game');
+        }
+
+        router.back()
+
     }
     
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
-        <ExitButton onExit={() => deleteGame(gameId)} />
+        <ExitButton onExit={handleExitLobby}/>
             <Text style={styles.title}>
                 Game Pin
             </Text>
