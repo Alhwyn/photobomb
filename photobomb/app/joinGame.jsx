@@ -35,9 +35,11 @@ const joinGame = () => {
       }
 
       const userPayload = await getUserPayloadFromStorage();
-      const result = await addUserToLobby(userPayload?.id, isValidPin?.data?.[0]?.id)
 
-      if (result.success) {
+      console.log(isValidPin?.data?.[0]?.id);
+      const result = await addUserToLobby(userPayload?.id, isValidPin?.data?.[0]?.id, false);
+    
+      if (result?.success) {
 
         router.push({
           pathname: 'Lobby'

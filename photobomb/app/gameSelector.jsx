@@ -44,9 +44,10 @@ const GameSelector = () => {
       const getGamePayload = await getGameId(data?.id)
 
       console.log('result in gameselector: ', result);
+      console.log('result in getGamePayload', getGamePayload);
 
       
-      const createPlayerGame = await addUserToLobby(data?.id, getGamePayload?.data?.id);
+      const createPlayerGame = await addUserToLobby(data?.id, getGamePayload?.data?.id, true);
 
       console.log("Game created:", result);
       console.log("Game create now player ID", createPlayerGame)

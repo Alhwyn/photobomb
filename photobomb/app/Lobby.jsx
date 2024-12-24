@@ -17,30 +17,31 @@ const Lobby = () => {
     const [gamePin, setGamePin] = useState(null);
     const [UserCreator, setUserCreator] = useState(null);
     const [gameId, setGameId] = useState(null);
-    const [isValidLobby, setisValidLobby] = useState(false);
 
     useEffect(() => {
         const retrieveGameData = async () => {
             try {
-                // get user ID
-                const userData = await getUserPayloadFromStorage();
-
-                // fetch the game ID data
-                const gameData = await getGameId(userData?.id);
+                // 
+                const userId = await getUserPayloadFromStorage();
+                console.log('asdfaldfjaslf', userId?.id);
+                //gameData
+                // get the data
+                const userData = await checkUserInLobby(userId?.id);
+                
+                console.log('userData userData', userData);
         
-                if (gameData.success) {
-                    setGamePin(gameData?.data?.game_pin);
-                    setGameId(gameData?.data?.id);
+                if (userData.success) {
+                    setGamePin(userData?.data?.games?.game_pin);
+                    setGameId(userData?.data?.game_id);
                     setUserCreator([{
-                        is_creator: true,
+                        is_creator: userData?.data?.is_creator,
                         payload: {
-                            username: userData?.username,
-                            image_url: userData?.image_url,
+                            username: userData?.data?.users?.username,
+                            image_url: userData?.data?.users?.image_url
                         }
                     }]);
 
                 }
-                console.log('retrieveGameData: ', gameData);
             } catch (error) {
                 console.error('Error in retrieveGameData:', error);
             }
@@ -52,9 +53,8 @@ const Lobby = () => {
     const handleExitLobby = async () => {
         // get user ID
         console.log('handleExitLobby called with gameId:', gameId); // Debug log
-        const userData = await getUserPayloadFromStorage();
 
-        const userId = userData?.id
+
 
         const gamePayload = await getGameId(userId);
 
@@ -65,6 +65,7 @@ const Lobby = () => {
             if (deletePlayerGameInLobby.success && deleteLobbyGame.success ) console.log('Succesfully removed the game ');
             return;
         } else {
+
             const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
 
             if (deletePlayerGameInLobby.success) console.log('User successfully left the game');

@@ -98,10 +98,10 @@ export const deleteGame = async (gameId) => {
     }
 }
 
-export const addUserToLobby = async (playerId, gameId) => {
+export const addUserToLobby = async (playerId, gameId, isCreator) => {
     try {
 
-        const { data, error } = await supabase
+        const { error } = await supabase
         .from('playerGame')
         .insert([
             {
@@ -109,15 +109,17 @@ export const addUserToLobby = async (playerId, gameId) => {
                 game_id: gameId,
                 score: 0,
                 turn_order: null,
+                is_creator: isCreator,
             },
-        ])
+        ]);
+
+
         if (error) {
             console.log('GameService.jsx Error when user joining the lobby: ', error.message);
             return {success: false, msg: error.message};
         }
 
-        console.log('User added to playerGame successfully:', data);
-        return {success: true, data: data}
+        return {success: true}
        
     } catch(error) {
         console.log('GameService.jsx Error when user joining the lobby: ', error.message);
@@ -125,22 +127,26 @@ export const addUserToLobby = async (playerId, gameId) => {
     }
 }
 
-export const checkUserInLobby = async (userId, gameId) => {
+export const checkUserInLobby = async (userId) => {
     try {
 
-        const { data: playerData, error: playerError } = await supabase
+        const { data, error } = await supabase
         .from('playerGame')
-        .select('id')
+        .select(`
+            player_id,
+            game_id,
+            users (username, image_url),
+            games (game_pin)
+        `)
         .eq('player_id', userId)
-        .eq('game_id', gameId)
-        .single()
+        .single();
 
-        if (playerError) {
+        if (error) {
             console.log('GameService.jsx Error when user joining the lobby: ', error.message);
             return {success: false, msg: error.message};
         }
 
-        return {success: true, data: playerData};
+        return {success: true, data: data};
 
     } catch(error) {
         console.log('GameService.jsx Error when user joining the lobby: ', error.message);
