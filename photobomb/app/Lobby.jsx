@@ -5,7 +5,7 @@ import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
-import { getGameId, deleteGame, checkUserInLobby, deletePlayerGame } from '../service/gameService';
+import { getGameId, deleteGame, deletePlayerGame } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
@@ -19,10 +19,40 @@ const Lobby = () => {
     const [players, setPlayers] = useState([]);
     const [gameId, setGameId] = useState(null);
 
+    // Fetch and Set Game ID
+    const initializeGameId = async () => {
+        try {
+            console.log('Fetching gameId...');
+            const userPayload = await getUserPayloadFromStorage();
+            const userId = userPayload?.id;
+
+            if (!userId) {
+                console.error('Failed to retrieve userId from storage.');
+                return;
+            }
+
+            const gamePayload = await getGameId(userId);
+
+            if (!gamePayload?.success || !gamePayload?.id) {
+                console.error('Failed to fetch gameId:', gamePayload?.error || 'Unknown error');
+                return;
+            }
+
+            console.log('Retrieved gameId:', gamePayload.id);
+            setGameId(gamePayload.id); // Set gameId here
+        } catch (error) {
+            console.error('Error initializing gameId:', error.message);
+        }
+    };
+
     // Fetch player in hte game of the game_id
     const fetchPlayers = async () => {
+        if (!gameId) {
+            console.error('Invalid or missing gameId:', gameId);
+            return;
+        }
         try {
-            console.log('starting fetchplay');
+            console.log('Starting fetchPlayers...');
 
 
             const { data, error } = await supabase
@@ -40,57 +70,92 @@ const Lobby = () => {
                 console.log('Error fetching the players: ', error.message);
                 return;
             }
-            console.log(data);
-            setGamePin(data?.[0]?.games?.game_pin);
-            setGameId(data?.[0]?.game_id);
 
+            if (!data || data.length === 0) {
+                console.error('No players found for the given gameId:', gameId);
+                setPlayers([]); // Clear players if no rows are found
+                return;
+            }
+            console.log('Fetched data:', data);
+
+            setGamePin(data?.[0]?.games?.game_pin || null);
             setPlayers(data);
 
         } catch(error) {
-            console.log('Error fetching the players: ', error.message);
+            console.log('Error fetching the players:  ', error.message);
             return;
         }
     };
 
     useEffect(() => {
+        // Initialize gameId and fetch players
+        initializeGameId();
+    }, []);
+
+    useEffect(() => {
+        if (!gameId) {
+            console.error('Invalid or missing gameId:', gameId);
+            return;
+        }
         fetchPlayers();
 
-        // subscribe to the realtime updates
-        const channel = supabase
-        .channel('playerGame-channel') // Name your channel
+        const channelLobby = supabase
+        .channel() 
         .on(
             'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'playerGame', filter: `game_id=eq.${gameId}` },
+            { schema: 'public', table: 'playerGame', filter: `game_id=eq.${gameId}` },
             (payload) => {
-            console.log('Real-time update received:', payload.new);
-            fetchPlayers(); // Refetch players when a new user joins
+                console.log('Real-time update received:', payload.new);
+
+                if (payload.eventType === 'INSERT') {
+                    console.log('PLayer Joined: ', payload.new)
+                    setPlayers((prevPlayers) => [...prevPlayers, payload.new]);
+                } else if (payload.eventType === 'DELETE') {
+                    console.log('Player exited: ', payload.old);
+                    setPlayers((prevPlayers) =>
+                        prevPlayers.filter((player) => player.player_id !== payload.old.player_id)
+                    );
+                } else {
+                    console.log('Unhandled event Type:', payload.eventType);
+
+                }
             }
         )
         .subscribe();
 
         // Cleanup subscription on unmount
         return () => {
-            supabase.removeChannel(channel);
+            supabase.removeChannel(channelLobby);
         };
     
     }, [gameId]); 
 
     const handleExitLobby = async () => {
-        // get user ID
-        console.log('handleExitLobby called with gameId:', gameId); // Debug log
-        const gamePayload = await getGameId(userId);
+        try {
+            console.log('Starting handleExitLobby...');
 
-        if (gamePayload.success) {
-            const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
-            const deleteLobbyGame = await deleteGame(gameId);
+            const getUserPayload = await getUserPayloadFromStorage();
+            console.log('werewrwer', getUserPayload);
+            const userId = getUserPayload?.id;
 
-            if (deletePlayerGameInLobby.success && deleteLobbyGame.success ) console.log('Succesfully removed the game ');
-            return;
-        } else {
-            const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
-            if (deletePlayerGameInLobby.success) console.log('User successfully left the game');
+            console.log('handleExitLobby called with gameId:', gameId); // Debug log
+            const gamePayload = await getGameId(userId);
+
+            if (gamePayload.success) {
+                const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
+                const deleteLobbyGame = await deleteGame(gameId);
+
+                if (deletePlayerGameInLobby.success && deleteLobbyGame.success ) console.log('Succesfully removed the game ');
+                return;
+            } else {
+                const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
+                if (deletePlayerGameInLobby.success) console.log('User successfully left the game');
+            }
+            router.back()
+        } catch (error) {
+            console.error('Error in handleExitLobby:', error.message);
         }
-        router.back()
+
     }
     
   return (
@@ -141,8 +206,8 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
 
-        paddingVertical: 10,   // Vertical padding for the container
-        alignItems: 'center',  // Center the button horizontally
+        paddingVertical: 10,  
+        alignItems: 'center',  
         backgroundColor: '#121212', 
     },
     gradient: {
