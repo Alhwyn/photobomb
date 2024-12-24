@@ -1,15 +1,56 @@
-import React from 'react';
-import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, TouchableWithoutFeedback, Keyboard, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, TouchableWithoutFeedback, Keyboard, SafeAreaView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import NumberInput from '../components/NumberInput';
 import Button from '../components/Button';
 import { useRouter } from 'expo-router';
+import { checkGamePin, addUserToLobby } from '../service/gameService';
+import { getUserPayloadFromStorage } from '../service/userService';
 
 
-const GameSelector = () => {
+const joinGame = () => {
   const router = useRouter();
+  const [gamePin, setGamePin] = useState('');
+  const [isLoading, setisLoading] = useState(false);
+
+  const handleJoinGame = async () => {
+    if (!gamePin) {
+      Alert.alert('Error', 'Please Enter a game Pin');
+      return;
+    }
+
+    setisLoading(true);
+
+    try {
+      const isValidPin = await checkGamePin(gamePin);
+
+      console.log('joinGame: data success; ', isValidPin);
+
+      if (!isValidPin.success) {
+        Alert.alert('Invalid game Pin: ', 'The game entered does not exist,')
+        setisLoading(false);
+        return;
+      }
+
+      const userPayload = await getUserPayloadFromStorage();
+      const result = await addUserToLobby(userPayload?.id, isValidPin?.data?.[0]?.id)
+
+      if (result.success) {
+
+        router.push({
+          pathname: 'Lobby'
+        })
+      }
+
+      
+
+    } catch(error) {
+      console.log('joinGame.jsx Could not join game: ', error.message);
+      return;
+    }
+  }
 
 
   return (
@@ -22,11 +63,11 @@ const GameSelector = () => {
           </Text>
         </View>
         <View style={styles.inputContainer}>
-          <NumberInput/>
+          <NumberInput value={gamePin} onChangeText={setGamePin} />
           <Button 
             title='Join' 
             colors={theme.buttonGradient.secondary} 
-            onPress={()=> console.log('Pressed Join game')}
+            onPress={handleJoinGame}
           />
         </View>
        
@@ -35,7 +76,7 @@ const GameSelector = () => {
   );
 };
 
-export default GameSelector;
+export default joinGame;
 
 const styles = StyleSheet.create({
   bigContainer: {

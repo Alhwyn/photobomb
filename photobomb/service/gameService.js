@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export const checkGamePin = async (pin) => {
@@ -16,7 +17,7 @@ export const checkGamePin = async (pin) => {
             return false;
         }
         console.log('Game PIN exists: ', data);
-        return true;
+        return {success: true, data: data};
     } catch(error) {
         console.log('Error checking PIN', error.message);
         return { success: false, msg: error.message};
@@ -95,3 +96,74 @@ export const deleteGame = async (gameId) => {
         console.error('gameService.js unexpected error while deteting the game: ', error.message);
     }
 }
+
+export const addUserToLobby = async (playerId, gameId) => {
+    try {
+        const {data, error} = await supabase
+        .from('playerGame')
+        .insert([
+            {
+                player_id: playerId,
+                game_id: gameId,
+                score: 0,
+                turn_order: null,
+            }
+        ]);
+
+        if (error) {
+            console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+            return {success: false, msg: error.message};
+        }
+
+        return {success: true, data: data};
+    } catch(error) {
+        console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+        return {success: false, msg: error.message};
+    }
+}
+
+export const checkUserInLobby = async (userId, gameId) => {
+    try {
+
+        const { data: playerData, error: playerError } = await supabase
+        .from('playerGame')
+        .select('id')
+        .eq('player_id', userId)
+        .eq('game_id', gameId)
+        .single()
+
+        if (playerError) {
+            console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+            return {success: false, msg: error.message};
+        }
+
+        return {success: true, data: playerData};
+
+    } catch(error) {
+        console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+        return {success: false, msg: error.message};
+    }
+
+}
+
+export const deletePlayerGame = async (playerId, gameId) => {
+    try {
+        const {data, error} = await supabase
+        .form
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

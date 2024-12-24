@@ -5,7 +5,7 @@ import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import { useRouter } from 'expo-router';
 import { getUserPayloadFromStorage } from '../service/userService';
-import { checkGamePin, CreateGameID } from '../service/gameService';
+import { checkGamePin, CreateGameID, addUserToLobby } from '../service/gameService';
 
 
 // Function to generate unique six digit game ID
@@ -41,7 +41,12 @@ const GameSelector = () => {
 
       const result = await CreateGameID(pin, data);
 
+      console.log('result in gameselector: ', result);
+
+      const createPlayerGame = await addUserToLobby(data?.id, result?.data?.id)
+
       console.log("Game created:", result);
+      console.log("Game create now player ID")
 
       // Navigate to Lobby screen with game details
       router.push({

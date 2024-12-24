@@ -5,24 +5,30 @@ import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
-import { getGameId } from '../service/gameService';
+import { getGameId, deleteGame, checkUserInLobby } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
-import { deleteGame } from '../service/gameService';
+import { useRouter } from 'expo-router';
+
+
 
 
 const Lobby = () => {
-
+    const router = useRouter();
     const [gamePin, setGamePin] = useState(null);
     const [UserCreator, setUserCreator] = useState(null);
     const [gameId, setGameId] = useState(null);
+    const [isValidLobby, setisValidLobby] = useState(false);
 
 
 
     useEffect(() => {
         const retrieveGameData = async () => {
             try {
+                // get user ID
                 const userData = await getUserPayloadFromStorage();
+
+                // fetch the game ID data
                 const gameData = await getGameId(userData?.id);
         
                 if (gameData.success) {
