@@ -19,50 +19,25 @@ const Lobby = () => {
     const [players, setPlayers] = useState([]);
     const [gameId, setGameId] = useState(null);
 
-    // Fetch and Set Game ID
-    const initializeGameId = async () => {
-        try {
-            console.log('Fetching gameId...');
-            const userPayload = await getUserPayloadFromStorage();
-            const userId = userPayload?.id;
-
-            if (!userId) {
-                console.error('Failed to retrieve userId from storage.');
-                return;
-            }
-
-            const gamePayload = await getGameId(userId);
-
-            if (!gamePayload?.success || !gamePayload?.id) {
-                console.error('Failed to fetch gameId:', gamePayload?.error || 'Unknown error');
-                return;
-            }
-
-            console.log('Retrieved gameId:', gamePayload.id);
-            setGameId(gamePayload.id); // Set gameId here
-        } catch (error) {
-            console.error('Error initializing gameId:', error.message);
-        }
-    };
-
     // Fetch player in hte game of the game_id
     const fetchPlayers = async () => {
-        if (!gameId) {
-            console.error('Invalid or missing gameId:', gameId);
-            return;
-        }
         try {
             console.log('Starting fetchPlayers...');
+
+            const getUserPayload = await getUserPayloadFromStorage();
+            console.log('werewrwer', getUserPayload);
+            const userId = getUserPayload?.id;
 
 
             const { data, error } = await supabase
                 .from('playerGame')
                 .select(`player_id, 
-                         game_id,
                          is_creator,
+                         game_id,
                          users (username, image_url),
                          games (game_pin)
                 `)
+                .eq('player_id', userId);
 
 
 
@@ -76,9 +51,11 @@ const Lobby = () => {
                 setPlayers([]); // Clear players if no rows are found
                 return;
             }
-            console.log('Fetched data:', data);
+            console.log('Fetched data: ', data);
 
-            setGamePin(data?.[0]?.games?.game_pin || null);
+            setGamePin(data?.[0]?.games?.game_pin);
+            setGameId(data?.[0]?.game_id);
+
             setPlayers(data);
 
         } catch(error) {
@@ -88,16 +65,13 @@ const Lobby = () => {
     };
 
     useEffect(() => {
-        // Initialize gameId and fetch players
-        initializeGameId();
-    }, []);
-
-    useEffect(() => {
+        fetchPlayers();
+        console.log('this is the game id:  ', gameId);
         if (!gameId) {
             console.error('Invalid or missing gameId:', gameId);
             return;
         }
-        fetchPlayers();
+    
 
         const channelLobby = supabase
         .channel() 
@@ -134,9 +108,7 @@ const Lobby = () => {
         try {
             console.log('Starting handleExitLobby...');
 
-            const getUserPayload = await getUserPayloadFromStorage();
-            console.log('werewrwer', getUserPayload);
-            const userId = getUserPayload?.id;
+            
 
             console.log('handleExitLobby called with gameId:', gameId); // Debug log
             const gamePayload = await getGameId(userId);
