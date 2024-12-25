@@ -172,7 +172,7 @@ const Lobby = () => {
             <Button 
                 title='Start Game' 
                 colors={theme.buttonGradient.success} 
-                onPress={()=> console.log('Press Start Game')}
+                onPress={()=> router.push('/games/MainGame')}
             />
         </View>
         
