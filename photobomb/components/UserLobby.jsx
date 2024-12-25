@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, Image } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../constants/theme';
 import Profile from './Profile';
 

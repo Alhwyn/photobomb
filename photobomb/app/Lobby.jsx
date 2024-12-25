@@ -6,6 +6,7 @@ import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
 import { getGameId, deleteGame, deletePlayerGame } from '../service/gameService';
+import { getUserData } from '../service/userService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
@@ -20,57 +21,69 @@ const Lobby = () => {
     const [gameId, setGameId] = useState(null);
 
     // Fetch player in hte game of the game_id
-    const fetchPlayers = async () => {
-        try {
-            console.log('Starting fetchPlayers...');
 
-            const getUserPayload = await getUserPayloadFromStorage();
-            console.log('werewrwer', getUserPayload);
-            const userId = getUserPayload?.id;
-
-
-            const { data, error } = await supabase
-                .from('playerGame')
-                .select(`player_id, 
-                         is_creator,
-                         game_id,
-                         users (username, image_url),
-                         games (game_pin)
-                `)
-                .eq('player_id', userId);
-
-
-
-            if (error) {
-                console.log('Error fetching the players: ', error.message);
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                console.error('No players found for the given gameId:', gameId);
-                setPlayers([]); // Clear players if no rows are found
-                return;
-            }
-            console.log('Fetched data: ', data);
-
-            setGamePin(data?.[0]?.games?.game_pin);
-            setGameId(data?.[0]?.game_id);
-
-            setPlayers(data);
-
-        } catch(error) {
-            console.log('Error fetching the players:  ', error.message);
-            return;
-        }
-    };
-
+    
     useEffect(() => {
+        const fetchPlayers = async () => {
+            try {
+    
+                console.log('Starting fetchPlayers..');
+                const getUserPayload = await getUserPayloadFromStorage();
+
+                console.log('this is the userPayload:  ', getUserPayload);
+
+                const userId = getUserPayload?.id;
+
+                console.log("this is the user_id", userId);
+    
+    
+            
+                const { data, error } = await supabase
+                    .from('users')
+                    .select(`*,
+                             games (game_pin, id),
+                             playerGame (is_creator)
+                    `)
+                    .eq('id', userId)
+                    .single();
+    
+                if (error) {
+                    console.log('Error fetching  the players: ', error.message);
+                    return;
+                }
+    
+                if (!data || data.length === 0) {
+                    console.error('No players found for the given gameId:', gameId);
+                    setPlayers([]); // Clear players if no rows are found
+                    return;
+                }
+                console.log('Fetched data: ', data);
+    
+                setGamePin(data?.games?.[0]?.game_pin);
+                setGameId(data?.games?.[0]?.id);
+
+                const { data: gamePayload, error: Payloaderror } = await supabase
+                    .from('playerGame')
+                    .select(`
+                        *,
+                        users (username, image_url)
+                        `)
+                    .eq('game_id', gameId)
+
+                console.log('this is the game Payload:  ', gamePayload);
+    
+                setPlayers(gamePayload);
+    
+            } catch(error) {
+                console.log('Error fetching the players:  ', error.message);
+                return;
+            }
+        };
+    
+        
         fetchPlayers();
+
         console.log('this is the game id:  ', gameId);
-        if (!gameId) {
-            console.error('Invalid or missing gameId:', gameId);
-            return;
-        }
     
 
         const channelLobby = supabase
@@ -107,6 +120,12 @@ const Lobby = () => {
     const handleExitLobby = async () => {
         try {
             console.log('Starting handleExitLobby...');
+
+            const getUserPayload = await getUserPayloadFromStorage();
+            console.log('this is the userPayload:  ', getUserPayload);
+            const userId = getUserPayload?.id;
+            console.log("this is the user_id", userId);
+
 
             
 

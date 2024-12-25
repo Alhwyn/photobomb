@@ -1,9 +1,31 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 
+
+export const getUserData = async (userId) => {
+  try {
+    const {data, error}  = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId);
+
+    if (error) {
+
+      console.log('Could not fetch user data', error.message);
+      return {success: false, msg: error.message};
+    }
+
+    return {success: true, data: data};
+  } catch(error) {
+    console.log('Could not fetch user data', error.message);
+    return {success: false, msg: error.message};
+  }
+  
+}
+
 export const handleCreateUser = async ({ username, imageUrl = null, status = 'active' }) => {
   try {
-    // Insert the user into the Supabase database
+    // Insert the user into the Supabase database€⁄
     const { data, error } = await supabase
       .from('users')
       .insert({
