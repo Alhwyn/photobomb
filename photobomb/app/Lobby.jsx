@@ -103,7 +103,7 @@ const Lobby = () => {
                         prevPlayers.filter((player) => player.player_id !== payload.old.player_id)
                     );
                 } else {
-                    console.log('Unhandled event Type:', payload.eventType);
+                    console.log('Unhandled event Type: ', payload.eventType);
 
                 }
             }

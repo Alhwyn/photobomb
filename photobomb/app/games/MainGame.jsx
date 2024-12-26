@@ -8,6 +8,7 @@ import Profile from '../../components/Profile';
 import { theme } from '../../constants/theme';
 import { getUserPayloadFromStorage } from '../../service/userService';
 import PromptCard from '../../components/GameComponent/PromptCard';
+import Gallery from '../../components/GameComponent/Gallery';
 
 
 // Setting
@@ -15,6 +16,15 @@ import PromptCard from '../../components/GameComponent/PromptCard';
 const Main = () => {
     const router = useRouter()
     const [userPayload, setUserPayload] = useState(null); 
+    const [currentStage, setCurrentStage] = useState('Prompt'); 
+    const [isPrompter, setIsPrompter] = useState('Prompt');
+
+
+    const components =  {
+        Prompt: <PromptCard text="A cat Photo." author='billyBob' />,
+        ImageGallery:  <Gallery/>
+
+    }
 
     // fetching the user data form the local storage
     
@@ -28,7 +38,7 @@ const Main = () => {
         fetchUserData();
     }, []);
 
-
+  const renderGameContainer = () => components[currentStage] || <PromptCard text="Default prompt" />;
     
 
   return (
@@ -44,15 +54,26 @@ const Main = () => {
             <Text style={styles.text}>is picking a prompt...</Text>
         </View>
         <View style={styles.gameContainer}>
-            <PromptCard
-                text="A cat Photo."
-            />
+            {renderGameContainer()}
         </View>
         <View style={styles.touchContainer}>
             <Button 
-                title='Join Game' 
+                title='Pick photo' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={()=> console.log("User pick an image")}
+                onPress={()=> setCurrentStage('Prompt')}
+                width='50%'
+            />
+            <Button 
+                title='Pick photo' 
+                colors={theme.buttonGradient.secondary} 
+                onPress={()=>  setCurrentStage('ImageGallery')}
+                width='50%'
+            />
+            <Button 
+                title='Pick photo' 
+                colors={theme.buttonGradient.secondary} 
+                onPress={()=>  setCurrentStage('Prompt')}
+                width='50%'
             />
         </View>
     </SafeAreaView>
@@ -83,6 +104,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
+        flexDirection: 'row',
         backgroundColor: "#1A1A1A",
         padding: 90,
         borderWidth: 1, 
