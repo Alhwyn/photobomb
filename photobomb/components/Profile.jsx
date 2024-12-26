@@ -1,23 +1,37 @@
-import { StyleSheet, View } from 'react-native'
+import { Image, StyleSheet, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 
-export const Profile = ({profileSize=48}) => {
+export const Profile = ({profileSize=48, image_url}) => {
   return (
     <View style={styles.profileContainer}>
-        <View style={styles.avatarContainer}>
-            <LinearGradient
+        <View style={styles.cameraFilm}>
+            <View style={styles.avatarContainer}>
+                {image_url ? (
+                    <Image
+                        source={{ uri: image_url}}
+                        style={{
+                            width: profileSize,
+                            height: profileSize,
+                            borderRadius: profileSize / 2,
+                          }}
+                    />
+                ) : (
+
+                <LinearGradient
                 colors={['#3B82F6', '#6366F1', '#A855F7']}
                 style={{
                     width: profileSize,
                     height: profileSize,
-                    borderRadius: 16,
                     justifyContent: 'center',
                     }}
-            >
-            </LinearGradient>
-        </View>
+                >
+                </LinearGradient>
+                )}
+                
+            </View>
 
+        </View>
     </View>
   )
 }
@@ -42,7 +56,6 @@ const styles = StyleSheet.create({
     right: -4,
     width: 16,
     height: 16,
-    borderRadius: 8,
     backgroundColor: '#22C55E',
     borderWidth: 2,
     borderColor: '#000',
@@ -52,6 +65,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     },
+    cameraFilm: {
+        backgroundColor: '#fffdf2',
+        paddingBottom: 10,
+        padding: 2,
+    }
 })
 
 export default Profile

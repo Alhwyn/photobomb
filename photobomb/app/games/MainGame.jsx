@@ -7,16 +7,28 @@ import { useRouter } from 'expo-router'
 import Profile from '../../components/Profile';
 import { theme } from '../../constants/theme';
 import { getUserPayloadFromStorage } from '../../service/userService';
+import PromptCard from '../../components/GameComponent/PromptCard';
 
 
 // Setting
 
 const Main = () => {
     const router = useRouter()
+    const [userPayload, setUserPayload] = useState(null); 
 
-    const userPayload = getUserPayloadFromStorage();
-
+    // fetching the user data form the local storage
     
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const data = await getUserPayloadFromStorage();
+            if (data) {
+                setUserPayload(data);
+            }
+        };
+        fetchUserData();
+    }, []);
+
+
     
 
   return (
@@ -30,21 +42,17 @@ const Main = () => {
             </TouchableOpacity>
             <Text style={styles.usernameText}>{userPayload?.username}</Text>
         </View>
-        <View style={styles.textCenter}>
-            <Text style={styles.bombText}>Photo</Text>
-            <LinearGradient 
-                colors={['#8A2BE2', '#DA70D6', '#BA55D3']}
-                style={styles.bombTextGradient}
-            >
-                <Text style={styles.bombText}>Bomb</Text>
-            </LinearGradient>
+        <View style={styles.gameContainer}>
+            <View style={styles.Promptheader}>
+                <Profile/>
+                <Text style={styles.usernameText}>{userPayload?.username} is choosing a prompt...</Text>
+                <PromptCard
+                    text="A cat Photo."
+                />
+            </View>
+
         </View>
         <View style={styles.touchContainer}>
-            <Button
-                title="Create Game"
-                colors={theme.buttonGradient.primary} // Blue to Indigo
-                onPress={()=> router.push('gameSelector')}
-            />
             <Button 
                 title='Join Game' 
                 colors={theme.buttonGradient.secondary} 
@@ -62,7 +70,7 @@ const styles = StyleSheet.create({
       paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
-        marginTop: '10',
+      marginTop: '10',
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
@@ -74,37 +82,33 @@ const styles = StyleSheet.create({
       borderRadius: 20,
     },
     touchContainer: {
-        gap: 20,
-        marginBottom: 150, 
-        justifyContent: 'flex-end', 
+        position: 'absolute',
         flex: 1,
-        paddingLeft: 20,
-        paddingRight: 20,
-    },
-    textCenter: {
-        flex: 1,
-        justifyContent: 'center',
-        flexDirection: 'column',
-        alignItems: 'center',
-    },
-    bombTextGradient: {
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-    },
-    bombText: {
-        color: 'white',
-        fontSize: 36, // Make it large
-        fontWeight: '600', // Semi-bold for "pop"
-        textAlign: 'center',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "#1A1A1A",
+        padding: 90,
+        borderWidth: 1, 
+        borderTopColor: '#333333', 
     },
     usernameText: {
         color: 'white',
         fontWeight: theme.fonts.extraBold,
         fontSize: 16,
-
-
-    }
+    },
+    gameContainer: {
+        flex: 1,
+        backgroundColor: "red",
+    },
+    Promptheader: {
+        marginTop: '10',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 5,
+        marginBottom: 32,
+        marginLeft: 20,
+      },
   });
   
   
