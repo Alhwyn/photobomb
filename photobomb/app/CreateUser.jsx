@@ -13,36 +13,8 @@ import { supabase } from '../lib/supabase';
 const CreateUser = () => {
     const [username, setUsername] = useState(''); // State for username
     const router = useRouter();
-    const [profileImage, setProfileImage] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadedImageUrl, setuploadedImageUrl] = useState(null);
 
-    const handleSelectImage = async () => {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
 
-      if (!result.canceled) {
-        setProfileImage(result.uri);
-      }
-    };
-
-    const handleUpload = async () => {
-      try {
-        if (!profileImage) {
-          Alert.alert('Error', 'Pleasean an image first.');
-          return;
-        }
-
-        setIsUploading(true);
-
-        const fileName = `profile_`
-
-       
-      }
-    }
 
     const onCreateUserPress = async () => {
         console.log('username: ', username);
@@ -73,13 +45,6 @@ const CreateUser = () => {
         </View>
         <View style={styles.inputContainer}>
             <View style={styles.profileContainer}>
-              <TouchableOpacity>
-                <Profile
-                      profileSize={64}
-                  />
-              </TouchableOpacity>
-
-                
             </View>
             <Input
                 placeholder='Enter your Username...'

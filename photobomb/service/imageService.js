@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 
-export const uplaodProfileImage = async (imageUri) => {
+export const uploadProfileImage = async (imageUri) => {
     try {
 
         const fileName = `public/profile_${Date.now()}.jpg`; // ensure it goes to the pulic folder
