@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
+import { supabaseUrl } from '../constants';
 
 export const uploadProfileImage = async (imageUri) => {
     try {
@@ -29,3 +30,36 @@ export const uploadProfileImage = async (imageUri) => {
         throw error;
     }
 };
+
+export const getSupabaseImageUrl = (filePath) => {
+    if (!filePath) {
+        console.error('File path is required to generate the URL.');
+        return null;
+    }
+
+    const { data, error } = supabase.storage
+    .from('user-profiles')
+    .getPublicUrl(filePath);
+
+    if (error) {
+        console.error('Error generating public URL:', error.message);
+        return null;
+      }
+    
+    return data;
+}
+
+export const getUserImageSrc = imagePath => {
+    if(imagePath){
+        return getSupabaseFileUrl(imagePath);
+    }else{
+        return require('../assets/images/defaultUser.png');
+    }
+}
+
+export const getSupabaseFileUrl = filePath => {
+    if(filePath){
+        return{uri: `${supabaseUrl}/storage/v1/object/public/uploads/${filePath}`}
+    }
+    return null;
+}

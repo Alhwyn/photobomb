@@ -22,6 +22,7 @@ const userProfile = () => {
             const data = await getUserPayloadFromStorage();
             if (data) {
                 setUserPayload(data);
+                
             }
         };
         fetchUserData();
@@ -46,6 +47,8 @@ const userProfile = () => {
 
             <Profile
                 profileSize={64}
+                image_url={userPayload?.image_url}
+
             />
             <Text style={styles.text}>
                 Username: {userPayload.username}

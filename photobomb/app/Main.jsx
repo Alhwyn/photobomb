@@ -14,9 +14,6 @@ const Main = () => {
 
     const [userPayload, setUserPayload] = useState(null); 
     
-    
-    
-    // fetching the user data form the local storage
 
     useEffect(() => {
         console.log('Updated userPayload:', userPayload);
@@ -29,19 +26,18 @@ const Main = () => {
             }
         };
     
-        // Fetch data once on mount
         fetchUserData();
     
-        // Poll for updates at regular intervals
+        
         const intervalId = setInterval(async () => {
             const updatedData = await getUserPayloadFromStorage();
             if (updatedData && JSON.stringify(updatedData) !== JSON.stringify(userPayload)) {
-                setUserPayload(updatedData); // Update state with new payload
+                setUserPayload(updatedData); 
             }
         }, 1000);
     
-        return () => clearInterval(intervalId); // Cleanup on unmount
-    }, []); // Empty dependency array to avoid unnecessary re-renders
+        return () => clearInterval(intervalId);
+    }, []); 
     
 
   return (
