@@ -21,18 +21,10 @@ const Gallery = () => {
         }
     };
 
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const imageKeys = Object.keys(images);
     const totalImages = imageKeys.length;
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            // Cycle to the next image
-            setCurrentImageIndex(prevIndex => (prevIndex + 1) % totalImages);
-        }, 15000);
 
-        return () => clearInterval(interval);
-    }, [totalImages]);
 
     const handleImagePress = (index) => {
         console.log('Image pressed at index: ', index);
@@ -40,7 +32,7 @@ const Gallery = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Gallery</Text>
+            <Text style={styles.title}>Select an image</Text>
             <View style={styles.imageGrid}>
                 {Object.keys(images).map((key, index) => (
                     <TouchableOpacity 
@@ -77,7 +69,7 @@ const styles = StyleSheet.create({
     },
     imageWrapper: {
         marginBottom: 15,
-        width: '45%',
+        width: '30%',
         alignItems: 'center',
     },
     image: {

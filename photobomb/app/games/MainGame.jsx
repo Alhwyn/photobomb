@@ -9,6 +9,7 @@ import { theme } from '../../constants/theme';
 import { getUserPayloadFromStorage } from '../../service/userService';
 import PromptCard from '../../components/GameComponent/PromptCard';
 import Gallery from '../../components/GameComponent/Gallery';
+import PromptSelection from '../../components/GameComponent/PromptSelection';
 
 
 // Setting
@@ -22,7 +23,8 @@ const Main = () => {
 
     const components =  {
         Prompt: <PromptCard text="A cat Photo." author='billyBob' />,
-        ImageGallery:  <Gallery/>
+        ImageGallery:  <Gallery/>,
+        UserPromptSelection: <PromptSelection/>
 
     }
 
@@ -72,7 +74,7 @@ const Main = () => {
             <Button 
                 title='Pick photo' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={()=>  setCurrentStage('Prompt')}
+                onPress={()=>  setCurrentStage('UserPromptSelection')}
                 width='50%'
             />
         </View>
