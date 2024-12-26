@@ -41,22 +41,18 @@ const Main = () => {
                 <Profile/>
             </TouchableOpacity>
             <Text style={styles.usernameText}>{userPayload?.username}</Text>
+            <Text style={styles.text}>is picking a prompt...</Text>
         </View>
         <View style={styles.gameContainer}>
-            <View style={styles.Promptheader}>
-                <Profile/>
-                <Text style={styles.usernameText}>{userPayload?.username} is choosing a prompt...</Text>
-                <PromptCard
-                    text="A cat Photo."
-                />
-            </View>
-
+            <PromptCard
+                text="A cat Photo."
+            />
         </View>
         <View style={styles.touchContainer}>
             <Button 
                 title='Join Game' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={()=> router.push('joinGame')}
+                onPress={()=> console.log("User pick an image")}
             />
         </View>
     </SafeAreaView>
@@ -97,9 +93,15 @@ const styles = StyleSheet.create({
         fontWeight: theme.fonts.extraBold,
         fontSize: 16,
     },
+    text: {
+        color: 'white',
+        fontSize: 16,
+    },
     gameContainer: {
-        flex: 1,
-        backgroundColor: "red",
+        backgroundColor: "1A1A1A",
+        justifyContent: 'center',
+        alignItems: 'center'
+
     },
     Promptheader: {
         marginTop: '10',
