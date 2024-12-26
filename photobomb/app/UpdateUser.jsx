@@ -1,48 +1,17 @@
 import React, {useState} from 'react';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Alert, SafeAreaView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Alert, SafeAreaView } from 'react-native';
 import { theme } from '../constants/theme';
 import Input from '../components/Input';
+import BackButton from '../components/BackButton';
 import Button from '../components/Button';
 import { useRouter } from 'expo-router';
 import Profile from '../components/Profile';
 import { handleCreateUser } from '../service/userService';
-import * as ImagePicker from 'expo-image-picker'; 
-import { supabase } from '../lib/supabase';
 
 
 const CreateUser = () => {
     const [username, setUsername] = useState(''); // State for username
     const router = useRouter();
-    const [profileImage, setProfileImage] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadedImageUrl, setuploadedImageUrl] = useState(null);
-
-    const handleSelectImage = async () => {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        setProfileImage(result.uri);
-      }
-    };
-
-    const handleUpload = async () => {
-      try {
-        if (!profileImage) {
-          Alert.alert('Error', 'Pleasean an image first.');
-          return;
-        }
-
-        setIsUploading(true);
-
-        const fileName = `profile_`
-
-       
-      }
-    }
 
     const onCreateUserPress = async () => {
         console.log('username: ', username);
@@ -65,21 +34,19 @@ const CreateUser = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      
       <SafeAreaView style={styles.bigContainer}>
+        <BackButton/>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>
-            Create User
+            Update User
           </Text>
         </View>
         <View style={styles.inputContainer}>
             <View style={styles.profileContainer}>
-              <TouchableOpacity>
                 <Profile
-                      profileSize={64}
-                  />
-              </TouchableOpacity>
-
-                
+                    profileSize={64}
+                />
             </View>
             <Input
                 placeholder='Enter your Username...'

@@ -5,10 +5,13 @@ import { theme } from '../constants/theme'
 import Profile from '../components/Profile'
 import Input from '../components/Input'
 import { getUserPayloadFromStorage } from '../service/userService'
+import Button from '../components/Button'
+import { useRouter } from 'expo-router'
 
 const userProfile = () => {
 
     const [userPayload, setUserPayload] = useState(null); 
+    const router = useRouter();
 
 
 
@@ -58,6 +61,11 @@ const userProfile = () => {
             </Text>
             
         </View>
+
+        <Button
+            title='Update Profile'
+            onPress={() => router.push('UpdateUser')}
+        />
       
     </SafeAreaView>
   )
