@@ -4,35 +4,15 @@ import { theme } from '../constants/theme';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useRouter } from 'expo-router';
-import Profile from '../components/Profile';
-import { handleCreateUser } from '../service/userService';
-import * as ImagePicker from 'expo-image-picker'; 
-import { supabase } from '../lib/supabase';
+
+
 
 
 const CreateUser = () => {
     const [username, setUsername] = useState(''); // State for username
     const router = useRouter();
-
-
-
-    const onCreateUserPress = async () => {
-        console.log('username: ', username);
-        if (!username.trim()) {
-          Alert.alert('Error', 'Please enter a username');
-          return;
-        }
     
-        const response = await handleCreateUser({ username });
-    
-        if (response.success) {
-          Alert.alert('Success', 'User created successfully!');
-          router.push('Main'); // Navigate to the lobby on success
-        } else {
-          Alert.alert('Error', response.msg || 'Failed to create user');
-        }
-    };
-    
+
 
 
   return (
