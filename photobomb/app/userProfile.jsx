@@ -7,10 +7,12 @@ import Input from '../components/Input'
 import { getUserPayloadFromStorage } from '../service/userService'
 import Button from '../components/Button'
 import { useRouter } from 'expo-router'
+import { getSupabaseUrl } from '../service/imageService'
 
 const userProfile = () => {
 
     const [userPayload, setUserPayload] = useState(null); 
+    const [userImage, setUserImage] = useState(null);
     const router = useRouter();
 
 
@@ -22,6 +24,8 @@ const userProfile = () => {
             const data = await getUserPayloadFromStorage();
             if (data) {
                 setUserPayload(data);
+                const imageUri = await getSupabaseUrl(data?.image_url);
+                setUserImage(imageUri);
                 
             }
         };
@@ -47,8 +51,7 @@ const userProfile = () => {
 
             <Profile
                 profileSize={64}
-                image_url={userPayload?.image_url}
-
+                image_url={userImage}
             />
             <Text style={styles.text}>
                 Username: {userPayload.username}

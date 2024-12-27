@@ -1,65 +1,38 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { supabaseUrl } from '../constants';
 
-export const uploadProfileImage = async (imageUri) => {
-    try {
 
-        const fileName = `public/profile_${Date.now()}.jpg`; // ensure it goes to the pulic folder
-        const response = await fetch(imageUri)
-        const blob = await response.blob()
 
-        const {data, error} = await supabase.storage
+
+export const getSupabaseFileUrl = (filePath) => {
+    if (filePath) {
+        const { data, error } = supabase
+            .storage
             .from('user-profiles')
-            .upload(fileName, blob, {
-                contentType: 'image/jpeg',
-            });
-        
+            .getPublicUrl(filePath);
+
         if (error) {
-            throw new Error(error.message);
+            console.error('Error fetching public URL:', error.message);
+            return null;
         }
 
-        const { publicUrl } = supabase.storage
-            .from('user-profiles')
-            .getPublicUrl(data.path);
+        console.log('data form the getSupabaseUrl: ', data);
 
-        return publicUrl; // returns the URL of the uplaoded image
-    
-    } catch(error) {
-        console.error('Error uploading image: ', error.message);
-        throw error;
-    }
-};
-
-export const getSupabaseImageUrl = (filePath) => {
-    if (!filePath) {
-        console.error('File path is required to generate the URL.');
-        return null;
-    }
-
-    const { data, error } = supabase.storage
-    .from('user-profiles')
-    .getPublicUrl(filePath);
-
-    if (error) {
-        console.error('Error generating public URL:', error.message);
-        return null;
-      }
-    
-    return data;
-}
-
-export const getUserImageSrc = imagePath => {
-    if(imagePath){
-        return getSupabaseFileUrl(imagePath);
-    }else{
-        return require('../assets/images/defaultUser.png');
-    }
-}
-
-export const getSupabaseFileUrl = filePath => {
-    if(filePath){
-        return{uri: `${supabaseUrl}/storage/v1/object/public/uploads/${filePath}`}
+        return { uri: data.publicUrl };
     }
     return null;
+};
+
+export const getSupabaseUrl = (filePath) => {
+
+    if (filePath) {
+        const fullUrl = `${supabaseUrl}/storage/v1/object/public/uploads/${filePath}`;
+        return fullUrl;
+    } else {
+        return null
+    }
+
+    
+
+
 }

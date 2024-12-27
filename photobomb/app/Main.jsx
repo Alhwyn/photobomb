@@ -1,7 +1,8 @@
-import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity, Image } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Button from '../components/Button'
 import { LinearGradient } from 'expo-linear-gradient';
+import { getSupabaseUrl, } from '../service/imageService';
 import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
 import Profile from '../components/Profile';
@@ -11,24 +12,30 @@ import { getUserPayloadFromStorage } from '../service/userService'
 
 const Main = () => {
     const router = useRouter();
-
     const [userPayload, setUserPayload] = useState(null); 
-    
+    const [profileImage, setProfileImage] = useState(null);
 
     useEffect(() => {
-        console.log('Updated userPayload:', userPayload);
+        console.log('Updated userPayload: ', userPayload);
+
         const fetchUserData = async () => {
             const data = await getUserPayloadFromStorage();
 
-            console.log(data);
             if (data) {
                 setUserPayload(data);
+
+                const imageSource = await getSupabaseUrl(data?.image_url);
+
+                console.log('this is the big image: ', imageSource);
+
+                setProfileImage(imageSource);
+
             }
+
         };
     
         fetchUserData();
     
-        
         const intervalId = setInterval(async () => {
             const updatedData = await getUserPayloadFromStorage();
             if (updatedData && JSON.stringify(updatedData) !== JSON.stringify(userPayload)) {
@@ -47,7 +54,10 @@ const Main = () => {
         <View style={styles.header}> 
             {/* Profile Pic Compnonent */}
             <TouchableOpacity onPress={() => router.push('userProfile')}>
-                <Profile/>
+                <Profile 
+                    profileSize={64}
+                    image_url={profileImage}
+                />
             </TouchableOpacity>
             <Text style={styles.usernameText}>{userPayload?.username}</Text>
         </View>

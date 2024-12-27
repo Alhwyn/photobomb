@@ -2,7 +2,7 @@ import { Image, StyleSheet, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 
-export const Profile = ({profileSize=48, image_url}) => {
+export const Profile = ({profileSize=48, image_url=null}) => {
   return (
     <View style={styles.profileContainer}>
         <View style={styles.cameraFilm}>
@@ -13,7 +13,6 @@ export const Profile = ({profileSize=48, image_url}) => {
                         style={{
                             width: profileSize,
                             height: profileSize,
-                            borderRadius: profileSize / 2,
                           }}
                     />
                 ) : (

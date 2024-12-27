@@ -84,8 +84,8 @@ const UpdateUser = () => {
   
       // Upload to Supabase
       const { data, error } = await supabase.storage
-        .from('user-profiles')
-        .upload(`public/${fileName}`, fileBuffer, {
+        .from('uploads')
+        .upload(`profiles/${fileName}`, fileBuffer, {
           contentType: mimeType,
         });
 
