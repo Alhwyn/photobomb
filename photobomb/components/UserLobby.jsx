@@ -2,6 +2,7 @@ import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../constants/theme';
 import Profile from './Profile';
+import { getSupabaseUrl } from '../service/imageService';
 
 const UserLobby = ({ lobbyData }) => {
 
@@ -11,10 +12,12 @@ const UserLobby = ({ lobbyData }) => {
     const { is_creator, users } = item; // Extract is_creator and users from item
     const { username, image_url } = users; // Extract username and image_url from users
 
+    const getImageUri = getSupabaseUrl(image_url);
+
     return (
       <View style={styles.itemContainer}>
         {/* Profile Picture */}
-        <Profile image_url={image_url} style={styles.profileImage} />
+        <Profile image_url={getImageUri} style={styles.profileImage} />
 
         
         {/* User Information */}

@@ -11,6 +11,7 @@ import Profile from '../components/Profile';
 import { theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
 import { getUserPayloadFromStorage } from '../service/userService';
+import { getSupabaseUrl } from '../service/imageService';
 
 
 const UpdateUser = () => {
@@ -32,7 +33,10 @@ const UpdateUser = () => {
 
         setUserId(payload.id);
         setUsername(payload.username || '');
-        setProfileImage(payload.image_url || null); // Pre-fill image if it exists
+
+        const getImageUrl = getSupabaseUrl(payload?.image_url);
+
+        setProfileImage(getImageUrl); // Pre-fill image if it exists
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch user data.');
       }
@@ -88,11 +92,6 @@ const UpdateUser = () => {
         .upload(`profiles/${fileName}`, fileBuffer, {
           contentType: mimeType,
         });
-
-      console.log('this is hte data: ', data);
-      console.log('File name:', fileName);
-      console.log('File type:', fileType);
-      console.log('File buffer length:', fileBuffer.length);
   
       if (error) {
         console.error('Supabase storage upload error:', error.message);
@@ -185,14 +184,9 @@ const UpdateUser = () => {
         <View style={styles.inputContainer}>
           <View style={styles.profileContainer}>
             <TouchableOpacity onPress={handleSelectImage}>
-              {profileImage ? (
-                <Image
-                  source={{ uri: profileImage }}
-                  style={{ width: 100, height: 100, borderRadius: 50 }}
-                />
-              ) : (
-                <Profile profileSize={64} />
-              )}
+              <Profile
+                image_url={profileImage}
+              />
             </TouchableOpacity>
           </View>
           {isUploading && <ActivityIndicator size="large" color="#fff" style={{ marginVertical: 10 }} />}
