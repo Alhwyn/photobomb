@@ -20,7 +20,7 @@ const CreateUser = () => {
 
       setLoading(true);
 
-
+      console.log('this is the username: ', username);
       const isHandleCreate = await handleCreateUser(username);
 
       if (!isHandleCreate?.success) {
@@ -28,6 +28,8 @@ const CreateUser = () => {
         console.log('Error: unable to create user')
 
       }
+
+      router.push('Main');
 
     
 
@@ -54,7 +56,7 @@ const CreateUser = () => {
             <Button 
                 title='Create' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={handleCreateUser} // Call the function here
+                onPress={handlingCreatingUser} // Call the function here
                 value={username}
 
             />

@@ -23,15 +23,17 @@ export const getUserData = async (userId) => {
   
 }
 
-export const handleCreateUser = async ({ username, imageUrl = null, status = 'active' }) => {
+export const handleCreateUser = async (username) => {
   try {
+
+  
     // Insert the user into the Supabase database€⁄
     const { data, error } = await supabase
       .from('users')
       .insert({
         username: username,
-        image_url: imageUrl,
-        status: status, // Default status is 'active'
+        status: 'active',
+        image_url: null,
       })
       .select('*') // Return the inserted record
       .single();
@@ -44,9 +46,9 @@ export const handleCreateUser = async ({ username, imageUrl = null, status = 'ac
     // Store the user payload in AsyncStorage
     const payload = {
       id: data.id,
-      username: data.username,
-      image_url: data.image_url,
-      status: data.status,
+      username: data?.username,
+      image_url: data?.image_url,
+      status: data?.status,
     };
     await AsyncStorage.setItem('userPayload', JSON.stringify(payload));
 
