@@ -98,7 +98,6 @@ const UpdateUser = () => {
         return null;
       }
   
-  
       return data?.path;
     } catch (error) {
       console.error('Image upload failed:', error.message);
@@ -129,7 +128,6 @@ const UpdateUser = () => {
         if (!imageUrl) {
           throw new Error('Image upload failed. Please try again.');
         }
-  
         // Update the image_url in AsyncStorage
         const userPayloadString = await AsyncStorage.getItem('userPayload');
         let updatedPayload;
@@ -186,6 +184,7 @@ const UpdateUser = () => {
             <TouchableOpacity onPress={handleSelectImage}>
               <Profile
                 image_url={profileImage}
+                profileSize={98}
               />
             </TouchableOpacity>
           </View>

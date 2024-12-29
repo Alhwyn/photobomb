@@ -29,7 +29,7 @@ export const handleCreateUser = async ({ username, imageUrl = null, status = 'ac
     const { data, error } = await supabase
       .from('users')
       .insert({
-        username: username.trim(),
+        username: username,
         image_url: imageUrl,
         status: status, // Default status is 'active'
       })
@@ -51,7 +51,7 @@ export const handleCreateUser = async ({ username, imageUrl = null, status = 'ac
     await AsyncStorage.setItem('userPayload', JSON.stringify(payload));
 
     console.log('User created successfully and stored in local storage:', payload);
-    return { success: true, payload };
+    return { success: true, data: payload };
   } catch (error) {
     console.log('Got error:', error.message);
     return { success: false, msg: error.message };

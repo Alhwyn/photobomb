@@ -4,6 +4,9 @@ import { theme } from '../constants/theme';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useRouter } from 'expo-router';
+import { handleCreateUser } from '../service/userService';
+import Loading from '../components/Loading';
+
 
 
 
@@ -11,10 +14,27 @@ import { useRouter } from 'expo-router';
 const CreateUser = () => {
     const [username, setUsername] = useState(''); // State for username
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
+
+    const handlingCreatingUser = async () => {
+
+      setLoading(true);
+
+
+      const isHandleCreate = await handleCreateUser(username);
+
+      if (!isHandleCreate?.success) {
+
+        console.log('Error: unable to create user')
+
+      }
+
     
 
-
-
+      setLoading(false);
+    }
+    
+    
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.bigContainer}>
@@ -34,7 +54,7 @@ const CreateUser = () => {
             <Button 
                 title='Create' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={onCreateUserPress} // Call the function here
+                onPress={handleCreateUser} // Call the function here
                 value={username}
 
             />

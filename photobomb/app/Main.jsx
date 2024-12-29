@@ -55,7 +55,7 @@ const Main = () => {
             {/* Profile Pic Compnonent */}
             <TouchableOpacity onPress={() => router.push('userProfile')}>
                 <Profile 
-                    profileSize={64}
+                    profileSize={48}
                     image_url={profileImage}
                 />
             </TouchableOpacity>

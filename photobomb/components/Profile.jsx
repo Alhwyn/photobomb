@@ -5,31 +5,31 @@ import { LinearGradient } from 'expo-linear-gradient'
 export const Profile = ({profileSize=48, image_url=null}) => {
   return (
     <View style={styles.profileContainer}>
-        <View style={styles.cameraFilm}>
-            <View style={styles.avatarContainer}>
-                {image_url ? (
-                    <Image
-                        source={{ uri: image_url}}
-                        style={{
-                            width: profileSize,
-                            height: profileSize,
-                          }}
-                    />
-                ) : (
+        <View style={styles.avatarContainer}>
+            {image_url ? (
+                <Image
+                    source={{ uri: image_url}}
+                    style={{
+                        width: profileSize,
+                        height: profileSize,
+                        borderRadius: 10,
+                        
+                        }}
+                />
+            ) : (
 
-                <LinearGradient
-                colors={['#3B82F6', '#6366F1', '#A855F7']}
-                style={{
-                    width: profileSize,
-                    height: profileSize,
-                    justifyContent: 'center',
-                    }}
-                >
-                </LinearGradient>
-                )}
-                
-            </View>
-
+            <LinearGradient
+            colors={['#3B82F6', '#6366F1', '#A855F7']}
+            style={{
+                width: profileSize,
+                height: profileSize,
+                justifyContent: 'center',
+                borderRadius: 10,
+                }}
+            >
+            </LinearGradient>
+            )}
+            
         </View>
     </View>
   )
@@ -40,9 +40,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+
+    
     },
     avatarContainer: {
         position: 'relative',
+        
     },
     avatarText: {
     color: '#fff',
