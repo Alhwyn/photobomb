@@ -90,11 +90,27 @@ const Lobby = () => {
         .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'playerGame', filter: `game_id=eq.${gameId}` },
-            (payload) => {
+            async (payload) => {
                 console.log('Real-time update received:', payload.new);
 
                 if (payload.eventType === 'INSERT') {
                     console.log('PLayer Joined: ', payload.new);
+
+                    // fetch the username from user table 
+
+                    const { data: userData, error } = await supabase
+                        .from('users')
+                        .select('username')
+                        .eq('id', payload.new.user_id)
+                        .single();
+
+                    if (error) {
+                        console.error('Error fetching username: ', error.message);
+                        return;
+                    }
+
+                    const newPLayer = { ...payload.new, username: userDat.username};
+
                     setPlayers((prevPlayers) => [...prevPlayers, payload.new]);
                 } else if (payload.eventType === 'DELETE') {
                     console.log('Player exited: ', payload.old);
