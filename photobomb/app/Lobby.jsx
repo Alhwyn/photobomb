@@ -155,19 +155,18 @@ const Lobby = () => {
             if (!checkGameDelete.success) {
                 console.log('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
             } else {
-                console.log('')
+                console.log('Succesfully deleted the game.')
             }
-
 
         }  else {
             deletePlayerGame(localPlayerData?.id, gameId);
+
+            if (!checkGameDelete.success) {
+                console.log('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
+            } else {
+                console.log('Succesfully deleted the game.')
+            }
         }
-
-
-        
-
-        
-        
 
     }
     
