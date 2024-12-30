@@ -52,7 +52,7 @@ export const handleCreateUser = async (username) => {
     };
     await AsyncStorage.setItem('userPayload', JSON.stringify(payload));
 
-    console.log('User created successfully and stored in local storage:', payload);
+    console.log('User created successfully and stored in local storage: ', payload);
     return { success: true, data: payload };
   } catch (error) {
     console.log('Got error:', error.message);

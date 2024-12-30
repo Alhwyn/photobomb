@@ -18,6 +18,7 @@ const Lobby = () => {
     const [gamePin, setGamePin] = useState(null);
     const [players, setPlayers] = useState([]);
     const [gameId, setGameId] = useState(null);
+    const [localPlayerData, getLocalPLayerData] = useState(null);
 
     // Fetch  player in hte game of the game_id
 
@@ -30,6 +31,8 @@ const Lobby = () => {
                 const getUserPayload = await getUserPayloadFromStorage();
 
                 console.log('this is the userPayload:  ', getUserPayload);
+
+                
 
                 const userId = getUserPayload?.id;
 
@@ -57,6 +60,8 @@ const Lobby = () => {
                     return;
                 }
                 console.log('Fetched data: ', data);
+
+                getLocalPLayerData(data);
     
                 setGamePin(data?.games?.[0]?.game_pin);
                 setGameId(data?.games?.[0]?.id);
@@ -97,11 +102,10 @@ const Lobby = () => {
                     console.log('PLayer Joined: ', payload.new);
 
                     // fetch the username from user table 
-
                     const { data: userData, error } = await supabase
                         .from('users')
                         .select('username')
-                        .eq('id', payload.new.user_id)
+                        .eq('id', payload.new.player_id)
                         .single();
 
                     if (error) {
@@ -109,18 +113,15 @@ const Lobby = () => {
                         return;
                     }
 
-                    const newPLayer = { ...payload.new, username: userDat.username};
+                    const newPLayer = { ...payload.new, users: {username: userData.username}};
+                    setPlayers((prevPlayers) => [...prevPlayers, newPLayer]);
 
-                    setPlayers((prevPlayers) => [...prevPlayers, payload.new]);
                 } else if (payload.eventType === 'DELETE') {
-                    console.log('Player exited: ', payload.old);
+                    console.log('Player exited:', payload.old);
                     setPlayers((prevPlayers) =>
                         prevPlayers.filter((player) => player.player_id !== payload.old.player_id)
                     );
-                } else {
-                    console.log('Unhandled event Type: ', payload.eventType);
-
-                }
+                } 
             }
         )
         .subscribe();
@@ -133,34 +134,40 @@ const Lobby = () => {
     }, [gameId]); 
 
     const handleExitLobby = async () => {
-        try {
-            console.log('Starting handleExitLobby...');
+        /*
+        this function gets the user_id from local storage and the game_id
 
-            const getUserPayload = await getUserPayloadFromStorage();
-            console.log('this is the userPayload:  ', getUserPayload);
-            const userId = getUserPayload?.id;
-            console.log("this is the user_id", userId);
+        if the user is the creator it will remove the game then removing the playerGame rows
+        with the foriegn key of the games table
 
+        else false it it remove the the player game row
+        */
 
-            
+        // the player data
+        console.log('this is the player data: ', localPlayerData);
 
-            console.log('handleExitLobby called with gameId:', gameId); // Debug log
-            const gamePayload = await getGameId(userId);
+        console.log('this is the player_id: ', localPlayerData?.id);
+        console.log('this is the is_Creator', localPlayerData?.playerGame?.[0]?.is_creator);
 
-            if (gamePayload.success) {
-                const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
-                const deleteLobbyGame = await deleteGame(gameId);
+        if (localPlayerData?.playerGame?.[0]?.is_creator) {
+            const checkGameDelete = await deleteGame(gameId);
 
-                if (deletePlayerGameInLobby.success && deleteLobbyGame.success ) console.log('Succesfully removed the game ');
-                return;
+            if (!checkGameDelete.success) {
+                console.log('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
             } else {
-                const deletePlayerGameInLobby = await deletePlayerGame(userId, gameId);
-                if (deletePlayerGameInLobby.success) console.log('User successfully left the game');
+                console.log('')
             }
-            router.back()
-        } catch (error) {
-            console.error('Error in handleExitLobby:', error.message);
+
+
+        }  else {
+            deletePlayerGame(localPlayerData?.id, gameId);
         }
+
+
+        
+
+        
+        
 
     }
     

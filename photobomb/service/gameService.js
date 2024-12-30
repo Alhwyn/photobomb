@@ -144,7 +144,7 @@ export const checkUserInLobby = async (userId) => {
         .single();
 
         if (error) {
-            console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+            console.log('GameService.jsx Error when user joining the lobby:  ', error.message);
             return {success: false, msg: error.message};
         }
 
