@@ -80,8 +80,10 @@ export const deleteGame = async (gameId) => {
     try {
         if (!gameId) {
             console.error('gameService.jsx: No game available to delete');
-            return {success: true, message: 'Succesfully deleted the game from the game tables'};
+            return {success: true, message: 'gameService.jsx: No game available to delete'};
         }
+
+        console.log('deleting the game id this is the id: ', gameId);
         const { error } = await supabase
         .from('games')
         .delete()

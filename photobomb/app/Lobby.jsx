@@ -82,19 +82,19 @@ const Lobby = () => {
         
         fetchPlayers();
 
-        console.log('this is the game id:  ', gameId);
+        console.log('this is the game id: ', gameId);
     
 
         const channelLobby = supabase
-        .channel() 
+        .channel('lobby_updates') 
         .on(
             'postgres_changes',
-            { schema: 'public', table: 'playerGame', filter: `game_id=eq.${gameId}` },
+            { event: '*', schema: 'public', table: 'playerGame', filter: `game_id=eq.${gameId}` },
             (payload) => {
                 console.log('Real-time update received:', payload.new);
 
                 if (payload.eventType === 'INSERT') {
-                    console.log('PLayer Joined: ', payload.new)
+                    console.log('PLayer Joined: ', payload.new);
                     setPlayers((prevPlayers) => [...prevPlayers, payload.new]);
                 } else if (payload.eventType === 'DELETE') {
                     console.log('Player exited: ', payload.old);
