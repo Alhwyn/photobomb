@@ -6,7 +6,6 @@ import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
 import { getGameId, deleteGame, deletePlayerGame } from '../service/gameService';
-import { getUserData } from '../service/userService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
@@ -20,7 +19,7 @@ const Lobby = () => {
     const [players, setPlayers] = useState([]);
     const [gameId, setGameId] = useState(null);
 
-    // Fetch player in hte game of the game_id
+    // Fetch  player in hte game of the game_id
 
     
     useEffect(() => {
@@ -37,7 +36,7 @@ const Lobby = () => {
                 console.log("this is the user_id", userId);
     
     
-            
+                // start with here try to fix the realtime issue in the lobby
                 const { data, error } = await supabase
                     .from('users')
                     .select(`*,
@@ -48,7 +47,7 @@ const Lobby = () => {
                     .single();
     
                 if (error) {
-                    console.log('Error fetching  the players: ', error.message);
+                    console.log('Error fetching  the players:  ', error.message);
                     return;
                 }
     
@@ -61,7 +60,7 @@ const Lobby = () => {
     
                 setGamePin(data?.games?.[0]?.game_pin);
                 setGameId(data?.games?.[0]?.id);
-
+                // else here
                 const { data: gamePayload, error: Payloaderror } = await supabase
                     .from('playerGame')
                     .select(`
