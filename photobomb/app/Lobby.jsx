@@ -31,7 +31,6 @@ const Lobby = () => {
             );
         }
 
-        
         if (payload.eventType === 'INSERT') {
             console.log('PLayer Joined: ', payload.new);
 
@@ -53,6 +52,35 @@ const Lobby = () => {
         } 
         
     }
+
+    const handleRemoveUser = async (payload) => {
+        console.log('Remove user received:', payload);
+    
+        try {
+            // Fetch the latest list of players in the current game
+            const { data: updatedPlayers, error } = await supabase
+                .from('playergame')
+                .select(`
+                    *,
+                    users (username, image_url)
+                `)
+                .eq('game_id', gameId);
+    
+            if (error) {
+                console.error('Error fetching updated players:', error.message);
+                return;
+            }
+    
+            console.log('Updated players list from server:', updatedPlayers);
+    
+            // Update the players state with the new list
+            setPlayers(updatedPlayers);
+        } catch (error) {
+            console.error('Error during handleRemoveUser:', error.message);
+        }
+    };
+
+
 
     // Fetch  player in hte game of the game_id
 
@@ -129,8 +157,16 @@ const Lobby = () => {
             { event: '*', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handlePLayerLobby)
         .subscribe();
 
+        
+        let removeUser = supabase.channel('custom-delete-channel')
+        .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handleRemoveUser)
+        .subscribe()
+
         return () => {
             supabase.removeChannel(channelLobby);
+            supabase.removeChannel(removeUser);
         };
     
     }, [gameId]); 
