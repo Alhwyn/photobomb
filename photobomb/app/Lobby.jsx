@@ -10,6 +10,7 @@ import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { startGame } from '../service/gameStartService';
 
 
 
@@ -218,8 +219,19 @@ const Lobby = () => {
             }
         }
 
-    }
-    
+    };
+
+    const handleStartGame = async () => {
+        const result = await startGame(gameId, players);
+
+        if (result.success) {
+            console.log("Game started successfully");
+            router.push('/games/MainGame')
+        } else {
+            console.log("Failed to start the game", result.message);
+        }
+        
+
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
@@ -243,13 +255,14 @@ const Lobby = () => {
             <Button 
                 title='Start Game' 
                 colors={theme.buttonGradient.success} 
-                onPress={()=> router.push('/games/MainGame')}
+                onPress={handleStartGame}
             />
         </View>
         
 
     </SafeAreaView>
   )
+}
 }
 
 export default Lobby
