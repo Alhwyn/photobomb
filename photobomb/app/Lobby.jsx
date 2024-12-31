@@ -21,6 +21,11 @@ const Lobby = () => {
     const [localPlayerData, getLocalPLayerData] = useState(null);
 
     const handlePLayerLobby = async (payload) => {
+        /*
+         * Given the parameter paylaod it takes the payload of the realtime
+         * supabase action from an INSERT event and updates the player list of the 
+         * user lobby.
+         */
 
         console.log('Real-time update received: ', payload);
 
@@ -54,10 +59,15 @@ const Lobby = () => {
     }
 
     const handleRemoveUser = async (payload) => {
+        /*
+         * Handles the removal of the user from the lobyy and updates the user list of the lobby
+         * when a user leaves in the supabase tables
+         * 
+         */
         console.log('Remove user received:', payload);
-    
+
         try {
-            // Fetch the latest list of players in the current game
+            // fetch the latest list of players in the current game
             const { data: updatedPlayers, error } = await supabase
                 .from('playergame')
                 .select(`
@@ -80,13 +90,15 @@ const Lobby = () => {
         }
     };
 
-
-
-    // Fetch  player in hte game of the game_id
-
-    
+ 
     useEffect(() => {
         const fetchPlayers = async () => {
+            /*
+             * function fetches the player data from their local storage, then fetches the data from the 
+             * tables users, for the game_id and check if the user is the creator of the lobby game
+             * and the game pin of the lobby. Then queries in the playergame table for the list of the unique id of the
+             * game_id.
+             */
             try {
   
     
