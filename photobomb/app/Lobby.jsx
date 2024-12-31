@@ -5,7 +5,7 @@ import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
 import Button from '../components/Button' 
-import { getGameId, deleteGame, deletePlayerGame } from '../service/gameService';
+import { deleteGame, deletePlayerGame } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
@@ -20,6 +20,7 @@ const Lobby = () => {
     const [players, setPlayers] = useState([]);
     const [gameId, setGameId] = useState(null);
     const [localPlayerData, getLocalPLayerData] = useState(null);
+    const [UserIsCreator, setUserIsCreator] = useState(false);
 
     const handlePLayerLobby = async (payload) => {
         /*
@@ -90,7 +91,6 @@ const Lobby = () => {
             console.error('Error during handleRemoveUser:', error.message);
         }
     };
-
  
     useEffect(() => {
         const fetchPlayers = async () => {
@@ -107,8 +107,6 @@ const Lobby = () => {
                 const getUserPayload = await getUserPayloadFromStorage();
 
                 console.log('this is the userPayload:  ', getUserPayload);
-
-                
 
                 const userId = getUserPayload?.id;
 
@@ -138,6 +136,7 @@ const Lobby = () => {
                 console.log('Fetched data: ', data);
 
                 getLocalPLayerData(data);
+                setUserIsCreator(data?.playergame?.[0]?.is_creator);
     
                 setGamePin(data?.games?.[0]?.game_pin);
                 setGameId(data?.games?.[0]?.id);
@@ -222,16 +221,21 @@ const Lobby = () => {
     };
 
     const handleStartGame = async () => {
+        /*
+         * this function handles the the game creator created the function
+         * 
+         */
         const result = await startGame(gameId, players);
 
         if (result.success) {
             console.log("Game started successfully");
             router.push('/games/MainGame')
         } else {
-            console.log("Failed to start the game", result.message);
+            console.log('Error on starting the game');
         }
-        
+    };
 
+        
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
@@ -252,17 +256,25 @@ const Lobby = () => {
         />
 
         <View style={styles.bottomContainer}>
-            <Button 
+            {UserIsCreator ? (
+                <Button 
                 title='Start Game' 
                 colors={theme.buttonGradient.success} 
                 onPress={handleStartGame}
-            />
+                />
+            ) : (
+                <Button 
+                    title="Ready" 
+                    colors={theme.buttonGradient.success} 
+                    onPress={() => console.log('User is ready!')}
+                />
+            )
+            }
         </View>
         
 
     </SafeAreaView>
   )
-}
 }
 
 export default Lobby

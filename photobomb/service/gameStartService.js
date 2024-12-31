@@ -11,18 +11,24 @@ import { supabase } from "../lib/supabase";
 export const startGame = async (gameId, players) => {
 
     try {
-        const shuffledPLayers = players
-        .map((player) => ({...player, sortKey: Math.random() }))
-        .sort((a, b) =>  a.sortKey - b.sortKey) 
-        .map((player, index) => ({ id: player.id, turn_order: index + 1}));
+        const shuffledPlayers = players
+            .map((player) => ({...player, sortKey: Math.random() }))
+            .sort((a, b) =>  a.sortKey - b.sortKey)
+            .map((player, index) => ({
+                id: player.id, 
+                turn_order: index + 1, // Assign new turn order
+            }));
 
-        // update the turn order in the playergame table
-        const { error: turnOrderError }  = await supabase
+
+        console.log("SHuffeld Players: ", shuffledPlayers);
+
+        // Update only the turn_order in the playergame table
+        const { error: turnOrderError } = await supabase
             .from('playergame')
-            .upsert(shuffledPLayers, { onConflict: [id] });
+            .upsert(shuffledPlayers, { onConflict: ["id"] });
 
         if (turnOrderError) {
-            console.log('Error: assigning random turn orders: ')
+            console.log('Error: assigning random turn orders: ', turnOrderError.message);
             return {success: false, message: turnOrderError.message};
         }
 
