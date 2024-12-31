@@ -20,14 +20,49 @@ const Lobby = () => {
     const [gameId, setGameId] = useState(null);
     const [localPlayerData, getLocalPLayerData] = useState(null);
 
+    const handlePLayerLobby = async (payload) => {
+
+        console.log('Real-time update received: ', payload);
+
+        if (payload.eventType === 'DELETE') {
+            console.log('Player exited:', payload.old);
+            setPlayers((prevPlayers) =>
+                prevPlayers.filter((player) => player.player_id !== payload.old.player_id)
+            );
+        }
+
+        
+        if (payload.eventType === 'INSERT') {
+            console.log('PLayer Joined: ', payload.new);
+
+            // fetch the username from user table 
+            const { data: userData, error } = await supabase
+                .from('users')
+                .select('username')
+                .eq('id', payload.new.player_id)
+                .single();
+
+            if (error) {
+                console.error('Error fetching username: ', error.message);
+                return;
+            }
+
+            const newPLayer = { ...payload.new, users: {username: userData.username}};
+            setPlayers((prevPlayers) => [...prevPlayers, newPLayer]);
+
+        } 
+        
+    }
+
     // Fetch  player in hte game of the game_id
 
     
     useEffect(() => {
         const fetchPlayers = async () => {
             try {
+  
     
-                console.log('Starting fetchPlayers..');
+                console.log('Starting fetchPlayers...');
                 const getUserPayload = await getUserPayloadFromStorage();
 
                 console.log('this is the userPayload:  ', getUserPayload);
@@ -44,7 +79,7 @@ const Lobby = () => {
                     .from('users')
                     .select(`*,
                              games (game_pin, id),
-                             playerGame (is_creator)
+                             playergame (is_creator)
                     `)
                     .eq('id', userId)
                     .single();
@@ -67,7 +102,7 @@ const Lobby = () => {
                 setGameId(data?.games?.[0]?.id);
                 // else here
                 const { data: gamePayload, error: Payloaderror } = await supabase
-                    .from('playerGame')
+                    .from('playergame')
                     .select(`
                         *,
                         users (username, image_url)
@@ -83,50 +118,17 @@ const Lobby = () => {
                 return;
             }
         };
-    
         
         fetchPlayers();
-
         console.log('this is the game id: ', gameId);
     
-
-        const channelLobby = supabase
+        let channelLobby = supabase
         .channel('lobby_updates') 
         .on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: 'playerGame', filter: `game_id=eq.${gameId}` },
-            async (payload) => {
-                console.log('Real-time update received:', payload.new);
-
-                if (payload.eventType === 'INSERT') {
-                    console.log('PLayer Joined: ', payload.new);
-
-                    // fetch the username from user table 
-                    const { data: userData, error } = await supabase
-                        .from('users')
-                        .select('username')
-                        .eq('id', payload.new.player_id)
-                        .single();
-
-                    if (error) {
-                        console.error('Error fetching username: ', error.message);
-                        return;
-                    }
-
-                    const newPLayer = { ...payload.new, users: {username: userData.username}};
-                    setPlayers((prevPlayers) => [...prevPlayers, newPLayer]);
-
-                } else if (payload.eventType === 'DELETE') {
-                    console.log('Player exited:', payload.old);
-                    setPlayers((prevPlayers) =>
-                        prevPlayers.filter((player) => player.player_id !== payload.old.player_id)
-                    );
-                } 
-            }
-        )
+            { event: '*', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handlePLayerLobby)
         .subscribe();
 
-        // Cleanup subscription on unmount
         return () => {
             supabase.removeChannel(channelLobby);
         };
@@ -137,7 +139,7 @@ const Lobby = () => {
         /*
         this function gets the user_id from local storage and the game_id
 
-        if the user is the creator it will remove the game then removing the playerGame rows
+        if the user is the creator it will remove the game then removing the playergame rows
         with the foriegn key of the games table
 
         else false it it remove the the player game row
@@ -147,9 +149,9 @@ const Lobby = () => {
         console.log('this is the player data: ', localPlayerData);
 
         console.log('this is the player_id: ', localPlayerData?.id);
-        console.log('this is the is_Creator', localPlayerData?.playerGame?.[0]?.is_creator);
+        console.log('this is the is_Creator', localPlayerData?.playergame?.[0]?.is_creator);
 
-        if (localPlayerData?.playerGame?.[0]?.is_creator) {
+        if (localPlayerData?.playergame?.[0]?.is_creator) {
             const checkGameDelete = await deleteGame(gameId);
 
             if (!checkGameDelete.success) {

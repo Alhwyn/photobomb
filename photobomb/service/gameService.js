@@ -16,7 +16,7 @@ export const checkGamePin = async (pin) => {
             console.log(' No games found with this PIN.')
             return false;
         }
-        console.log('Game PIN exists: ', data);
+        console.log('Game PIN exists:  ', data);
         return {success: true, data: data};
     } catch(error) {
         console.log('Error checking PIN', error.message);
@@ -104,7 +104,7 @@ export const addUserToLobby = async (playerId, gameId, isCreator) => {
     try {
 
         const { error } = await supabase
-        .from('playerGame')
+        .from('playergame')
         .insert([
             {
                 player_id: playerId,
@@ -133,7 +133,7 @@ export const checkUserInLobby = async (userId) => {
     try {
 
         const { data, error } = await supabase
-        .from('playerGame')
+        .from('playergame')
         .select(`
             player_id,
             game_id,
@@ -160,7 +160,7 @@ export const checkUserInLobby = async (userId) => {
 export const deletePlayerGame = async (playerId, gameId) => {
     try {
         const {data, error} = await supabase
-        .from('playerGame')
+        .from('playergame')
         .delete()
         .eq('player_id', playerId)
         .eq('game_id', gameId)
