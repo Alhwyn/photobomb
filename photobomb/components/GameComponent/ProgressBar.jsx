@@ -43,10 +43,9 @@ export default ProgressBar;
 
 const styles = StyleSheet.create({
     progressBarContainer: {
-        width: '80%',
-        height: 10,
+        width: '100%',
+        height: 5,
         backgroundColor: '#d3d3d3',
-        borderRadius: 5,
         overflow: 'hidden',
         marginTop: 20,
     },

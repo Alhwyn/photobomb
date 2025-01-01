@@ -1,7 +1,6 @@
 import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Button from '../../components/Button';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
 import Profile from '../../components/Profile';
@@ -47,18 +46,18 @@ const Main = () => {
   return (
     <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
-        <View style={{ marginVertical: 10 }}>
-            <ProgressBar duration={5000} color="#52307c" />
-        </View>
         {/* Header with Profile */}
         <View style={styles.header}> 
             {/* Profile Pic Compnonent */}
-            <TouchableOpacity onPress={() => router.push('userProfile')}>
-                <Profile/>
-            </TouchableOpacity>
+            <Profile/>
+            
             <Text style={styles.usernameText}>{userPayload?.username}</Text>
             <Text style={styles.text}>is picking a prompt...</Text>
         </View>
+        <View style={styles.styleprogressBar}>
+            <ProgressBar duration={5000} color="#52307c" />
+        </View>
+        
         <View style={styles.gameContainer}>
             {renderGameContainer()}
         </View>
@@ -97,7 +96,6 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      marginBottom: 32,
       marginLeft: 20,
     },
     iconButton: {
@@ -139,6 +137,10 @@ const styles = StyleSheet.create({
         marginBottom: 32,
         marginLeft: 20,
       },
+    styleprogressBar: {
+        marginBottom: 32,
+        alignItems: 'center',
+    }
   });
   
   
