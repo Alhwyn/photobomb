@@ -10,10 +10,11 @@ import { getUserPayloadFromStorage } from '../../service/userService';
 import PromptCard from '../../components/GameComponent/PromptCard';
 import Gallery from '../../components/GameComponent/Gallery';
 import PromptSelection from '../../components/GameComponent/PromptSelection';
+import ProgressBar from '../../components/GameComponent/ProgressBar';
 
 
 // Setting
-
+/*  */
 const Main = () => {
     const router = useRouter()
     const [userPayload, setUserPayload] = useState(null); 
@@ -28,7 +29,7 @@ const Main = () => {
 
     }
 
-    // fetching the user data form the local storage
+    // fetching the user data form the local storag
     
     useEffect(() => {
         const fetchUserData = async () => {
@@ -46,6 +47,9 @@ const Main = () => {
   return (
     <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
+        <View style={{ marginVertical: 10 }}>
+            <ProgressBar duration={5000} color="#FFA500" />
+        </View>
         {/* Header with Profile */}
         <View style={styles.header}> 
             {/* Profile Pic Compnonent */}
