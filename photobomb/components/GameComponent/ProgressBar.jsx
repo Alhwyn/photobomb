@@ -5,11 +5,20 @@ const ProgressBar = ({ duration = 5000, color = 'purple' }) => {
     const progress = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        Animated.timing(progress, {
-            toValue: 1,
-            duration,
-            useNativeDriver: false, // Consider changing to `true` and use scaling
-        }).start();
+        const loopAnimation = Animated.loop(
+            Animated.timing(progress, {
+                toValue: 1,
+                duration,
+                useNativeDriver: false, // Consider changing to `true` and use scaling
+            }),
+            {
+                resetBeforeIteration: true, // Reset value before each iteration
+            }
+        );
+
+        loopAnimation.start();
+
+        return () => loopAnimation.stop(); // Cleanup the animation on unmount
     }, [progress, duration]);
 
     return (
@@ -20,7 +29,7 @@ const ProgressBar = ({ duration = 5000, color = 'purple' }) => {
                     {
                         width: progress.interpolate({
                             inputRange: [0, 1],
-                            outputRange: ['0%', '100%'],
+                            outputRange: ['100%', '0%'], // Corrected the direction
                         }),
                         backgroundColor: color, // Dynamic color
                     },

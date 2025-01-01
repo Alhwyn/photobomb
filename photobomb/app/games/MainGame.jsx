@@ -48,7 +48,7 @@ const Main = () => {
     <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
         <View style={{ marginVertical: 10 }}>
-            <ProgressBar duration={5000} color="#FFA500" />
+            <ProgressBar duration={5000} color="#52307c" />
         </View>
         {/* Header with Profile */}
         <View style={styles.header}> 
