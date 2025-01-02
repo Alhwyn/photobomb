@@ -9,17 +9,17 @@ const ProgressBar = ({ duration = 5000, color = 'purple' }) => {
             Animated.timing(progress, {
                 toValue: 1,
                 duration,
-                useNativeDriver: false, // Consider changing to `true` and use scaling
+                useNativeDriver: false, // consider changing to `true` and use scaling
             }),
             {
-                resetBeforeIteration: true, // Reset value before each iteration
+                resetBeforeIteration: true, 
             }
         );
 
-        
+
         loopAnimation.start();
 
-        return () => loopAnimation.stop(); // Cleanup the animation on unmount
+        return () => loopAnimation.stop(); 
     }, [progress, duration]);
 
     return (
@@ -30,9 +30,9 @@ const ProgressBar = ({ duration = 5000, color = 'purple' }) => {
                     {
                         width: progress.interpolate({
                             inputRange: [0, 1],
-                            outputRange: ['100%', '0%'], // Corrected the direction
+                            outputRange: ['100%', '0%'],
                         }),
-                        backgroundColor: color, // Dynamic color
+                        backgroundColor: color,
                     },
                 ]}
             />

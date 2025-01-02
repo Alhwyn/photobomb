@@ -67,3 +67,59 @@ export const startGame = async (gameId, players) => {
 };
 
 
+
+const handleRoundTable = async (game_id, prompter_id) => {
+    /*
+     * This is the following table needs to create the round table in supabase
+     * - game_id
+     * - prompter_id
+     * - round ( current round of game )
+     * - total_players ( total players in the game )
+     * 
+     * Once the round table is create the game can start 
+     * 
+     * - Before creating the round table check if the game_id is in lobby
+     * - if its not lobby then the round number and select the next prompter 
+     * 
+     */
+
+    try {
+
+        const { data: gameData, error: gameError } = await supabase
+            .from("games")
+            .select("status")
+            .eq("id", game_id)
+            .single();
+
+        if (gameError) {
+            console.log("Error fetching game status: ", gameError.message);
+            return { success: false, message: gameError.message};
+        }
+
+        if (gameData.status !== "lobby") {
+            
+            const nextRound = gameData.current_round ? gameData.current_round + 1 : 1;
+
+            const {data: players, error: playerError} = await supabase
+                .from("playergame")
+                .select("id, turn_order")
+                .eq("game_id", game_id)
+                .order("turn_order", { ascending: true });
+
+            if (playerError) {
+                console.log("Error fethcing player list: ", playerError.message);
+                return { success: false, message: playerError.message };
+            }
+
+            // Determine the next prompter
+            
+        }
+
+
+
+
+    } catch (error) {
+        console.log("Error in handleRoundtable: ", error.message);
+        return { success: false, message: error.message};
+    }
+};
