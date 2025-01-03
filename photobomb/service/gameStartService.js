@@ -59,6 +59,19 @@ export const startGame = async (gameId, players) => {
 
         console.log("Game status updated to 'in_progress'")
 
+        const firstPropmpter = shuffledPlayers?.[0]?.id;
+        if (!firstPropmpter) {
+            console.log("Error determining the first prompter.");
+            return {success: false, message: "No players available to start the game."};
+        }
+
+        const roundTableResult = await handleRoundTable(gameId, firstPropmpter);
+        if (!roundTableResult.success) {
+            console.log("Error creating the round table: ", roundTableResult.message);
+            return { success: false, message: roundTableResult};
+        }
+
+        console.log("First round table created succesfully");
         return {success: true};
     } catch(error) {
         console.log('Error on Starting Game: ', error.message);
@@ -82,6 +95,11 @@ const handleRoundTable = async (game_id, prompter_id) => {
      * - if its not lobby then the round number and select the next prompter 
      * 
      */
+
+    if (!game_id || !prompter_id) {
+        console.log("Invalid input: game_id and prompter_id are required.");
+        return { success: false, message: "Invalid input." };
+    }
 
     try {
 
