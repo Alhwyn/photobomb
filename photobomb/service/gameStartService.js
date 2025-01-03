@@ -112,7 +112,18 @@ const handleRoundTable = async (game_id, prompter_id) => {
             }
 
             // Determine the next prompter
-            
+            const prompterIndex = players.findIndex(player => player.id === prompter_id);
+            const nextPrompterIndex = (prompterIndex + 1) % players.length;
+            const nextPrompterId = players[nextPrompterIndex];
+
+            const { error: roundError} = await supabase
+                .from("rounds")
+                .insert({
+                    game_id: game_id,
+                    prompter_id: nextPrompterId,
+                    round
+                })
+
         }
 
 
