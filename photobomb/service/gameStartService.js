@@ -85,6 +85,8 @@ const handleRoundTable = async (game_id, prompter_id) => {
 
     try {
 
+
+        // fetch the game data of the game_id
         const { data: gameData, error: gameError } = await supabase
             .from("games")
             .select("status")
@@ -116,19 +118,40 @@ const handleRoundTable = async (game_id, prompter_id) => {
             const nextPrompterIndex = (prompterIndex + 1) % players.length;
             const nextPrompterId = players[nextPrompterIndex];
 
+            if (!nextPrompterId) {
+                console.log("Error determining the next prompter: nextPrompter problem");
+                return { success: false, message: "Unable to determine the next prompter"};
+            }
+
             const { error: roundError} = await supabase
                 .from("rounds")
                 .insert({
                     game_id: game_id,
                     prompter_id: nextPrompterId,
-                    round
-                })
+                    round: nextRound,
+                    total_players: players.length,
+                });
 
+            if (roundError) {
+                console.log("Error creating a new round.", roundError.message);
+                return {success: false, message: roundError.message};
+            }
+
+            // UPdate the games current round
+
+            const { error: roundUpdateError } = await supabase
+                .from("games")
+                .update({ current_round: nextRound })
+                .eq("id", game_id);
+
+            if (roundUpdateError) {
+                console.log("Error updating the game current round ", roundUpdateError.message);
+                return {success: false, message: roundUpdateError.message};
+            }
+
+            console.log("New record created succesffuly with next prompter: ", nextPrompterId);
+            return { success: true,  data: nextPrompterId, round: nextRound};
         }
-
-
-
-
     } catch (error) {
         console.log("Error in handleRoundtable: ", error.message);
         return { success: false, message: error.message};
