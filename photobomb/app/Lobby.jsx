@@ -11,6 +11,7 @@ import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { startGame } from '../service/gameStartService';
+import Loading from '../components/Loading';
 
 
 
@@ -21,6 +22,7 @@ const Lobby = () => {
     const [gameId, setGameId] = useState(null);
     const [localPlayerData, getLocalPLayerData] = useState(null);
     const [UserIsCreator, setUserIsCreator] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handlePLayerLobby = async (payload) => {
         /*
@@ -91,6 +93,22 @@ const Lobby = () => {
             console.error('Error during handleRemoveUser:', error.message);
         }
     };
+
+    const startGameListener = async (payload) => {
+        /*
+         * when the game creator press start game the it will init a loading screen when
+         * the 
+         * 
+         */
+        if (payload.new.status === 'in_progress') {
+            console.log('Game status changed to in_progress:', payload.new);
+            setIsLoading(true);
+        } else {
+            setIsLoading(false);
+        }
+    };
+
+   
  
     useEffect(() => {
         const fetchPlayers = async () => {
@@ -141,7 +159,7 @@ const Lobby = () => {
                 setGamePin(data?.games?.[0]?.game_pin);
                 setGameId(data?.games?.[0]?.id);
                 // else here
-                const { data: gamePayload, error: Payloaderror } = await supabase
+                const { data: gamePayload } = await supabase
                     .from('playergame')
                     .select(`
                         *,
@@ -176,9 +194,17 @@ const Lobby = () => {
         { event: 'DELETE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handleRemoveUser)
         .subscribe()
 
+        let gameStatusListener = supabase
+            .channel('game_status_updates')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` }, startGameListener)
+            .subscribe()
+
         return () => {
             supabase.removeChannel(channelLobby);
             supabase.removeChannel(removeUser);
+            supabase.removeChannel(gameStatusListener);
         };
     
     }, [gameId]); 
@@ -256,7 +282,9 @@ const Lobby = () => {
         />
 
         <View style={styles.bottomContainer}>
-            {UserIsCreator ? (
+            {isLoading ? (
+                <Loading/>
+            ) : UserIsCreator ? (
                 <Button 
                 title='Start Game' 
                 colors={theme.buttonGradient.success} 
@@ -268,8 +296,7 @@ const Lobby = () => {
                     colors={theme.buttonGradient.success} 
                     onPress={() => console.log('User is ready!')}
                 />
-            )
-            }
+            )}
         </View>
         
 
