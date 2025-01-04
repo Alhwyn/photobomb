@@ -23,6 +23,20 @@ export const startGame = async (gameId, players) => {
     */
 
     try {
+
+        // update the game status to 'in_progress'
+        const { error: statusError } = await supabase
+          .from("games")
+          .update({ status: "in_progress"})
+          .eq("id", gameId);
+
+        if (statusError) {
+            console.log("Error updating the game status: ", statusError.message);
+            return { success: false, message: statusError};
+        }
+
+        console.log("Game status updated to 'in_progress'")
+
         const shuffledPlayers = players
             .map((player) => ({...player, sortKey: Math.random() }))
             .sort((a, b) =>  a.sortKey - b.sortKey)
@@ -46,18 +60,7 @@ export const startGame = async (gameId, players) => {
 
         console.log('Random turn order successfully assigned.');
 
-        // update the game status to 'in_progress'
-        const { error: statusError } = await supabase
-            .from("games")
-            .update({ status: "in_progress"})
-            .eq("id", gameId)
 
-        if (statusError) {
-            console.log("Error updating the game status: ", statusError.message);
-            return { success: false, message: statusError};
-        }
-
-        console.log("Game status updated to 'in_progress'")
 
         const firstPropmpter = shuffledPlayers?.[0]?.id;
         if (!firstPropmpter) {
@@ -72,6 +75,20 @@ export const startGame = async (gameId, players) => {
         }
 
         console.log("First round table created succesfully");
+
+        // update the game status to 'active'
+        const { error: statusActiveError } = await supabase
+          .from("games")
+          .update({ status: "active"})
+          .eq("id", gameId);
+
+        if (statusActiveError) {
+            console.log("Error updating the game status: ", statusError.message);
+            return { success: false, message: statusError};
+        }
+
+        console.log("Game status updated to 'active'")
+
         return {success: true};
     } catch(error) {
         console.log('Error on Starting Game: ', error.message);

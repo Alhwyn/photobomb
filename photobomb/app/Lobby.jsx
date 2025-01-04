@@ -103,6 +103,11 @@ const Lobby = () => {
         if (payload.new.status === 'in_progress') {
             console.log('Game status changed to in_progress:', payload.new);
             setIsLoading(true);
+        } else if (payload.new.status === 'active') {
+            console.log('Game status change to in active', payload.new);
+            console.log("Game started successfully");
+            router.push('/games/MainGame')
+            setIsLoading(false);
         } else {
             setIsLoading(false);
         }
@@ -253,12 +258,6 @@ const Lobby = () => {
          */
         const result = await startGame(gameId, players);
 
-        if (result.success) {
-            console.log("Game started successfully");
-            router.push('/games/MainGame')
-        } else {
-            console.log('Error on starting the game');
-        }
     };
 
         
