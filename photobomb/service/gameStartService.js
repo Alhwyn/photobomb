@@ -118,7 +118,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
 
         if (gameData.status !== "lobby") {
             
-            const nextRound = gameData.current_round ? gameData.current_round + 1 : 1;
+            const nextRound = Math.floor(gameData.current_round ? gameData.current_round + 1 : 1);
 
             const {data: players, error: playerError} = await supabase
                 .from("playergame")
@@ -136,18 +136,28 @@ const handleRoundTable = async (game_id, prompter_id) => {
             const nextPrompterIndex = (prompterIndex + 1) % players.length;
             const nextPrompterId = players[nextPrompterIndex];
 
+            
+            const totalPlayers = Math.floor(players.length);
+
             if (!nextPrompterId) {
                 console.log("Error determining the next prompter: nextPrompter problem");
                 return { success: false, message: "Unable to determine the next prompter"};
             }
 
+            console.log("Preparing to insert into rounds with values:", {
+                game_id,
+                prompter_id: nextPrompterId,
+                round: nextRound,
+                total_players: totalPlayers,
+            });
+
             const { error: roundError} = await supabase
-                .from("rounds")
+                .from("round")
                 .insert({
                     game_id: game_id,
-                    prompter_id: nextPrompterId,
+                    prompter_id: nextPrompterId?.id,
                     round: nextRound,
-                    total_players: players.length,
+                    total_players: totalPlayers,
                 });
 
             if (roundError) {
