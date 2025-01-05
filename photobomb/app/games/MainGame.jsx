@@ -10,6 +10,7 @@ import PromptCard from '../../components/GameComponent/PromptCard';
 import Gallery from '../../components/GameComponent/Gallery';
 import PromptSelection from '../../components/GameComponent/PromptSelection';
 import ProgressBar from '../../components/GameComponent/ProgressBar';
+import { supabase } from '../../lib/supabase';
 
 
 // Setting
@@ -18,7 +19,7 @@ const Main = () => {
     const router = useRouter()
     const [userPayload, setUserPayload] = useState(null); 
     const [currentStage, setCurrentStage] = useState('Prompt'); 
-    const [isPrompter, setIsPrompter] = useState('Prompt');
+    const [isPrompter, setIsPrompter] = useState(false);
 
 
     const components =  {
@@ -28,16 +29,33 @@ const Main = () => {
 
     }
 
-    // fetching the user data form the local storag
+    // fetching the user data form the local storage
+    const fetchUserData = async () => {
+        const data = await getUserPayloadFromStorage();
+        if (data) {
+            setUserPayload(data);
+
+            const { data, error } = await supabase
+              .from('users')
+              .select(`*,
+                  games (game_pin, id),
+                  playergame (is_creator)
+              `)
+              .eq('id', userId)
+              .single();
+        }
+    };
+
+    const checkUserRole = async () => {
+        
+
+    }
     
     useEffect(() => {
-        const fetchUserData = async () => {
-            const data = await getUserPayloadFromStorage();
-            if (data) {
-                setUserPayload(data);
-            }
-        };
+        // got the userpayload from asyn storage
         fetchUserData();
+
+
     }, []);
 
   const renderGameContainer = () => components[currentStage] || <PromptCard text="Default prompt" />;
