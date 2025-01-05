@@ -2,6 +2,11 @@ import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export const checkGamePin = async (pin) => {
+    /**
+     * checks if a game with the provided game PIN exist in the database.
+     * @params {string} pin = the game PIN to check.
+     * @returns {Promise<Object>}- an obejct indication the success on the data retrieval
+     */
     try {
 
         const { data, error } = await supabase
@@ -25,6 +30,11 @@ export const checkGamePin = async (pin) => {
 
 }
 export const getGameId = async (userId) => {
+    /**
+     * retreives the game associated with a specific user ID ( game creator).
+     * @params {string} userId - The ID of game creator.
+     * @returns {Promise<Object>} - an obejct indication the success on the data retrieval
+     */
     try {
         const { data, error } = await supabase
         .from('games')
@@ -49,6 +59,12 @@ export const getGameId = async (userId) => {
 }
 
 export const CreateGameID = async (pin, payload) => {
+    /**
+     * creates a new game with the specified PIN and user paylaod as the game creator.
+     * @param {string} pin - the game PIN to assign to the new game.
+     * @param {Object} payload - The user payload containg user ID  and the other data
+     * @returns {Promise<Object>} - an obejct indication the success on the data retrieval
+     */
 
     try {
         console.log('Game PIN: ', pin);
@@ -77,6 +93,11 @@ export const CreateGameID = async (pin, payload) => {
 }
 
 export const deleteGame = async (gameId) => {
+    /**
+     * deletes a game from the database by its ID
+     * @param {string} gameId - The ID  of the game to delete
+     * @reutrns {Promise<Object>} - an object indication the success on the data retrieval
+     */
     try {
         if (!gameId) {
             console.error('gameService.jsx: No game available to delete');
@@ -101,6 +122,13 @@ export const deleteGame = async (gameId) => {
 }
 
 export const addUserToLobby = async (playerId, gameId, isCreator) => {
+    /**
+     * add a user to the game lobby in the playergametable.
+     * @param {string} playerId - the id of the palyer to add
+     * @param {string} gameId - the id of teh game to join
+     * @param {boolean} isCreator - whether the player is the game creator 
+     * @returns {Promise<Object>} - an object indicatiing success of an error mesaage
+     */
     try {
 
         const { error } = await supabase
