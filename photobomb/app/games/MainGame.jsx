@@ -20,6 +20,7 @@ const Main = () => {
     const [userPayload, setUserPayload] = useState(null); 
     const [currentStage, setCurrentStage] = useState('Prompt'); 
     const [isPrompter, setIsPrompter] = useState(false);
+    const [gameID, setGameID] = useState(null);
 
 
     const components =  {
@@ -31,19 +32,32 @@ const Main = () => {
 
     // fetching the user data form the local storage
     const fetchUserData = async () => {
-        const data = await getUserPayloadFromStorage();
-        if (data) {
-            setUserPayload(data);
+        try {
+            const Userpayload = await getUserPayloadFromStorage();
+            if (Userpayload) {
+                setUserPayload(Userpayload);
 
-            const { data, error } = await supabase
-              .from('users')
-              .select(`*,
-                  games (game_pin, id),
-                  playergame (is_creator)
-              `)
-              .eq('id', userId)
-              .single();
+                const { data, error: playerError } = await supabase
+                .from('users')
+                .select(`*,
+                    games (game_pin, id),
+                    playergame (is_creator)
+                `)
+                .eq('id', Userpayload?.id)
+                .single();
+
+                if (playerError) {
+                    console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
+                }
+
+                console.log('Retreiving player data went succesful: ', data);
+                setGameID(data?.games?.[0]?.id);
+                console.log('This is the game id: ', gameID);
+            }
+        } catch(error) {
+            console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
         }
+        
     };
 
     const checkUserRole = async () => {
