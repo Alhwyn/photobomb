@@ -206,6 +206,28 @@ export const deletePlayerGame = async (playerId, gameId) => {
     }
 };
 
+export const getRoundData = async (gameId) => {
+    try {
+        const {data, error } = await supabase
+          .from('round')
+          .select('*')
+          .eq('game_id', gameId)
+          .single();
+
+        if (error) {
+            console.log('Error on fetching the data on the round table gameService.js', error.message);
+            return {success: false, message: error.message};
+        }
+
+        console.log('successfully fetch the data fron the rounds table');
+
+        return 
+    } catch (error) {
+        console.log('Error on fetching the data on the round table gameService.js', error.message);
+        return {success: false, message: error.message};
+    }
+}
+
 
 
 
