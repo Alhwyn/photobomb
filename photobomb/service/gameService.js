@@ -247,7 +247,7 @@ export const getRoundData = async (gameId) => {
 
         console.log('successfully fetch the data fron the rounds table');
 
-        return 
+        return {success: true, data: data};
     } catch (error) {
         console.log('Error on fetching the data on the round table gameService.js', error.message);
         return {success: false, message: error.message};

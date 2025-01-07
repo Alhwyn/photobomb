@@ -5,20 +5,19 @@ import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
 import Profile from '../../components/Profile';
 import { theme } from '../../constants/theme';
-import { getUserPayloadFromStorage } from '../../service/userService';
+import { getUserData, getUserPayloadFromStorage } from '../../service/userService';
 import PromptCard from '../../components/GameComponent/PromptCard';
 import Gallery from '../../components/GameComponent/Gallery';
 import PromptSelection from '../../components/GameComponent/PromptSelection';
 import ProgressBar from '../../components/GameComponent/ProgressBar';
 import { supabase } from '../../lib/supabase';
+import { getRoundData } from '../../service/gameService';
 
-
-// Setting
-/*  */
 const Main = () => {
     const router = useRouter()
     const [userPayload, setUserPayload] = useState(null); 
     const [currentStage, setCurrentStage] = useState('Prompt'); 
+    const [showPrompterPayload, setShowPrompterPayload] = useState(null);
     const [isPrompter, setIsPrompter] = useState(false);
     const [gameID, setGameID] = useState(null);
 
@@ -61,17 +60,49 @@ const Main = () => {
     };
 
     const checkUserRole = async () => {
+        /**
+         * in this function will look for the locat user role of the game 
+         * given the game id and the player id from the round table and check if thier the prompter
+         * if the user is the prompter then the state will be true and they will be a new ui and new 
+         * instruction
+         * 
+         */
+    }
 
-        // get the data table fropm the round tables
-        
+    const fetchPrompterData = async (gameId) => {
+        /**
+         * before teh game start will use the prompter userid to get the image url and the username for the 
+         * game form the round tabel and query in the relational database in the user table
+         */
+
+        try {
+
+            const getRoundDataPayload = await getRoundData(gameId);
+
+            if (!getRoundDataPayload?.success) {
+                console.log('Their is an error on fetching the round payload in MainGame: ', getRoundDataPayload.message);
+            }
+
+            console.log('got the data paylaod', getRoundDataPayload?.data);
+
+            console.log('this is the prompter id: ', getRoundDataPayload?.data?.prompter_id);
+
+            const getPrompterPayload = await getUserData(getRoundDataPayload?.data?.prompter_id);
+
+            console.log('this is the prompter data in the user table', getPrompterPayload);
+        } catch(error) {
+            console.log('error on the function fetchPrompterData', error.message); 
+
+        }
 
         
 
     }
     
     useEffect(() => {
-        // got the userpayload from asyn storage
         fetchUserData();
+
+        fetchPrompterData(gameID);
 
 
     }, []);
