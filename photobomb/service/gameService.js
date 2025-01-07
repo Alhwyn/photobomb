@@ -159,6 +159,20 @@ export const addUserToLobby = async (playerId, gameId, isCreator) => {
 }
 
 export const checkUserInLobby = async (userId) => {
+    /**
+     * ckecks if a user is in the game lobby and retrieves their associated data.
+     * @param {string} userId - The ID of the user to check in the lobby
+     * @returns {Promise<Object>} - an object indicating the success of the operation  and the user/game data if found
+     * 
+     * the function queries the `playergame` table to check if teh user  is in the lobby  and retreives:
+     * - `player_id` - the ID of the player
+     * - `game_id` - the ID of the game the user is part of
+     * - `users` (joined data) - the user's `username` and `image_url`
+     * - `games` (joined data) - The `game_pin` of the game the user is associated with.
+     * 
+     * 
+     */
+    
     try {
 
         const { data, error } = await supabase
@@ -187,6 +201,12 @@ export const checkUserInLobby = async (userId) => {
 }
 
 export const deletePlayerGame = async (playerId, gameId) => {
+    /**
+     * deletes a player form the playergame table based on player and IDS
+     * @param {string} playerId - The ID  of the player to delete.
+     * @param {string} gameId - The ID of the game to remove the player from.
+     * @returns {Promise<Object>} - An object indicating the success of the operationor an error message
+     */
     try {
         const {data, error} = await supabase
         .from('playergame')
@@ -208,6 +228,11 @@ export const deletePlayerGame = async (playerId, gameId) => {
 };
 
 export const getRoundData = async (gameId) => {
+    /**
+     * fetches data for a specific game round from the round table
+     * @param {string} gameId - The ID of the game to fetch round data for.
+     * @returns {Promise<Object>} - an object indicating the success of the operationor an error message
+     */
     try {
         const {data, error } = await supabase
           .from('round')
