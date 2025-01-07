@@ -34,6 +34,7 @@ export const getGameId = async (userId) => {
      * retreives the game associated with a specific user ID ( game creator).
      * @params {string} userId - The ID of game creator.
      * @returns {Promise<Object>} - an obejct indication the success on the data retrieval
+     * 
      */
     try {
         const { data, error } = await supabase
