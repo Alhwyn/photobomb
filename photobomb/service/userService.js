@@ -3,6 +3,11 @@ import { supabase } from '../lib/supabase';
 
 
 export const getUserData = async (userId) => {
+  /**
+   * fetches user data from the supabase database basedon the user_id
+   * @param {string} userId - The ID of the user to fetch
+   * @returns {Promise<Object>} - An object containing the success status and user data else an error message.
+   */
   try {
     const {data, error}  = await supabase
       .from('users')
@@ -25,9 +30,12 @@ export const getUserData = async (userId) => {
 
 export const handleCreateUser = async (username) => {
   try {
+    /**
+     * creates a new user on the supabase database with the provided username
+     * @param {string} username - the username for the new user 
+     * @returns {PRomis<Object>} - An object containing the success status and user data or an error message.
+     */
 
-  
-    // Insert the user into the Supabase database€⁄
     const { data, error } = await supabase
       .from('users')
       .insert({
@@ -35,7 +43,7 @@ export const handleCreateUser = async (username) => {
         status: 'active',
         image_url: null,
       })
-      .select('*') // Return the inserted record
+      .select('*')
       .single();
 
     if (error) {
@@ -43,7 +51,6 @@ export const handleCreateUser = async (username) => {
       return { success: false, msg: error.message };
     }
 
-    // Store the user payload in AsyncStorage
     const payload = {
       id: data.id,
       username: data?.username,
@@ -61,6 +68,10 @@ export const handleCreateUser = async (username) => {
 };
 
 export const getUserPayloadFromStorage = async () => {
+  /**
+   * retreievs the userpayload form AsnycStorage
+   * @returns {Promise<Object|null>} - the user payload as a parsed object, or `null` if no data is found or an error 
+   */
   try {
     const userPayloadString = await AsyncStorage.getItem('userPayload');
 
@@ -79,8 +90,12 @@ export const getUserPayloadFromStorage = async () => {
 
 
 export const verifyUserFromStorage = async () => {
+  /**
+   * verifies the user paylaod from the local storage with the supabase 
+   * @returns {Promise<Object>} - an object containing the success status and payload if verified, or an error message.
+   */
   try {
-    // Retrieve the user payload from AsyncStorage
+    
     const userPayload = await getUserPayloadFromStorage();
 
     if (!userPayload) {
