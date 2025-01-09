@@ -30,6 +30,7 @@ const Main = () => {
     }
 
     // fetching the user data form the local storage
+    // commit a day
     const fetchUserData = async () => {
         try {
             const Userpayload = await getUserPayloadFromStorage();
