@@ -208,6 +208,9 @@ export const deletePlayerGame = async (playerId, gameId) => {
      * @returns {Promise<Object>} - An object indicating the success of the operationor an error message
      */
     try {
+
+        console.log('playergame deleting here is the player_id: ', playerId);
+        console.log('playergame deleting here is the user_id: ', gameId);
         const {data, error} = await supabase
         .from('playergame')
         .delete()

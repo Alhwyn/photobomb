@@ -46,6 +46,9 @@ const Lobby = () => {
 
                 console.log('Player Joined: ', payload.new);
 
+                // set game id 
+                setGameId(payload.new?.game_id)
+
                 // fetch the username from user table 
                 const { data: userData, error } = await supabase
                     .from('users')
@@ -145,7 +148,10 @@ const Lobby = () => {
                 const userId = getUserPayload?.id;
 
                 console.log('this is the userPayload:  ', getUserPayload);
+
+
                 console.log("this is the user_id", userId);
+    
     
                 // start with here try to fix the realtime issue in the lobby
                 const { data, error } = await supabase
@@ -165,16 +171,15 @@ const Lobby = () => {
                 if (!data || data.length === 0) {
                     console.error('No players found for the given gameId:', gameId);
                     setPlayers([]); // Clear players if no rows are found
-                    setGamePin(null);
-                    setGameId(null);
                     return;
                 }
                 console.log('Fetched data: ', data);
 
-                setGameId(data.games[0].id);
-                setGamePin(data.game[0].game_pin);
                 getLocalPLayerData(data);
                 setUserIsCreator(data?.playergame?.[0]?.is_creator);
+    
+                setGamePin(data?.games?.[0]?.game_pin);
+                setGameId(data?.games?.[0]?.id || null);
                 // else here
                 const { data: gamePayload } = await supabase
                     .from('playergame')
@@ -182,7 +187,7 @@ const Lobby = () => {
                         *,
                         users (username, image_url)
                         `)
-                    .eq('game_id', gameId)
+                    .eq('game_id', gameId);
 
                 console.log('this is the game Payload:  ', gamePayload);
     
