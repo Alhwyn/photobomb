@@ -58,7 +58,7 @@ const Lobby = () => {
                     return;
                 }
 
-                const newPLayer = { ...payload.new, users: {username: userData.username}};
+                const newPlayer = { ...payload.new, users: {username: userData.username}};
                 setPlayers((prevPlayers) =>
                     prevPlayers.some(player => player.player_id === newPlayer.player_id)
                         ? prevPlayers // Prevent duplicates
@@ -136,20 +136,16 @@ const Lobby = () => {
              * game_id.
              */
 
-            if (!gameId) return;
             try {
   
     
                 console.log('Starting fetchPlayers...');
 
                 const getUserPayload = await getUserPayloadFromStorage();
-
-                console.log('this is the userPayload:  ', getUserPayload);
-
                 const userId = getUserPayload?.id;
 
+                console.log('this is the userPayload:  ', getUserPayload);
                 console.log("this is the user_id", userId);
-    
     
                 // start with here try to fix the realtime issue in the lobby
                 const { data, error } = await supabase
@@ -169,15 +165,16 @@ const Lobby = () => {
                 if (!data || data.length === 0) {
                     console.error('No players found for the given gameId:', gameId);
                     setPlayers([]); // Clear players if no rows are found
+                    setGamePin(null);
+                    setGameId(null);
                     return;
                 }
                 console.log('Fetched data: ', data);
 
+                setGameId(data.games[0].id);
+                setGamePin(data.game[0].game_pin);
                 getLocalPLayerData(data);
                 setUserIsCreator(data?.playergame?.[0]?.is_creator);
-    
-                setGamePin(data?.games?.[0]?.game_pin);
-                setGameId(data?.games?.[0]?.id);
                 // else here
                 const { data: gamePayload } = await supabase
                     .from('playergame')
