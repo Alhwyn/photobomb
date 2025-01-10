@@ -41,22 +41,34 @@ const Lobby = () => {
         }
 
         if (payload.eventType === 'INSERT') {
-            console.log('PLayer Joined: ', payload.new);
 
-            // fetch the username from user table 
-            const { data: userData, error } = await supabase
-                .from('users')
-                .select('username')
-                .eq('id', payload.new.player_id)
-                .single();
+            try {
 
-            if (error) {
-                console.error('Error fetching username: ', error.message);
-                return;
+                console.log('Player Joined: ', payload.new);
+
+                // fetch the username from user table 
+                const { data: userData, error } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', payload.new.player_id)
+                    .single();
+
+                if (error || !userData) {
+                    console.error('Error fetching username:', error.message);
+                    return;
+                }
+
+                const newPLayer = { ...payload.new, users: {username: userData.username}};
+                setPlayers((prevPlayers) =>
+                    prevPlayers.some(player => player.player_id === newPlayer.player_id)
+                        ? prevPlayers // Prevent duplicates
+                        : [...prevPlayers, newPlayer]
+                );
+            } catch(error) {
+                console.error('Error fetching username:', error.message);
+                    return;
+
             }
-
-            const newPLayer = { ...payload.new, users: {username: userData.username}};
-            setPlayers((prevPlayers) => [...prevPlayers, newPLayer]);
 
         } 
         
@@ -123,10 +135,13 @@ const Lobby = () => {
              * and the game pin of the lobby. Then queries in the playergame table for the list of the unique id of the
              * game_id.
              */
+
+            if (!gameId) return;
             try {
   
     
                 console.log('Starting fetchPlayers...');
+
                 const getUserPayload = await getUserPayloadFromStorage();
 
                 console.log('this is the userPayload:  ', getUserPayload);
@@ -192,7 +207,11 @@ const Lobby = () => {
             { event: '*', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handlePLayerLobby)
         .subscribe();
 
-        
+        // Add logging to debug
+        if (!channelLobby) {
+            console.error('Failed to subscribe to lobby updates');
+        }
+
         let removeUser = supabase.channel('custom-delete-channel')
         .on(
         'postgres_changes',
