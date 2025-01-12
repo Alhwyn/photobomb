@@ -38,16 +38,18 @@ const Lobby = () => {
             setPlayers((prevPlayers) =>
                 prevPlayers.filter((player) => player.player_id !== payload.old.player_id)
             );
+            return;
         }
 
         if (payload.eventType === 'INSERT') {
-
             try {
 
                 console.log('Player Joined: ', payload.new);
 
                 // set game id 
                 setGameId(payload.new?.game_id)
+
+                console.log(`GAME ID from payload: ${gameId}`);
 
                 // fetch the username from user table 
                 const { data: userData, error } = await supabase
@@ -61,20 +63,32 @@ const Lobby = () => {
                     return;
                 }
 
-                const newPlayer = { ...payload.new, users: {username: userData.username}};
-                setPlayers((prevPlayers) =>
-                    prevPlayers.some(player => player.player_id === newPlayer.player_id)
-                        ? prevPlayers // Prevent duplicates
-                        : [...prevPlayers, newPlayer]
-                );
+                console.log(`Fetched username for player ID ${payload.new.player_id}:`, userData.username);
+
+                const newPlayer = { ...payload.new, users: { username: userData.username } };
+
+                console.log('New player object:', newPlayer);
+
+                setPlayers((prevPlayers) => {
+                    const playerExists = prevPlayers.some(player => player.player_id === newPlayer.player_id);
+                    if (playerExists) {
+                        console.warn(`Player with ID ${newPlayer.player_id} already exists in the lobby.`);
+                        return prevPlayers;
+                    }
+                    console.log('Adding new player to the list:', newPlayer);
+
+                    setGameId(newPlayer?.gmae_id);
+                    setUserIsCreator(newPlayer?.game_id);
+
+                    return [...prevPlayers, newPlayer];
+                });
+    
             } catch(error) {
                 console.error('Error fetching username:', error.message);
                     return;
 
             }
-
         } 
-        
     }
 
     const handleRemoveUser = async (payload) => {
@@ -175,7 +189,7 @@ const Lobby = () => {
                 }
                 console.log('Fetched data: ', data);
 
-                getLocalPLayerData(data);
+                getLocalPLayerData(getUserPayload);
                 setUserIsCreator(data?.playergame?.[0]?.is_creator);
     
                 setGamePin(data?.games?.[0]?.game_pin);
