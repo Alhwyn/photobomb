@@ -24,6 +24,60 @@ const Lobby = () => {
     const [UserIsCreator, setUserIsCreator] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    const setStateLobby = async () => {
+
+        try {
+
+            console.log('Starting fetchPlayers...');
+            const getUserPayload = await getUserPayloadFromStorage();
+            const userId = getUserPayload?.id;
+
+            console.log('this is the userPayload:  ', getUserPayload);
+
+
+            console.log("this is the user_id", userId);
+
+
+            // start with here try to fix the realtime issue in the lobby
+            const { data, error } = await supabase
+                .from('users')
+                .select(`*,
+                            games (game_pin, id),
+                            playergame (is_creator)
+                `)
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.log('Error fetching  the players:  ', error.message);
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                console.error('No players found for the given gameId:', gameId);
+                setPlayers([]); // Clear players if no rows are found
+                return;
+            }
+            console.log('Fetched data: ', data);
+
+            getLocalPLayerData(getUserPayload);
+            setUserIsCreator(data?.playergame?.[0]?.is_creator);
+
+            setGamePin(data?.games?.[0]?.game_pin);
+            setGameId(data?.games?.[0]?.id);
+
+            return {success: true, message: 'data success'};
+
+        } catch(error) {
+            console.log('There is an error on setStateLobbyFunction: ', )
+            return {success: false, message: 'data success'};
+
+
+        }
+
+
+    }
+
     const handlePLayerLobby = async (payload) => {
         /*
          * Given the parameter paylaod it takes the payload of the realtime
@@ -77,10 +131,10 @@ const Lobby = () => {
                     }
                     console.log('Adding new player to the list:', newPlayer);
 
-                    setGameId(newPlayer?.gmae_id);
-                    setUserIsCreator(newPlayer?.game_id);
+                setGameId(newPlayer?.gmae_id);
+                setUserIsCreator(newPlayer?.game_id);
 
-                    return [...prevPlayers, newPlayer];
+                return [...prevPlayers, newPlayer];
                 });
     
             } catch(error) {
@@ -154,46 +208,14 @@ const Lobby = () => {
              */
 
             try {
+
+                const setUsersetStateLobby = await setStateLobby();
+
+                if (!setUsersetStateLobby) {
+                    console.log('Thier is an error in setStateLobby');
+                }
   
-    
-                console.log('Starting fetchPlayers...');
 
-                const getUserPayload = await getUserPayloadFromStorage();
-                const userId = getUserPayload?.id;
-
-                console.log('this is the userPayload:  ', getUserPayload);
-
-
-                console.log("this is the user_id", userId);
-    
-    
-                // start with here try to fix the realtime issue in the lobby
-                const { data, error } = await supabase
-                    .from('users')
-                    .select(`*,
-                             games (game_pin, id),
-                             playergame (is_creator)
-                    `)
-                    .eq('id', userId)
-                    .single();
-    
-                if (error) {
-                    console.log('Error fetching  the players:  ', error.message);
-                    return;
-                }
-    
-                if (!data || data.length === 0) {
-                    console.error('No players found for the given gameId:', gameId);
-                    setPlayers([]); // Clear players if no rows are found
-                    return;
-                }
-                console.log('Fetched data: ', data);
-
-                getLocalPLayerData(getUserPayload);
-                setUserIsCreator(data?.playergame?.[0]?.is_creator);
-    
-                setGamePin(data?.games?.[0]?.game_pin);
-                setGameId(data?.games?.[0]?.id || null);
                 // else here
                 const { data: gamePayload } = await supabase
                     .from('playergame')
@@ -215,6 +237,18 @@ const Lobby = () => {
         
         fetchPlayers();
         console.log('this is the game id: ', gameId);
+
+        if (!gameId) {
+
+            const setUsersetStateLobby = setStateLobby();
+
+            if (!setUsersetStateLobby) {
+                console.log('Thier is an error in setStateLobby');
+            }
+
+
+
+        }
     
         let channelLobby = supabase
         .channel('lobby_updates') 
