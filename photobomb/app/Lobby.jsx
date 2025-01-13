@@ -27,13 +27,17 @@ const Lobby = () => {
     const setStateLobby = async () => {
 
         try {
+            console.log('Initializing lobby state...');
 
-            console.log('Starting fetchPlayers...');
             const getUserPayload = await getUserPayloadFromStorage();
             const userId = getUserPayload?.id;
 
             console.log('this is the userPayload:  ', getUserPayload);
 
+            if (!userId) {
+                console.error('User ID is null. Cannot fetch lobby state.');
+                return { success: false, message: 'User ID is missing' };
+            }
 
             console.log("this is the user_id", userId);
 
@@ -43,38 +47,53 @@ const Lobby = () => {
                 .from('users')
                 .select(`*,
                             games (game_pin, id),
-                            playergame (is_creator)
+                            playergame (is_creator, player_id, game_id)
                 `)
                 .eq('id', userId)
                 .single();
 
-            if (error) {
-                console.log('Error fetching  the players:  ', error.message);
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                console.error('No players found for the given gameId:', gameId);
-                setPlayers([]); // Clear players if no rows are found
-                return;
-            }
             console.log('Fetched data: ', data);
 
+            setGameId(data.playergame[0].game_id);
+
+
+            console.log('Where is the game id: ', gameId)
+
+        
+            if (!data?.playergame[0].is_creator) {
+
+                const { data: fetchPlayerGamePayload, error: fetchError } = await supabase
+                    .from('playergame')
+                    .select(`*`)
+                    .eq('game_id', gameId);
+
+                console.log('Fetched data fetchPlayerGamePayload: ', fetchPlayerGamePayload);
+
+                setGamePin(data.games[0].game_pin);
+                
+            }
+
+         
+            if (error) {
+                console.error('Error fetching user data:', error.message);
+                return { success: false, message: error.message };
+            }
+
+
+            setGamePin(data.games[0].game_pin);
+            
             getLocalPLayerData(getUserPayload);
             setUserIsCreator(data?.playergame?.[0]?.is_creator);
 
-            setGamePin(data?.games?.[0]?.game_pin);
-            setGameId(data?.games?.[0]?.id);
-
+            console.log('Lobby state set successfully:', { gameId: data.games[0].id, gamePin: data.games[0].game_pin });
             return {success: true, message: 'data success'};
 
         } catch(error) {
-            console.log('There is an error on setStateLobbyFunction: ', )
+            console.error('There is an error on setStateLobbyFunction: ', error.message);
             return {success: false, message: 'data success'};
 
 
         }
-
 
     }
 
@@ -131,8 +150,6 @@ const Lobby = () => {
                     }
                     console.log('Adding new player to the list:', newPlayer);
 
-                setGameId(newPlayer?.gmae_id);
-                setUserIsCreator(newPlayer?.game_id);
 
                 return [...prevPlayers, newPlayer];
                 });
@@ -245,9 +262,6 @@ const Lobby = () => {
             if (!setUsersetStateLobby) {
                 console.log('Thier is an error in setStateLobby');
             }
-
-
-
         }
     
         let channelLobby = supabase
@@ -366,8 +380,6 @@ const Lobby = () => {
                 />
             )}
         </View>
-        
-
     </SafeAreaView>
   )
 }
