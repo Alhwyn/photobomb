@@ -46,7 +46,7 @@ const Lobby = () => {
             const { data, error } = await supabase
                 .from('users')
                 .select(`*,
-                            games (game_pin, id),
+                            games (game_pin, id, game_creator),
                             playergame (is_creator, player_id, game_id)
                 `)
                 .eq('id', userId)
@@ -54,38 +54,36 @@ const Lobby = () => {
 
             console.log('Fetched data: ', data);
 
-            setGameId(data.playergame[0].game_id);
+            setGameId(data.playergame[0]?.game_id);
 
 
             console.log('Where is the game id: ', gameId)
 
         
-            if (!data?.playergame[0].is_creator) {
+            if (!data?.playergame[0]?.is_creator) {
 
                 const { data: fetchPlayerGamePayload, error: fetchError } = await supabase
                     .from('playergame')
-                    .select(`*`)
+                    .select(`*, 
+                             games (game_pin)`)
                     .eq('game_id', gameId);
 
-                console.log('Fetched data fetchPlayerGamePayload: ', fetchPlayerGamePayload);
-
-                setGamePin(data.games[0].game_pin);
+                setGamePin(fetchPlayerGamePayload?.[0]?.games?.game_pin);
                 
+            } else {
+
+                setGamePin(data?.games?.[0]?.game_pin);
+
             }
 
-         
-            if (error) {
-                console.error('Error fetching user data:', error.message);
-                return { success: false, message: error.message };
-            }
+                      
 
 
-            setGamePin(data.games[0].game_pin);
+            
             
             getLocalPLayerData(getUserPayload);
             setUserIsCreator(data?.playergame?.[0]?.is_creator);
 
-            console.log('Lobby state set successfully:', { gameId: data.games[0].id, gamePin: data.games[0].game_pin });
             return {success: true, message: 'data success'};
 
         } catch(error) {
@@ -118,11 +116,6 @@ const Lobby = () => {
             try {
 
                 console.log('Player Joined: ', payload.new);
-
-                // set game id 
-                setGameId(payload.new?.game_id)
-
-                console.log(`GAME ID from payload: ${gameId}`);
 
                 // fetch the username from user table 
                 const { data: userData, error } = await supabase
@@ -311,9 +304,9 @@ const Lobby = () => {
         console.log('this is the player data: ', localPlayerData);
 
         console.log('this is the player_id: ', localPlayerData?.id);
-        console.log('this is the is_Creator', localPlayerData?.playergame?.[0]?.is_creator);
+        console.log('this is the is_Creator', UserIsCreator);
 
-        if (localPlayerData?.playergame?.[0]?.is_creator) {
+        if (UserIsCreator === localPlayerData?.id) {
             const checkGameDelete = await deleteGame(gameId);
 
             if (!checkGameDelete.success) {
