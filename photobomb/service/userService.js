@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 
-
 export const getUserData = async (userId) => {
   /**
    * fetches user data from the supabase database basedon the user_id
@@ -25,7 +24,6 @@ export const getUserData = async (userId) => {
     console.error('Could not fetch user data', error.message);
     return {success: false, msg: error.message};
   }
-  
 }
 
 export const handleCreateUser = async (username) => {

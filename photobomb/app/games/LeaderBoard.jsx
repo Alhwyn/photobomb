@@ -8,7 +8,5 @@ const LeaderBoard = () => {
     </View>
   )
 }
-
 export default LeaderBoard
-
 const styles = StyleSheet.create({})

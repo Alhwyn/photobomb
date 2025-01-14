@@ -206,8 +206,6 @@ const Lobby = () => {
         }
     };
 
-   
- 
     useEffect(() => {
         const fetchPlayers = async () => {
             /*
@@ -224,8 +222,6 @@ const Lobby = () => {
                 if (!setUsersetStateLobby) {
                     console.error('Thier is an error in setStateLobby');
                 }
-  
-
                 // else here
                 const { data: gamePayload } = await supabase
                     .from('playergame')
@@ -299,7 +295,6 @@ const Lobby = () => {
 
         else false it it remove the the player game row
         */
-
         // the player data
         console.log('this is the player data: ', localPlayerData);
 
@@ -326,7 +321,6 @@ const Lobby = () => {
         }
 
     };
-
     const handleStartGame = async () => {
         /*
          * this function handles the the game creator created the function
@@ -335,8 +329,6 @@ const Lobby = () => {
         const result = await startGame(gameId, players);
 
     };
-
-        
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
@@ -355,7 +347,6 @@ const Lobby = () => {
         <UserLobby
             lobbyData={players}
         />
-
         <View style={styles.bottomContainer}>
             {isLoading ? (
                 <Loading/>

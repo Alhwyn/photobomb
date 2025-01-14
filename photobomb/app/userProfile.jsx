@@ -14,9 +14,6 @@ const userProfile = () => {
     const [userPayload, setUserPayload] = useState(null); 
     const [userImage, setUserImage] = useState(null);
     const router = useRouter();
-
-
-
     // fetching the user data form the local storage
 
     useEffect(() => {
@@ -39,7 +36,6 @@ const userProfile = () => {
           </View>
         );
     }
-
 
   return (
     <SafeAreaView style={styles.container}>

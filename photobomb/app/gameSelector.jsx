@@ -46,7 +46,6 @@ const GameSelector = () => {
       console.log('result in gameselector: ', result);
       console.log('result in getGamePayload', getGamePayload);
 
-      
       const createPlayerGame = await addUserToLobby(data?.id, getGamePayload?.data?.id, true);
 
       console.log("Game created:", result);
@@ -63,7 +62,6 @@ const GameSelector = () => {
     
     
 }
-
 
   const renderItem = ({ item }) => (
     <Pressable style={styles.item} onPress={() => createGame(item)}> 

@@ -36,7 +36,6 @@ const CreateUser = () => {
       setLoading(false);
     }
     
-    
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.bigContainer}>

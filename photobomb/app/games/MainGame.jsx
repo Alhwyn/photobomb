@@ -21,14 +21,12 @@ const Main = () => {
     const [isPrompter, setIsPrompter] = useState(false);
     const [gameID, setGameId] = useState(null);
 
-
     const components =  {
         Prompt: <PromptCard text="A cat Photo." author='billyBob' />,
         ImageGallery:  <Gallery/>,
         UserPromptSelection: <PromptSelection/>
 
     }
-
     // fetching the user data form the local storage
     // commit a day
     const fetchUserData = async () => {
@@ -124,9 +122,6 @@ const Main = () => {
             console.error('error on the function fetchPrompterData', error.message); 
 
         }
-
-        
-
     }
     
     useEffect(() => {

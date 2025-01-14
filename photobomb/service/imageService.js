@@ -1,9 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { supabaseUrl } from '../constants';
 
-
-
-
 export const getSupabaseFileUrl = (filePath) => {
     /**
      * retreives a public url for a file stored in the  supabase 'user-profiles' bucket.
@@ -42,8 +39,4 @@ export const getSupabaseUrl = (filePath) => {
     } else {
         return null
     }
-
-    
-
-
 }

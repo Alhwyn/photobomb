@@ -1,6 +1,5 @@
 import { supabase } from "../lib/supabase";
 
-
 /*
  * this Script will do the following thing querying supabase with the following steps until 
  * 1) table (playergame) assign a randomize index of the for each of the following 
@@ -96,8 +95,6 @@ export const startGame = async (gameId, players) => {
     }
 };
 
-
-
 const handleRoundTable = async (game_id, prompter_id) => {
     /*
      * This is the following table needs to create the round table in supabase
@@ -119,7 +116,6 @@ const handleRoundTable = async (game_id, prompter_id) => {
     }
 
     try {
-
 
         // fetch the game data of the game_id
         const { data: gameData, error: gameError } = await supabase
@@ -183,7 +179,6 @@ const handleRoundTable = async (game_id, prompter_id) => {
             }
 
             // UPdate the games current round
-
             const { error: roundUpdateError } = await supabase
                 .from("games")
                 .update({ current_round: nextRound })
