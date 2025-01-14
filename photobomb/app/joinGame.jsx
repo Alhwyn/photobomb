@@ -49,7 +49,7 @@ const joinGame = () => {
       
 
     } catch(error) {
-      console.log('joinGame.jsx Could not join game: ', error.message);
+      console.error('joinGame.jsx Could not join game: ', error.message);
       return;
     }
   }

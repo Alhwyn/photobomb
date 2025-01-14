@@ -222,7 +222,7 @@ const Lobby = () => {
                 const setUsersetStateLobby = await setStateLobby();
 
                 if (!setUsersetStateLobby) {
-                    console.log('Thier is an error in setStateLobby');
+                    console.error('Thier is an error in setStateLobby');
                 }
   
 
@@ -240,7 +240,7 @@ const Lobby = () => {
                 setPlayers(gamePayload);
     
             } catch(error) {
-                console.log('Error fetching the players:  ', error.message);
+                console.error('Error fetching the players:  ', error.message);
                 return;
             }
         };
@@ -253,7 +253,7 @@ const Lobby = () => {
             const setUsersetStateLobby = setStateLobby();
 
             if (!setUsersetStateLobby) {
-                console.log('Thier is an error in setStateLobby');
+                console.error('Thier is an error in setStateLobby');
             }
         }
     
@@ -310,7 +310,7 @@ const Lobby = () => {
             const checkGameDelete = await deleteGame(gameId);
 
             if (!checkGameDelete.success) {
-                console.log('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
+                console.error('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
             } else {
                 console.log('Succesfully deleted the game.')
             }

@@ -25,7 +25,7 @@ const CreateUser = () => {
 
       if (!isHandleCreate?.success) {
 
-        console.log('Error: unable to create user')
+        console.error('Error: unable to create user')
 
       }
 

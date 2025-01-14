@@ -58,7 +58,7 @@ const GameSelector = () => {
     });
 
     } catch(error) {
-      console.log('Game Creation has Failed', error.message);
+      console.error('Game Creation has Failed', error.message);
     }
     
     

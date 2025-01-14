@@ -20,7 +20,7 @@ const Index = () => {
           router.replace('CreateUser'); // Navigate to CreateUser.jsx if verification fails
         }
       } catch (error) {
-        console.log('Error during initialization:', error.message);
+        console.error('Error during initialization:', error.message);
         router.replace('CreateUser'); // Navigate to CreateUser.jsx on unexpected errors
       }
     };
