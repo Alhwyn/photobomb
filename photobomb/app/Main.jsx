@@ -26,7 +26,7 @@ const Main = () => {
 
                 const imageSource = await getSupabaseUrl(data?.image_url);
 
-                console.log('this is the big image: ', imageSource);
+                console.log('this is the big image:  ', imageSource);
 
                 setProfileImage(imageSource);
 

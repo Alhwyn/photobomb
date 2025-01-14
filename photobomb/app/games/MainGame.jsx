@@ -19,7 +19,7 @@ const Main = () => {
     const [currentStage, setCurrentStage] = useState('Prompt'); 
     const [showPrompterPayload, setShowPrompterPayload] = useState(null);
     const [isPrompter, setIsPrompter] = useState(false);
-    const [gameID, setGameID] = useState(null);
+    const [gameID, setGameId] = useState(null);
 
 
     const components =  {
@@ -37,25 +37,29 @@ const Main = () => {
             if (Userpayload) {
                 setUserPayload(Userpayload);
 
-                const { data, error: playerError } = await supabase
-                .from('users')
-                .select(`*,
-                    games (game_pin, id),
-                    playergame (is_creator)
-                `)
-                .eq('id', Userpayload?.id)
-                .single();
+                const { data, error } = await supabase
+                    .from('users')
+                    .select(`*,
+                                games (game_pin, id, game_creator),
+                                playergame (is_creator, player_id, game_id)
+                    `)
+                    .eq('id', Userpayload?.id)
+                    .single();
+    
+                console.log('Fetched data: ', data);
+                console.log('Fetched data: ', data.games[0]?.id);
+    
+                setGameId(data.games[0]?.id);
 
-                if (playerError) {
-                    console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
+                if (error) {
+                    console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
                 }
 
                 console.log('Retreiving player data went succesful: ', data);
-                setGameID(data?.games?.[0]?.id);
                 console.log('This is the game id: ', gameID);
             }
         } catch(error) {
-            console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
+            console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
         }
         
     };
@@ -68,6 +72,31 @@ const Main = () => {
          * instruction
          * 
          */
+
+        try {
+
+            const getRoundPayload = await getRoundData(gameID);
+
+            console.log('sasdasdas', getRoundPayload?.data?.prompter_id);
+
+            const {data: fetchPlayerGameData, error: playerGameError} = await supabase
+                .from('playergame')
+                .select('*')
+                .eq('id', getRoundPayload?.data?.prompter_id)
+                .single();
+
+            console.log('dafadfadsfdasfsdf', fetchPlayerGameData);
+
+            if (fetchPlayerGameData.is_creator) {
+                setIsPrompter(getRoundPayload?.data?.prompter_id);
+
+                console.log('set up the prompter: ', isPrompter);
+
+            }
+
+        } catch(error) {
+            console.error('Error in teh checkUserRole: ', error.message)
+        }
     }
 
     const fetchPrompterData = async (gameId) => {
@@ -103,7 +132,10 @@ const Main = () => {
     useEffect(() => {
         fetchUserData();
 
+        checkUserRole();
+
         fetchPrompterData(gameID);
+
 
 
     }, []);
