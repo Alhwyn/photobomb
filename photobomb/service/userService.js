@@ -16,13 +16,13 @@ export const getUserData = async (userId) => {
 
     if (error) {
 
-      console.log('Could not fetch user data', error.message);
+      console.error('Could not fetch user data', error.message);
       return {success: false, msg: error.message};
     }
 
     return {success: true, data: data};
   } catch(error) {
-    console.log('Could not fetch user data', error.message);
+    console.error('Could not fetch user data', error.message);
     return {success: false, msg: error.message};
   }
   
@@ -47,7 +47,7 @@ export const handleCreateUser = async (username) => {
       .single();
 
     if (error) {
-      console.log('Creating User Insert Error:', error.message);
+      console.error('Creating User Insert Error:', error.message);
       return { success: false, msg: error.message };
     }
 
@@ -62,7 +62,7 @@ export const handleCreateUser = async (username) => {
     console.log('User created successfully and stored in local storage: ', payload);
     return { success: true, data: payload };
   } catch (error) {
-    console.log('Got error:', error.message);
+    console.error('Got error:', error.message);
     return { success: false, msg: error.message };
   }
 };
@@ -76,13 +76,13 @@ export const getUserPayloadFromStorage = async () => {
     const userPayloadString = await AsyncStorage.getItem('userPayload');
 
     if (!userPayloadString) {
-      console.log('No user data found in local storage.');
+      console.error('No user data found in local storage.');
       return null; // Return null if no data is found
     }
 
     return JSON.parse(userPayloadString); // Parse and return the user payload
   } catch (error) {
-    console.log('Error retrieving user payload from storage:', error.message);
+    console.error('Error retrieving user payload from storage:', error.message);
     return null;
   }
 };
@@ -99,7 +99,7 @@ export const verifyUserFromStorage = async () => {
     const userPayload = await getUserPayloadFromStorage();
 
     if (!userPayload) {
-      console.log('No user data found in local storage.');
+      console.error('No user data found in local storage.');
       return { success: false, msg: 'No user data in storage' };
     }
 
@@ -114,7 +114,7 @@ export const verifyUserFromStorage = async () => {
       .single();
 
     if (error) {
-      console.log('Error fetching user from database:', error.message);
+      console.error('Error fetching user from database:', error.message);
       return { success: false, msg: error.message };
     }
 
@@ -127,7 +127,7 @@ export const verifyUserFromStorage = async () => {
       return { success: false, msg: 'User UUID mismatch or not found' };
     }
   } catch (error) {
-    console.log('Error verifying user:', error.message);
+    console.error('Error verifying user:', error.message);
     return { success: false, msg: error.message };
   }
 };

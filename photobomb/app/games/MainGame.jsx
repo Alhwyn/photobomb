@@ -121,7 +121,7 @@ const Main = () => {
 
             console.log('this is the prompter data in the user table', getPrompterPayload);
         } catch(error) {
-            console.log('error on the function fetchPrompterData', error.message); 
+            console.error('error on the function fetchPrompterData', error.message); 
 
         }
 

@@ -14,17 +14,17 @@ export const checkGamePin = async (pin) => {
         .select('*')
         .eq('game_pin', pin);
         if (error) {
-            console.log('Error checking game PIN: ', error.message);
+            console.error('Error checking game PIN: ', error.message);
             return { success: false, msg: error.message};
         }
         if (!data || data.length === 0) {
-            console.log(' No games found with this PIN.')
+            console.error(' No games found with this PIN.')
             return false;
         }
         console.log('Game PIN exists:  ', data);
         return {success: true, data: data};
     } catch(error) {
-        console.log('Error checking PIN', error.message);
+        console.error('Error checking PIN', error.message);
         return { success: false, msg: error.message};
     }
 
@@ -44,7 +44,7 @@ export const getGameId = async (userId) => {
         .single();
 
         if (error) {
-            console.log('Failed to retrieve game connection', error.message);
+            console.error('Failed to retrieve game connection', error.message);
             return { success: false, msg: error.message};
         }
         if (!data || data.length === 0) {
@@ -53,7 +53,7 @@ export const getGameId = async (userId) => {
         }
         return {success: true, data: data}
     } catch(error) {
-        console.log('Error checking PIN', error.message);
+        console.error('Error checking PIN', error.message);
         return { success: false, msg: error.message};
     }
 
@@ -82,12 +82,12 @@ export const CreateGameID = async (pin, payload) => {
             },
         ]);
         if (error) {
-            console.log('Error Create game in Database', error.message);
+            console.error('Error Create game in Database', error.message);
             return { success: false, msg: error.message };
         }
         return {success: true, data: payload}
     } catch(error) {
-        console.log('Error Create game in Database', error.message);
+        console.error('Error Create game in Database', error.message);
         return { success: false, msg: error.message };
     }
 
@@ -146,14 +146,14 @@ export const addUserToLobby = async (playerId, gameId, isCreator) => {
 
 
         if (error) {
-            console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+            console.error('GameService.jsx Error when user joining the lobby: ', error.message);
             return {success: false, msg: error.message};
         }
 
         return {success: true}
        
     } catch(error) {
-        console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+        console.error('GameService.jsx Error when user joining the lobby: ', error.message);
         return {success: false, msg: error.message};
     }
 }
@@ -187,14 +187,14 @@ export const checkUserInLobby = async (userId) => {
         .single();
 
         if (error) {
-            console.log('GameService.jsx Error when user joining the lobby:  ', error.message);
+            console.error('GameService.jsx Error when user joining the lobby:  ', error.message);
             return {success: false, msg: error.message};
         }
 
         return {success: true, data: data};
 
     } catch(error) {
-        console.log('GameService.jsx Error when user joining the lobby: ', error.message);
+        console.error('GameService.jsx Error when user joining the lobby: ', error.message);
         return {success: false, msg: error.message};
     }
 
@@ -219,13 +219,13 @@ export const deletePlayerGame = async (playerId, gameId) => {
 
 
         if (error) {
-            console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
+            console.error('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
             return {success: false, msg: error.message}
         }
 
         return {success: true, message: 'Succesfully deleted the game from the playerGames tables'};
     } catch(error) {
-        console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
+        console.error('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
         return {success: false, msg: error.message}
     }
 };
@@ -244,7 +244,7 @@ export const getRoundData = async (gameId) => {
           .single();
 
         if (error) {
-            console.log('Error on fetching the data on the round table gameService.js', error.message);
+            console.error('Error on fetching the data on the round table gameService.js', error.message);
             return {success: false, message: error.message};
         }
 
@@ -252,7 +252,7 @@ export const getRoundData = async (gameId) => {
 
         return {success: true, data: data};
     } catch (error) {
-        console.log('Error on fetching the data on the round table gameService.js', error.message);
+        console.error('Error on fetching the data on the round table gameService.js', error.message);
         return {success: false, message: error.message};
     }
 }

@@ -31,7 +31,7 @@ export const startGame = async (gameId, players) => {
           .eq("id", gameId);
 
         if (statusError) {
-            console.log("Error updating the game status: ", statusError.message);
+            console.error("Error updating the game status: ", statusError.message);
             return { success: false, message: statusError};
         }
 
@@ -54,7 +54,7 @@ export const startGame = async (gameId, players) => {
             .upsert(shuffledPlayers, { onConflict: ["id"] });
 
         if (turnOrderError) {
-            console.log('Error: assigning random turn orders: ', turnOrderError.message);
+            console.error('Error: assigning random turn orders: ', turnOrderError.message);
             return {success: false, message: turnOrderError.message};
         }
 
@@ -64,13 +64,13 @@ export const startGame = async (gameId, players) => {
 
         const firstPropmpter = shuffledPlayers?.[0]?.id;
         if (!firstPropmpter) {
-            console.log("Error determining the first prompter.");
+            console.error("Error determining the first prompter.");
             return {success: false, message: "No players available to start the game."};
         }
 
         const roundTableResult = await handleRoundTable(gameId, firstPropmpter);
         if (!roundTableResult.success) {
-            console.log("Error creating the round table: ", roundTableResult.message);
+            console.error("Error creating the round table: ", roundTableResult.message);
             return { success: false, message: roundTableResult};
         }
 
@@ -83,7 +83,7 @@ export const startGame = async (gameId, players) => {
           .eq("id", gameId);
 
         if (statusActiveError) {
-            console.log("Error updating the game status: ", statusError.message);
+            console.error("Error updating the game status: ", statusError.message);
             return { success: false, message: statusError};
         }
 
@@ -91,7 +91,7 @@ export const startGame = async (gameId, players) => {
 
         return {success: true};
     } catch(error) {
-        console.log('Error on Starting Game: ', error.message);
+        console.error('Error on Starting Game: ', error.message);
         return {success: false, message: turnOrderError.message};
     }
 };
@@ -114,7 +114,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
      */
 
     if (!game_id || !prompter_id) {
-        console.log("Invalid input: game_id and prompter_id are required.");
+        console.error("Invalid input: game_id and prompter_id are required.");
         return { success: false, message: "Invalid input." };
     }
 
@@ -129,7 +129,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
             .single();
 
         if (gameError) {
-            console.log("Error fetching game status: ", gameError.message);
+            console.error("Error fetching game status: ", gameError.message);
             return { success: false, message: gameError.message};
         }
 
@@ -144,7 +144,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
                 .order("turn_order", { ascending: true });
 
             if (playerError) {
-                console.log("Error fethcing player list: ", playerError.message);
+                console.error("Error fethcing player list: ", playerError.message);
                 return { success: false, message: playerError.message };
             }
 
@@ -157,7 +157,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
             const totalPlayers = Math.floor(players.length);
 
             if (!nextPrompterId) {
-                console.log("Error determining the next prompter: nextPrompter problem");
+                console.error("Error determining the next prompter: nextPrompter problem");
                 return { success: false, message: "Unable to determine the next prompter"};
             }
 
@@ -178,7 +178,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
                 });
 
             if (roundError) {
-                console.log("Error creating a new round.", roundError.message);
+                console.error("Error creating a new round.", roundError.message);
                 return {success: false, message: roundError.message};
             }
 
@@ -190,7 +190,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
                 .eq("id", game_id);
 
             if (roundUpdateError) {
-                console.log("Error updating the game current round ", roundUpdateError.message);
+                console.error("Error updating the game current round ", roundUpdateError.message);
                 return {success: false, message: roundUpdateError.message};
             }
 
@@ -198,7 +198,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
             return { success: true,  data: nextPrompterId, round: nextRound};
         }
     } catch (error) {
-        console.log("Error in handleRoundtable: ", error.message);
+        console.error("Error in handleRoundtable: ", error.message);
         return { success: false, message: error.message};
     }
 };
