@@ -45,9 +45,6 @@ const joinGame = () => {
           pathname: 'Lobby'
         })
       }
-
-      
-
     } catch(error) {
       console.error('joinGame.jsx Could not join game: ', error.message);
       return;

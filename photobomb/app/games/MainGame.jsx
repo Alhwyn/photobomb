@@ -61,7 +61,6 @@ const Main = () => {
         }
         
     };
-
     const checkUserRole = async () => {
         /**
          * in this function will look for the locat user role of the game 
@@ -70,9 +69,7 @@ const Main = () => {
          * instruction
          * 
          */
-
         try {
-
             const getRoundPayload = await getRoundData(gameID);
 
             console.log('sasdasdas', getRoundPayload?.data?.prompter_id);
@@ -123,16 +120,13 @@ const Main = () => {
 
         }
     }
-    
+
     useEffect(() => {
         fetchUserData();
 
         checkUserRole();
 
         fetchPrompterData(gameID);
-
-
-
     }, []);
 
   const renderGameContainer = () => components[currentStage] || <PromptCard text="Default prompt" />;

@@ -17,7 +17,6 @@ const CreateUser = () => {
     const [loading, setLoading] = useState(false);
 
     const handlingCreatingUser = async () => {
-
       setLoading(true);
 
       console.log('this is the username: ', username);
@@ -30,9 +29,6 @@ const CreateUser = () => {
       }
 
       router.push('Main');
-
-    
-
       setLoading(false);
     }
     

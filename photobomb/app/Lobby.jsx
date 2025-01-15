@@ -205,7 +205,6 @@ const Lobby = () => {
             setIsLoading(false);
         }
     };
-
     useEffect(() => {
         const fetchPlayers = async () => {
             /*
@@ -214,9 +213,7 @@ const Lobby = () => {
              * and the game pin of the lobby. Then queries in the playergame table for the list of the unique id of the
              * game_id.
              */
-
             try {
-
                 const setUsersetStateLobby = await setStateLobby();
 
                 if (!setUsersetStateLobby) {

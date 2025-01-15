@@ -20,8 +20,6 @@ const generateUniquePin = async () => {
     return pin; // return the unique PIN
 }
 
-
-
 const gameModes = [
   { id: '1', name: 'Classic', image: require('../assets/images/mode1.png'), gradient: ['#0000FF', '#1E90FF']},
 ];
@@ -59,8 +57,6 @@ const GameSelector = () => {
     } catch(error) {
       console.error('Game Creation has Failed', error.message);
     }
-    
-    
 }
 
   const renderItem = ({ item }) => (

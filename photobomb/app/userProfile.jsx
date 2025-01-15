@@ -15,7 +15,6 @@ const userProfile = () => {
     const [userImage, setUserImage] = useState(null);
     const router = useRouter();
     // fetching the user data form the local storage
-
     useEffect(() => {
         const fetchUserData = async () => {
             const data = await getUserPayloadFromStorage();
@@ -36,7 +35,6 @@ const userProfile = () => {
           </View>
         );
     }
-
   return (
     <SafeAreaView style={styles.container}>
         <BackButton/>
@@ -44,7 +42,6 @@ const userProfile = () => {
             <Text style={styles.title}>
                 User Profile
             </Text>
-
             <Profile
                 profileSize={64}
                 image_url={userImage}

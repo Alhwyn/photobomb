@@ -9,7 +9,6 @@ import Profile from '../components/Profile';
 import { theme } from '../constants/theme';
 import { getUserPayloadFromStorage } from '../service/userService'
 // Setting
-
 const Main = () => {
     const router = useRouter();
     const [userPayload, setUserPayload] = useState(null); 
@@ -31,7 +30,6 @@ const Main = () => {
                 setProfileImage(imageSource);
 
             }
-
         };
     
         fetchUserData();
@@ -45,8 +43,6 @@ const Main = () => {
     
         return () => clearInterval(intervalId);
     }, []); 
-    
-
   return (
     <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
