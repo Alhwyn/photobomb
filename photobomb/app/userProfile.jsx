@@ -10,7 +10,6 @@ import { useRouter } from 'expo-router'
 import { getSupabaseUrl } from '../service/imageService'
 
 const userProfile = () => {
-
     const [userPayload, setUserPayload] = useState(null); 
     const [userImage, setUserImage] = useState(null);
     const router = useRouter();
