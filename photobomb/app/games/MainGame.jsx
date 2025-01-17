@@ -45,9 +45,9 @@ const Main = () => {
                     .single();
     
                 console.log('Fetched data: ', data);
-                console.log('Fetched data: ', data.games[0]?.id);
+                console.log('This is the game data in MainGame: ', data.playergame[0].game_id);
     
-                setGameId(data.games[0]?.id);
+                setGameId(data.playergame[0].game_id);
 
                 if (error) {
                     console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
@@ -70,9 +70,40 @@ const Main = () => {
          * 
          */
         try {
+
+
+            const {data: fetchPlayerGameData, error: playerGameError} = await supabase
+                .from('playergame')
+                .select(`*,
+                         users (username)`)
+                .eq('player_id', userPayload?.id)
+                .single();
+
+                console.log('the payload: ', fetchPlayerGameData);
+
+                console.log(`this is the fetched data of fetchPlayerGameData is_creator and this is the user ${fetchPlayerGameData.users.username}: `, fetchPlayerGameData?.is_creator);
+
+
+            return {success: true, boolean: fetchPlayerGameData?.is_creator};
+
+        } catch(error) {
+            console.error('Error in the checkUserRole: ', error.message)
+        }
+    }
+
+    const getPrompterPlayer = async () => {
+        /**
+         * in this function will look for the locat user role of the game 
+         * given the game id and the player id from the round table and check if thier the prompter
+         * if the user is the prompter then the state will be true and they will be a new ui and new 
+         * instruction
+         * 
+         */
+        try {
+            // get he round data
             const getRoundPayload = await getRoundData(gameID);
 
-            console.log('sasdasdas', getRoundPayload?.data?.prompter_id);
+            console.log('This is the round data; ',  getRoundPayload);
 
             const {data: fetchPlayerGameData, error: playerGameError} = await supabase
                 .from('playergame')
@@ -80,17 +111,13 @@ const Main = () => {
                 .eq('id', getRoundPayload?.data?.prompter_id)
                 .single();
 
-            console.log('dafadfadsfdasfsdf', fetchPlayerGameData);
+                console.log('this is the fetched data of fetchPlayerGameData is_creator: ', fetchPlayerGameData?.is_creator);
 
-            if (fetchPlayerGameData.is_creator) {
-                setIsPrompter(getRoundPayload?.data?.prompter_id);
+                
 
-                console.log('set up the prompter: ', isPrompter);
-
-            }
 
         } catch(error) {
-            console.error('Error in teh checkUserRole: ', error.message)
+            console.error('Error in the checkUserRole: ', error.message)
         }
     }
 
@@ -122,11 +149,20 @@ const Main = () => {
     }
 
     useEffect(() => {
-        fetchUserData();
+        const initiallizeGameData = async () => {
+            try {
 
-        checkUserRole();
+                await fetchUserData();
+                const GetRolePlayerBool = await checkUserRole();
+                await fetchPrompterData(gameID);
 
-        fetchPrompterData(gameID);
+            } catch(error) {
+                console.error('Error in USe Effect: '. error.message);
+            };
+            
+        };
+
+        initiallizeGameData();
     }, []);
 
   const renderGameContainer = () => components[currentStage] || <PromptCard text="Default prompt" />;
