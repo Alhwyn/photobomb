@@ -18,7 +18,7 @@ const Main = () => {
     const [userPayload, setUserPayload] = useState(null); 
     const [currentStage, setCurrentStage] = useState('Prompt'); 
     const [showPrompterPayload, setShowPrompterPayload] = useState(null);
-    const [isPrompter, setIsPrompter] = useState(false);
+    const [isPrompterUsername, setIsPrompterUsername] = useState(false);
     const [gameID, setGameId] = useState(null);
 
     const components =  {
@@ -70,8 +70,6 @@ const Main = () => {
          * 
          */
         try {
-
-
             const {data: fetchPlayerGameData, error: playerGameError} = await supabase
                 .from('playergame')
                 .select(`*,
@@ -91,59 +89,27 @@ const Main = () => {
         }
     }
 
-    const getPrompterPlayer = async () => {
-        /**
-         * in this function will look for the locat user role of the game 
-         * given the game id and the player id from the round table and check if thier the prompter
-         * if the user is the prompter then the state will be true and they will be a new ui and new 
-         * instruction
-         * 
-         */
+    const viewPlayerGameTable = async (playerGameId) => {
         try {
-            // get he round data
-            const getRoundPayload = await getRoundData(gameID);
 
-            console.log('This is the round data; ',  getRoundPayload);
-
-            const {data: fetchPlayerGameData, error: playerGameError} = await supabase
+            const { data: dataPlayerGame, error: errorPLayerGame} = await supabase
                 .from('playergame')
-                .select('*')
-                .eq('id', getRoundPayload?.data?.prompter_id)
+                .select(`*,
+                         users (username, image_url)`)
+                .eq('id', RoundDataPayload?.data?.prompter_id)
                 .single();
 
-                console.log('this is the fetched data of fetchPlayerGameData is_creator: ', fetchPlayerGameData?.is_creator);
-
-                
+                console.log('Fetched the paylaod of the dataPLayerGame: ', dataPlayerGame);
 
 
-        } catch(error) {
-            console.error('Error in the checkUserRole: ', error.message)
-        }
-    }
-
-    const fetchPrompterData = async (gameId) => {
-        /**
-         * before teh game start will use the prompter userid to get the image url and the username for the 
-         * game form the round tabel and query in the relational database in the user table
-         */
-
-        try {
-
-            const getRoundDataPayload = await getRoundData(gameId);
-
-            if (!getRoundDataPayload?.success) {
-                console.log('Their is an error on fetching the round payload in MainGame: ', getRoundDataPayload.message);
+            if (errorPLayerGame) {
+                console.error('Error on View PlayerGameTable: ', error.message)
+                return {success: false, message: error.message}
             }
 
-            console.log('got the data paylaod', getRoundDataPayload?.data);
-
-            console.log('this is the prompter id: ', getRoundDataPayload?.data?.prompter_id);
-
-            const getPrompterPayload = await getUserData(getRoundDataPayload?.data?.prompter_id);
-
-            console.log('this is the prompter data in the user table', getPrompterPayload);
         } catch(error) {
-            console.error('error on the function fetchPrompterData', error.message); 
+            console.error('Error on View PlayerGameTable: ', error.message)
+            return {success: false, message: error.message}
 
         }
     }
@@ -153,8 +119,35 @@ const Main = () => {
             try {
 
                 await fetchUserData();
+
+                const RoundDataPayload = await getRoundData(gameID);
+
+                console.log('this is the Round data bob: ', RoundDataPayload);
+
+                console.log(RoundDataPayload?.data?.prompter_id);
+                console.log(RoundDataPayload?.data?.prompter_id);
+                console.log(RoundDataPayload?.data?.prompter_id);
+                console.log(RoundDataPayload?.data?.prompter_id);
+
+                
+
+                
+
+                // get the state of username of the of the palyoad of the 
+
+                setShowPrompterPayload(dataPlayerGame);
+
+                console.log('Fetc the UserTablePrompter: ', UserTablePrompter);
+                console.log('This is the set Round payload:', showPrompterPayload);
+
+                
+
+
+                await getPrompterPlayer();
+
+
                 const GetRolePlayerBool = await checkUserRole();
-                await fetchPrompterData(gameID);
+                
 
             } catch(error) {
                 console.error('Error in USe Effect: '. error.message);
@@ -163,7 +156,7 @@ const Main = () => {
         };
 
         initiallizeGameData();
-    }, []);
+    }, [gameID]);
 
   const renderGameContainer = () => components[currentStage] || <PromptCard text="Default prompt" />;
     
