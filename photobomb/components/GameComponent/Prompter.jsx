@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { FlatList, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import PromptCard from './PromptCard'
 
 const Prompter = () => {
 
@@ -21,11 +22,19 @@ const Prompter = () => {
 
   return (
     <View stlye={styles.container}>
-
+        <FlatList
+            data={prompts}
+            horizontal
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+                <PromptCard text={item.text} author={item.author} />
+            )}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.list}
+        />
     </View>
-
-  )
-}
+  );
+};
 
 export default Prompter
 

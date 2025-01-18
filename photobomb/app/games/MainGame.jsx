@@ -12,6 +12,7 @@ import PromptSelection from '../../components/GameComponent/PromptSelection';
 import ProgressBar from '../../components/GameComponent/ProgressBar';
 import { supabase } from '../../lib/supabase';
 import { getRoundData } from '../../service/gameService';
+import Prompter from '../../components/GameComponent/Prompter';
 
 const Main = () => {
     const router = useRouter()
@@ -23,12 +24,12 @@ const Main = () => {
     const [gameID, setGameId] = useState(null);
 
     const components =  {
-        Prompt: <PromptCard text="A cat Photo." author='billyBob' />,
+        Prompt: <Prompter/>,
         ImageGallery:  <Gallery/>,
         UserPromptSelection: <PromptSelection/>
 
     }
-    // fetching the user data form the local storage
+    // fetching the user data for m the local storage
     // commit a day
     const fetchUserData = async () => {
         try {
@@ -80,18 +81,18 @@ const Main = () => {
 
                 console.log('the payload:', fetchPlayerGameData);
 
-                console.log(`this is the fetched data of fetchPlayerGameData is_creator and this is the user ${fetchPlayerGameData.users.username}: `, fetchPlayerGameData?.is_creator);
+                
 
             if (playerGameError) {
-                console.error('Error in the checkUserRole: ', error.message)
+                console.error('Error in the checkUserRole:  ', playerGameError.message);
                 return {success: false, message: playerGameError.message};
 
             }
             return {success: true, data: fetchPlayerGameData};
 
         } catch(error) {
-            console.error('Error in the checkUserRole: ', error.message)
-            return {success: false, message: error.message};
+            console.log('Error in the checkUserRole: ', playerGameError.message)
+            return {success: false, message: playerGameError.message};
         }
     }
 
