@@ -96,7 +96,7 @@ const Main = () => {
                 .from('playergame')
                 .select(`*,
                          users (username, image_url)`)
-                .eq('id', RoundDataPayload?.data?.prompter_id)
+                .eq('id', playerGameId)
                 .single();
 
                 console.log('Fetched the paylaod of the dataPLayerGame: ', dataPlayerGame);
@@ -106,6 +106,10 @@ const Main = () => {
                 console.error('Error on View PlayerGameTable: ', error.message)
                 return {success: false, message: error.message}
             }
+
+            return {success: true, data: dataPlayerGame}
+
+
 
         } catch(error) {
             console.error('Error on View PlayerGameTable: ', error.message)
@@ -124,20 +128,18 @@ const Main = () => {
 
                 console.log('this is the Round data bob: ', RoundDataPayload);
 
-                console.log(RoundDataPayload?.data?.prompter_id);
-                console.log(RoundDataPayload?.data?.prompter_id);
-                console.log(RoundDataPayload?.data?.prompter_id);
-                console.log(RoundDataPayload?.data?.prompter_id);
 
                 
 
-                
+                const RetreivePrompterPayload = await viewPlayerGameTable(RoundDataPayload?.data?.prompter_id);
+
+                console.log('Recieve teh RetreivePrompterPayload in teh bobby wegjweegj: ', RetreivePrompterPayload);
 
                 // get the state of username of the of the palyoad of the 
 
-                setShowPrompterPayload(dataPlayerGame);
+                setShowPrompterPayload(RetreivePrompterPayload);
 
-                console.log('Fetc the UserTablePrompter: ', UserTablePrompter);
+
                 console.log('This is the set Round payload:', showPrompterPayload);
 
                 
@@ -169,7 +171,7 @@ const Main = () => {
             {/* Profile Pic Compnonent */}
             <Profile/>
             
-            <Text style={styles.usernameText}>{userPayload?.username}</Text>
+            <Text style={styles.usernameText}>{showPrompterPayload?.users}</Text>
             <Text style={styles.text}>is picking a prompt...</Text>
         </View>
         <View style={styles.styleprogressBar}>
