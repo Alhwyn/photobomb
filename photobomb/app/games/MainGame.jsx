@@ -18,7 +18,8 @@ const Main = () => {
     const [userPayload, setUserPayload] = useState(null); 
     const [currentStage, setCurrentStage] = useState('Prompt'); 
     const [showPrompterPayload, setShowPrompterPayload] = useState(null);
-    const [isPrompterUsername, setIsPrompterUsername] = useState(false);
+    const [isPrompter, setIsPrompter] = useState(null);
+    const [Loading, isLoading] = useState();
     const [gameID, setGameId] = useState(null);
 
     const components =  {
@@ -77,15 +78,20 @@ const Main = () => {
                 .eq('player_id', userPayload?.id)
                 .single();
 
-                console.log('the payload: ', fetchPlayerGameData);
+                console.log('the payload:', fetchPlayerGameData);
 
                 console.log(`this is the fetched data of fetchPlayerGameData is_creator and this is the user ${fetchPlayerGameData.users.username}: `, fetchPlayerGameData?.is_creator);
 
+            if (playerGameError) {
+                console.error('Error in the checkUserRole: ', error.message)
+                return {success: false, message: playerGameError.message};
 
-            return {success: true, boolean: fetchPlayerGameData?.is_creator};
+            }
+            return {success: true, data: fetchPlayerGameData};
 
         } catch(error) {
             console.error('Error in the checkUserRole: ', error.message)
+            return {success: false, message: error.message};
         }
     }
 
@@ -123,14 +129,8 @@ const Main = () => {
             try {
 
                 await fetchUserData();
-
                 const RoundDataPayload = await getRoundData(gameID);
-
                 console.log('this is the Round data bob: ', RoundDataPayload);
-
-
-                
-
                 const RetreivePrompterPayload = await viewPlayerGameTable(RoundDataPayload?.data?.prompter_id);
 
                 console.log('Recieve teh RetreivePrompterPayload in teh bobby wegjweegj: ', RetreivePrompterPayload);
@@ -138,18 +138,12 @@ const Main = () => {
                 // get the state of username of the of the palyoad of the 
 
                 setShowPrompterPayload(RetreivePrompterPayload);
-
-
                 console.log('This is the set Round payload:', showPrompterPayload);
-
-                
-
-
-                await getPrompterPlayer();
-
-
                 const GetRolePlayerBool = await checkUserRole();
-                
+                console.log('this is the GetRolePlayerBool: ', GetRolePlayerBool);
+                // boolean of the user client selection of the game
+                console.log(GetRolePlayerBool?.data?.is_creator);
+                setIsPrompter(GetRolePlayerBool?.data?.is_creator); 
 
             } catch(error) {
                 console.error('Error in USe Effect: '. error.message);
@@ -171,7 +165,7 @@ const Main = () => {
             {/* Profile Pic Compnonent */}
             <Profile/>
             
-            <Text style={styles.usernameText}>{showPrompterPayload?.users}</Text>
+            <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
             <Text style={styles.text}>is picking a prompt...</Text>
         </View>
         <View style={styles.styleprogressBar}>
