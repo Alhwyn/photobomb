@@ -1,14 +1,20 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import { LinearGradient } from 'expo-linear-gradient';
 
 const PromptCard = ({ text, author="PhotoBomb", media}) => {
   return (
-    <View style={styles.card}>
-        <View style={styles.content}>
-            <Text style={styles.promptText}>{text}</Text>
-            <Text style={styles.authorText}>@{author}</Text>
+    <LinearGradient
+      colors={['#d3d3d3', '#e8e8e8']}
+      style={styles.card}
+    >
+        <View style={styles.card}>
+            <View style={styles.content}>
+                <Text style={styles.promptText}>{text}</Text>
+            </View>
         </View>
-    </View>
+    </LinearGradient>
+   
   );
 };
 
@@ -16,31 +22,28 @@ export default PromptCard
 
 const styles = StyleSheet.create({
     card: {
-        width: 300,
-        height: 425,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 3,
     },
     content: {
-        marginTop: 20,
-        marginLeft: 30,
-        alignItems: 'flex-start',
+      marginTop: 15, // Adjusted for smaller card
+      marginBottom: 15, // Adjusted for smaller card
+      marginLeft: 20,
+      alignItems: 'flex-start',
     },
     promptText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        textAlign: 'center',
+      fontSize: 14, // Smaller font
+      fontWeight: 'bold',
+      textAlign: 'center',
     },
     authorText: {
-        fontSize: 14,
-        color: '#555',
-        fontStyle: 'italic',
+      fontSize: 12, // Smaller font
+      color: '#666',
+      fontStyle: 'italic',
+      marginTop: 5,
     },
-});
+  });
