@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
         alignItems: 'cneter',
     },
     list: {
-        paddingHorizontal: 10,
-        gap: 4,
+        paddingHorizontal: 5,
+        gap: 5,
     }
 })

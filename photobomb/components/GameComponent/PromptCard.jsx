@@ -30,18 +30,19 @@ const styles = StyleSheet.create({
       elevation: 3,
     },
     content: {
-      marginTop: 15, // Adjusted for smaller card
-      marginBottom: 15, // Adjusted for smaller card
-      marginLeft: 20,
+      marginTop: 15,
+      marginBottom: 15, 
+      marginLeft: 15,
+      marginRight: 15,
       alignItems: 'flex-start',
     },
     promptText: {
-      fontSize: 14, // Smaller font
+      fontSize: 14, 
       fontWeight: 'bold',
       textAlign: 'center',
     },
     authorText: {
-      fontSize: 12, // Smaller font
+      fontSize: 12, 
       color: '#666',
       fontStyle: 'italic',
       marginTop: 5,

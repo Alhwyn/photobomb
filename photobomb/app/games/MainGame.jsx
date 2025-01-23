@@ -137,11 +137,11 @@ const Main = () => {
                 console.log('Recieve teh RetreivePrompterPayload in teh bobby wegjweegj: ', RetreivePrompterPayload);
 
                 // get the state of username of the of the palyoad of the 
-
                 setShowPrompterPayload(RetreivePrompterPayload);
                 console.log('This is the set Round payload:', showPrompterPayload);
                 const GetRolePlayerBool = await checkUserRole();
                 console.log('this is the GetRolePlayerBool: ', GetRolePlayerBool);
+
                 // boolean of the user client selection of the game
                 console.log(GetRolePlayerBool?.data?.is_creator);
                 setIsPrompter(GetRolePlayerBool?.data?.is_creator); 
@@ -163,11 +163,13 @@ const Main = () => {
         <StatusBar barStyle="light-content" />
         {/* Header with Profile */}
         <View style={styles.header}> 
-            {/* Profile Pic Compnonent */}
+            {/* Profile Pic Component */}
             <Profile/>
             
             <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
-            <Text style={styles.text}>is picking a prompt...</Text>
+            {
+                isPrompter ? <Text style={styles.text}>You are the Prompter</Text>: <Text style={styles.text}>is picking a prompt...</Text>
+            }
         </View>
         <View style={styles.styleprogressBar}>
             <ProgressBar duration={5000} color="#52307c" />
