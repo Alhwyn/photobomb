@@ -13,6 +13,7 @@ import ProgressBar from '../../components/GameComponent/ProgressBar';
 import { supabase } from '../../lib/supabase';
 import { getRoundData } from '../../service/gameService';
 import Prompter from '../../components/GameComponent/Prompter';
+import GameLoading from '../../components/GameComponent/GameLoading';
 
 const Main = () => {
     const router = useRouter()
@@ -26,7 +27,8 @@ const Main = () => {
     const components =  {
         Prompt: <Prompter/>,
         ImageGallery:  <Gallery/>,
-        UserPromptSelection: <PromptSelection/>
+        UserPromptSelection: <PromptSelection/>,
+        WaitPrompter: <GameLoading/>
 
     }
     // fetching the user data for m the local storage
@@ -69,7 +71,6 @@ const Main = () => {
          * given the game id and the player id from the round table and check if thier the prompter
          * if the user is the prompter then the state will be true and they will be a new ui and new 
          * instruction
-         * 
          */
         try {
             const {data: fetchPlayerGameData, error: playerGameError} = await supabase
@@ -80,8 +81,6 @@ const Main = () => {
                 .single();
 
                 console.log('the payload:', fetchPlayerGameData);
-
-                
 
             if (playerGameError) {
                 console.error('Error in the checkUserRole:  ', playerGameError.message);
@@ -155,7 +154,17 @@ const Main = () => {
         initiallizeGameData();
     }, [gameID]);
 
-  const renderGameContainer = () => components[currentStage] || <PromptCard text="Default prompt" />;
+
+  const bottomDashboard = async () => {
+    try {
+
+
+    } catch(error) {
+        console.error('Error in BottomContainerLogic: ', error.message);
+    }
+
+
+}
     
 
   return (
@@ -174,9 +183,8 @@ const Main = () => {
         <View style={styles.styleprogressBar}>
             <ProgressBar duration={5000} color="#52307c" />
         </View>
-        
         <View style={styles.gameContainer}>
-            {renderGameContainer()}
+            {isPrompter ? <Prompter/> : <GameLoading/>}
         </View>
         <View style={styles.touchContainer}>
             <Button 

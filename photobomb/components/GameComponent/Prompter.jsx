@@ -1,16 +1,35 @@
 import { FlatList, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import PromptCard from './PromptCard'
+import { supabase } from '../../lib/supabase';
 
 const Prompter = () => {
 
-    const prompts = [
-        { id: '1', text: 'Show the funniest meme in your photo gallery.', author: 'Alice' },
-        { id: '2', text: 'Share a picture of your last vacation.', author: 'Bob' },
-        { id: '3', text: 'What’s the weirdest screenshot you have?', author: 'Charlie' },
-        { id: '4', text: 'Find a photo that perfectly represents your mood right now.', author: 'Diana' },
-        { id: '5', text: 'Post the most delicious food picture you’ve taken.', author: 'Eve' }
-    ];
+    const [prompts, setPrompts] = useState([]);
+
+    const fetchRandomPrompts = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('prompts')
+                .select('*')
+                .order('id', { ascending: false })
+                .limit(5);
+
+            if (error) {
+                console.error('Something went wrong with fetching prompts: ', error.message);
+                return;
+            }
+
+            setPrompts(data);
+        } catch (error) {
+            console.error('Error in fetchRandomPrompts: ', error.message);
+        }
+    };
+
+    useEffect(() => {
+        fetchRandomPrompts();
+    }, []);
+
 
   return (
     <View stlye={styles.container}>
