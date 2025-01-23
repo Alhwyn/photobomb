@@ -1,19 +1,29 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient';
 
-const PromptCard = ({ text, author="PhotoBomb", media}) => {
+const PromptCard = ({ text, author="PhotoBomb", isSelected, onSelect }) => {
+
+  const handleSelect = () => {
+    console.log('PromptCard selected: ', text);
+    onSelect();
+  }
   return (
-    <LinearGradient
-      colors={['#d3d3d3', '#e8e8e8']}
-      style={styles.card}
-    >
+
+    <TouchableOpacity onPress={handleSelect}>
+      <LinearGradient
+        colors={isSelected ? ['#4a90e2', '#357abd'] : ['#d3d3d3', '#e8e8e8']}
+        style={[styles.card, isSelected && styles.selectedCard]}
+      >
         <View style={styles.card}>
             <View style={styles.content}>
-                <Text style={styles.promptText}>{text}</Text>
+                <Text style={[styles.promptText, isSelected && styles.selectedText]}>
+                  {text}
+                </Text>
             </View>
         </View>
-    </LinearGradient>
+      </LinearGradient>
+    </TouchableOpacity>
    
   );
 };

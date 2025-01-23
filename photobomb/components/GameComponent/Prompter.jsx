@@ -6,6 +6,11 @@ import { supabase } from '../../lib/supabase';
 const Prompter = () => {
 
     const [prompts, setPrompts] = useState([]);
+    const [selectedPromptId, setSelectedPromptId] = useState(null);
+
+    const handlePromptSelection = (promptId) => {
+        setSelectedPromptId(promptId);
+    }
 
     const fetchRandomPrompts = async () => {
         try {
@@ -37,7 +42,12 @@ const Prompter = () => {
             data={prompts}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-                <PromptCard text={item.text} author={item.author} />
+                <PromptCard 
+                    text={item.text} 
+                    author={item.author} 
+                    isSelected={selectedPromptId === item.id}
+                    onSelect={() => handlePromptSelection(item.id)}
+                />
             )}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.list}

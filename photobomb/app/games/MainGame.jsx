@@ -21,7 +21,6 @@ const Main = () => {
     const [currentStage, setCurrentStage] = useState('Prompt'); 
     const [showPrompterPayload, setShowPrompterPayload] = useState(null);
     const [isPrompter, setIsPrompter] = useState(null);
-    const [Loading, isLoading] = useState();
     const [gameID, setGameId] = useState(null);
 
     const components =  {
