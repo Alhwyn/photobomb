@@ -20,18 +20,28 @@ const Main = () => {
     const [userPayload, setUserPayload] = useState(null); 
     const [currentStage, setCurrentStage] = useState('Prompt'); 
     const [showPrompterPayload, setShowPrompterPayload] = useState(null);
+
     const [isPrompter, setIsPrompter] = useState(null);
+    const [isPrompterSubmit, setIsPrompterSubmit] = useState(false);
+
     const [gameID, setGameId] = useState(null);
+    const [selectedPrompt, setSelectedPrompt] = useState(null);
+
+    const handlePromptSelect = (promptData) => {
+        setSelectedPrompt(promptData);
+        setIsPrompterSubmit(true);
+        console.log('Selected prompt:asdasd', promptData);
+    };
 
     const components =  {
-        Prompt: <Prompter/>,
+        Prompt: <Prompter onPromptSelect={handlePromptSelect}/>,
         ImageGallery:  <Gallery/>,
         UserPromptSelection: <PromptSelection/>,
         WaitPrompter: <GameLoading/>
 
     }
-    // fetching the user data for m the local storage
-    // commit a day
+
+
     const fetchUserData = async () => {
         try {
             const Userpayload = await getUserPayloadFromStorage();
@@ -121,7 +131,13 @@ const Main = () => {
             return {success: false, message: error.message}
 
         }
-    }
+    };
+
+    const PrompterButtonSubmit = async () => {
+
+        console.log('PrompterButtonSubmit: ', selectedPrompt);
+
+    };
 
     useEffect(() => {
         const initiallizeGameData = async () => {
@@ -153,17 +169,6 @@ const Main = () => {
         initiallizeGameData();
     }, [gameID]);
 
-
-  const bottomDashboard = async () => {
-    try {
-
-
-    } catch(error) {
-        console.error('Error in BottomContainerLogic: ', error.message);
-    }
-
-
-}
     
 
   return (
@@ -183,30 +188,28 @@ const Main = () => {
             <ProgressBar duration={5000} color="#52307c" />
         </View>
         <View style={styles.gameContainer}>
-            {isPrompter ? <Prompter/> : <GameLoading/>}
+            {isPrompter ? <Prompter onPromptSelect={handlePromptSelect}/> : <GameLoading/>}
         </View>
         <View style={styles.touchContainer}>
-            <Button 
-                title='Pick photo' 
-                colors={theme.buttonGradient.secondary} 
-                onPress={()=> setCurrentStage('Prompt')}
-                width='50%'
-            />
-            <Button 
-                title='Pick photo' 
-                colors={theme.buttonGradient.secondary} 
-                onPress={()=>  setCurrentStage('ImageGallery')}
-                width='50%'
-            />
-            <Button 
-                title='Pick photo' 
-                colors={theme.buttonGradient.secondary} 
-                onPress={()=>  setCurrentStage('UserPromptSelection')}
-                width='50%'
-            />
+            {
+                isPrompterSubmit ? <Button
+                                      title='Submit'
+                                      colors={theme.buttonGradient.success} 
+                                        onPress={()=> PrompterButtonSubmit()}
+                                    /> 
+                                    :
+                                    <Button 
+                                    title='Pick photo' 
+                                    colors={theme.buttonGradient.secondary} 
+                                    onPress={()=> setCurrentStage('Prompt')}
+                                    width='50%'
+                                    />
+                                
+            }
         </View>
     </SafeAreaView>
-  )
+    );
+
 }
 
 const styles = StyleSheet.create({
@@ -237,6 +240,8 @@ const styles = StyleSheet.create({
         padding: 90,
         borderWidth: 1, 
         borderTopColor: '#333333', 
+        justifyContent: 'center', // Center horizontally
+        alignItems: 'center', // Center vertically
     },
     usernameText: {
         color: 'white',
