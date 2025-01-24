@@ -134,8 +134,30 @@ const Main = () => {
     };
 
     const PrompterButtonSubmit = async () => {
+        try {
 
-        console.log('PrompterButtonSubmit: ', selectedPrompt);
+            console.log('This is the selected prompt: ', selectedPrompt);
+            console.log('This is the game id: ', gameID);
+
+
+            const {data: PromptSubmitData, error: PromptSumbitDataError} = await supabase
+                .from('round')
+                .update({
+                    prompt_id: selectedPrompt.id,
+                })
+                .eq('game_id', gameID)
+                .select();
+
+            if (PromptSumbitDataError) {
+                console.error('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
+                return {success: false, message: PromptSumbitDataError.message};
+            }
+
+            console.log('PrompterButtonSubmit: ', PromptSubmitData);
+
+        } catch(error) {
+            console.error('Error in PrompterButtonSubmit: ', error.message);
+        }
 
     };
 
