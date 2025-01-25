@@ -215,16 +215,16 @@ const Main = () => {
         <View style={styles.touchContainer}>
             {
                 isPrompterSubmit ? <Button
-                                      title='Submit'
-                                      colors={theme.buttonGradient.success} 
+                                        title='Submit'
+                                        colors={theme.buttonGradient.success} 
                                         onPress={()=> PrompterButtonSubmit()}
                                     /> 
                                     :
                                     <Button 
-                                    title='Pick photo' 
-                                    colors={theme.buttonGradient.secondary} 
-                                    onPress={()=> setCurrentStage('Prompt')}
-                                    width='50%'
+                                        title='Pick photo' 
+                                        colors={theme.buttonGradient.secondary} 
+                                        onPress={()=> setCurrentStage('Prompt')}
+                                        width='50%'
                                     />
                                 
             }
