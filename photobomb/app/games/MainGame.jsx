@@ -30,7 +30,7 @@ const Main = () => {
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
         setIsPrompterSubmit(true);
-        console.log('Selected prompt:asdasd', promptData);
+        console.log('Selected prompt in Main: ', promptData);
     };
 
     const components =  {
@@ -74,6 +74,54 @@ const Main = () => {
         }
         
     };
+
+    const mainGameUpdateHandler = async (payload) => {
+        try {
+
+            console.log('Thsi is the paylaod of the mainGameUpdateHandler: ', payload);
+
+
+            console.log('This is the game id: ', gameID);
+            console.log('This is the user prompt id: ', payload?.new?.prompt_id);
+
+            if (payload?.eventType === 'UPDATE') {
+
+                const {data: promptDataTable, error: promptDataError} = await supabase
+                    .from('prompts')
+                    .select(`*`)
+                    .eq('id', payload?.new?.prompt_id)
+                    .single();
+
+                if (promptDataError) {
+                    console.error('Error in the mainGameUpdateHandler: ', promptDataError.message);
+                    return {success: false, message: promptDataError.message};
+                }
+
+                console.log('This is the prompt data: ', promptDataTable);
+
+                setSelectedPrompt(promptDataTable);
+
+
+
+
+    
+             
+            }
+
+
+
+
+
+        } catch(error) {
+            console.error('Error in the mainGameUpdateHandler: ', error.message);
+        }
+
+        
+
+    };
+
+
+
     const checkUserRole = async () => {
         /**
          * in this function will look for the locat user role of the game 
@@ -161,6 +209,21 @@ const Main = () => {
 
     };
 
+    const renderComponent = () => {
+
+
+        console.log('this is the game stage: ', currentStage);
+
+
+        if (isPrompter) {
+            return <Prompter onPromptSelect={handlePromptSelect} />;
+        } else {
+            return <GameLoading />;
+        }
+    };
+
+
+
     useEffect(() => {
         const initiallizeGameData = async () => {
             try {
@@ -189,6 +252,18 @@ const Main = () => {
         };
 
         initiallizeGameData();
+
+        const roundSubscription = supabase
+            .channel('roundUpdates')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainGameUpdateHandler)
+            .subscribe();
+
+
+        return () => {
+            supabase.removeChannel(roundSubscription);
+        }
     }, [gameID]);
 
     
@@ -202,15 +277,17 @@ const Main = () => {
             <Profile/>
             
             <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
-            {
-                isPrompter ? <Text style={styles.text}>You are the Prompter</Text>: <Text style={styles.text}>is picking a prompt...</Text>
-            }
+            {isPrompter ? (
+                    <Text style={styles.text}>You are the Prompter</Text>
+                ) : (
+                    <Text style={styles.text}>is picking a prompt...</Text>
+            )}
         </View>
         <View style={styles.styleprogressBar}>
             <ProgressBar duration={5000} color="#52307c" />
         </View>
         <View style={styles.gameContainer}>
-            {isPrompter ? <Prompter onPromptSelect={handlePromptSelect}/> : <GameLoading/>}
+                {renderComponent()}
         </View>
         <View style={styles.touchContainer}>
             {
@@ -231,6 +308,8 @@ const Main = () => {
         </View>
     </SafeAreaView>
     );
+
+
 
 }
 
