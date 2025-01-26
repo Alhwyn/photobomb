@@ -14,6 +14,7 @@ import { supabase } from '../../lib/supabase';
 import { getRoundData } from '../../service/gameService';
 import Prompter from '../../components/GameComponent/Prompter';
 import GameLoading from '../../components/GameComponent/GameLoading';
+import ImageSubmission from '../../components/GameComponent/ImageSubmission';
 
 const Main = () => {
     const router = useRouter()
@@ -33,13 +34,31 @@ const Main = () => {
         console.log('Selected prompt in Main: ', promptData);
     };
 
-    const components =  {
-        Prompt: <Prompter onPromptSelect={handlePromptSelect}/>,
-        ImageGallery:  <Gallery/>,
-        UserPromptSelection: <PromptSelection/>,
-        WaitPrompter: <GameLoading/>
+    const renderComponent = () => {
 
-    }
+        const components =  {
+            Prompt: <Prompter onPromptSelect={handlePromptSelect}/>,
+            ImageGallery:  <Gallery/>,
+            UserPromptSelection: <PromptSelection/>,
+            WaitPrompter: <GameLoading/>,
+            HandleImageSubmit: <ImageSubmission/>
+    
+        }
+
+        console.log('this is the game stage: ', currentStage);
+
+        if (currentStage === 'Prompt') {
+
+            if (isPrompter) {
+                return <Prompter onPromptSelect={handlePromptSelect} />;
+            } else {
+                return <GameLoading />;
+            }
+
+        } else if (currentStage === 'ImageGallery') {
+            return <ImageSubmission currentPrompt={selectedPrompt?.text} gameId={gameID}/>;
+        }
+    };
 
 
     const fetchUserData = async () => {
@@ -100,26 +119,12 @@ const Main = () => {
                 console.log('This is the prompt data: ', promptDataTable);
 
                 setSelectedPrompt(promptDataTable);
-
-
-
-
-    
-             
             }
-
-
-
-
 
         } catch(error) {
             console.error('Error in the mainGameUpdateHandler: ', error.message);
         }
-
-        
-
     };
-
 
 
     const checkUserRole = async () => {
@@ -203,26 +208,15 @@ const Main = () => {
 
             console.log('PrompterButtonSubmit: ', PromptSubmitData);
 
+            setCurrentStage('ImageGallery');
+
+
+
         } catch(error) {
             console.error('Error in PrompterButtonSubmit: ', error.message);
         }
 
     };
-
-    const renderComponent = () => {
-
-
-        console.log('this is the game stage: ', currentStage);
-
-
-        if (isPrompter) {
-            return <Prompter onPromptSelect={handlePromptSelect} />;
-        } else {
-            return <GameLoading />;
-        }
-    };
-
-
 
     useEffect(() => {
         const initiallizeGameData = async () => {
