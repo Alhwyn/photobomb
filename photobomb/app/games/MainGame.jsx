@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
 import Profile from '../../components/Profile';
 import { theme } from '../../constants/theme';
-import { getUserData, getUserPayloadFromStorage } from '../../service/userService';
+import { getUserPayloadFromStorage } from '../../service/userService';
 import PromptCard from '../../components/GameComponent/PromptCard';
 import Gallery from '../../components/GameComponent/Gallery';
 import PromptSelection from '../../components/GameComponent/PromptSelection';
@@ -56,6 +56,7 @@ const Main = () => {
             }
 
         } else if (currentStage === 'ImageGallery') {
+            
             return <ImageSubmission currentPrompt={selectedPrompt?.text} gameId={gameID}/>;
         }
     };

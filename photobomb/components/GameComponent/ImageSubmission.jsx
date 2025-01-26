@@ -1,14 +1,52 @@
 import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { getUserPayloadFromStorage } from '../../service/userService';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 const ImageSubmission = ({
     currentPrompt,
-    submissionPayload,
     gameId,
     
 }) => {
+
+
+  const handleSumbissionTables = async () => {
+    const {data: gamesPayload, error: gamesPayloadError} = await supabase
+      .from('games')
+      .select(`*,
+               playergame (game_id, id)`)
+      .eq('id', gameId)
+
+
+    if (gamesPayloadError) {
+      console.error('Error fetching game data: ', gamesPayloadError.message);
+      return {success: false, error: gamesPayloadError.message};
+    }
+
+
+    console.log('gamesPayload: ', gamesPayload);
+
+
+
+
+
+
+  }
+
+
+
+
+
+  useEffect(() => {
+  }, []);
+  
+
+
+
+
+
+
   return (
     <View>
       <LinearGradient
@@ -26,6 +64,7 @@ const ImageSubmission = ({
     </View>
   )
 }
+
 
 export default ImageSubmission
 
