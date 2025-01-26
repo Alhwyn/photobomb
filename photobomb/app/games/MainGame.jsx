@@ -92,7 +92,6 @@ const Main = () => {
         } catch(error) {
             console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
         }
-        
     };
 
     const mainGameUpdateHandler = async (payload) => {
@@ -177,13 +176,9 @@ const Main = () => {
             }
 
             return {success: true, data: dataPlayerGame}
-
-
-
         } catch(error) {
             console.error('Error on View PlayerGameTable: ', error.message)
             return {success: false, message: error.message}
-
         }
     };
 
@@ -208,10 +203,7 @@ const Main = () => {
             }
 
             console.log('PrompterButtonSubmit: ', PromptSubmitData);
-
-            setCurrentStage('ImageGallery');
-
-
+            setCurrentStage('ImageGallery')
 
         } catch(error) {
             console.error('Error in PrompterButtonSubmit: ', error.message);
@@ -297,15 +289,11 @@ const Main = () => {
                                         colors={theme.buttonGradient.secondary} 
                                         onPress={()=> setCurrentStage('Prompt')}
                                         width='50%'
-                                    />
-                                
+                                    />         
             }
         </View>
     </SafeAreaView>
     );
-
-
-
 }
 
 const styles = StyleSheet.create({
@@ -336,8 +324,8 @@ const styles = StyleSheet.create({
         padding: 90,
         borderWidth: 1, 
         borderTopColor: '#333333', 
-        justifyContent: 'center', // Center horizontally
-        alignItems: 'center', // Center vertically
+        justifyContent: 'center', 
+        alignItems: 'center', 
     },
     usernameText: {
         color: 'white',
@@ -367,6 +355,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     }
   });
-  
   
 export default Main

@@ -10,7 +10,6 @@ const ImageSubmission = ({
     
 }) => {
 
-
   const handleSumbissionTables = async () => {
     const {data: gamesPayload, error: gamesPayloadError} = await supabase
       .from('games')
@@ -26,11 +25,6 @@ const ImageSubmission = ({
 
 
     console.log('gamesPayload: ', gamesPayload);
-
-
-
-
-
 
   }
 
