@@ -41,43 +41,41 @@ const styles = StyleSheet.create({
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    margin: 5,
+    padding: 12,
+    margin: 8,
     backgroundColor: 'rgba(39, 39, 46, 0.26)',
     borderRadius: theme.radius.xxl,
+    paddingRight: 120,
   },
+  // Profile elements
   profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+    width: 48,
+    height: 48,
+    borderRadius: theme.radius.round,
+    marginRight: 12,
   },
   profilePlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: theme.radius.round,
     backgroundColor: '#555',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
+  // Text elements
   placeholderText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   infoContainer: {
     flex: 1,
-    paddingLeft: 10,
+    paddingLeft: 12,
     justifyContent: 'center',
   },
   username: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  creatorBadge: {
-    fontSize: 12,
-    color: '#FFA500',
-    marginTop: 4,
-  },
+    fontWeight: '600',
+    color: '#fff',
+  }
 });

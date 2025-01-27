@@ -42,12 +42,12 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
 
 
       const {data: submissionsTable, error: submissionsTableError} = await supabase
-      .from('submissions')
-      .insert(`*`)
-      .eq('game_id', gameId);
+        .from('submissions')
+        .insert(`*`)
+        .eq('game_id', gameId);
 
 
-      
+
     }
 
   }
@@ -58,7 +58,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
   }, []);
   
   return (
-    <View>
+    <View style={styles.container}> 
       <LinearGradient
         colors={['#d3d3d3', '#e8e8e8']}
         style={[styles.card]}
@@ -80,30 +80,25 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
 export default ImageSubmission
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   card: {
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 3,
   },
   content: {
-    marginTop: 15,
-    marginBottom: 15, 
-    marginLeft: 15,
-    marginRight: 15,
-    alignItems: 'flex-start',
+    margin: 15,
+    marginLeft: 100,
+    marginRight: 100,
   },
   promptText: {
-    fontSize: 14, 
+    fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  authorText: {
-    fontSize: 12, 
-    color: '#666',
-    fontStyle: 'italic',
-    marginTop: 5,
-  },
+  }
 });

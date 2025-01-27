@@ -119,6 +119,9 @@ const Main = () => {
                 console.log('This is the prompt data: ', promptDataTable);
 
                 setSelectedPrompt(promptDataTable);
+
+
+                setCurrentStage('ImageGallery')
             }
 
         } catch(error) {
@@ -166,9 +169,7 @@ const Main = () => {
                          users (username, image_url)`)
                 .eq('id', playerGameId)
                 .single();
-
                 console.log('Fetched the paylaod of the dataPLayerGame: ', dataPlayerGame);
-
 
             if (errorPLayerGame) {
                 console.error('Error on View PlayerGameTable: ', error.message)
@@ -203,7 +204,7 @@ const Main = () => {
             }
 
             console.log('PrompterButtonSubmit: ', PromptSubmitData);
-            setCurrentStage('ImageGallery')
+            
 
         } catch(error) {
             console.error('Error in PrompterButtonSubmit: ', error.message);
@@ -242,8 +243,7 @@ const Main = () => {
 
         const roundSubscription = supabase
             .channel('roundUpdates')
-            .on(
-                'postgres_changes',
+            .on('postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainGameUpdateHandler)
             .subscribe();
 
@@ -253,7 +253,6 @@ const Main = () => {
         }
     }, [gameID]);
 
-    
 
   return (
     <SafeAreaView style={styles.container}>
@@ -261,8 +260,8 @@ const Main = () => {
         {/* Header with Profile */}
         <View style={styles.header}> 
             {/* Profile Pic Component */}
-            <Profile/>
-            
+            <Profile image_url={userPayload.image_url}/>
+             
             <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
             {isPrompter ? (
                     <Text style={styles.text}>You are the Prompter</Text>
@@ -337,10 +336,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     gameContainer: {
+        flex: 1,
         backgroundColor: "1A1A1A",
         justifyContent: 'center',
-        alignItems: 'center'
-
+        alignItems: 'center',
+    
     },
     Promptheader: {
         marginTop: '10',
