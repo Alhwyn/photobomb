@@ -1,14 +1,14 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../constants/theme';
-import Profile from './Profile';
-import { getSupabaseUrl } from '../service/imageService';
+import { theme } from '../../constants/theme';
+import Profile from '../Profile';
+import { getSupabaseUrl } from '../../service/imageService';
 
-const UserLobby = ({ lobbyData }) => {
+const ImageList = ({ lobbyData }) => {
 
   console.log(lobbyData)
   const renderItem = ({ item }) => {
-    const { is_creator, users } = item;
+    const { users } = item;
     const { username, image_url } = users;
 
     const getImageUri = getSupabaseUrl(image_url);
@@ -21,7 +21,6 @@ const UserLobby = ({ lobbyData }) => {
         {/* User Information */}
         <View style={styles.infoContainer}>
           <Text style={styles.username}>{username}</Text>
-          {is_creator && <Text style={styles.creatorBadge}>Creator</Text>}
         </View>
       </View>
     );
@@ -36,7 +35,7 @@ const UserLobby = ({ lobbyData }) => {
   );
 };
 
-export default UserLobby;
+export default ImageList;
 
 const styles = StyleSheet.create({
   itemContainer: {

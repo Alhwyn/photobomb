@@ -1,21 +1,23 @@
 import { StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { getUserPayloadFromStorage } from '../../service/userService';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import ImageList from './ImageList';
+import { getUserPayloadFromStorage } from '../../service/userService';
 
-const ImageSubmission = ({
-    currentPrompt,
-    gameId,
-    
-}) => {
+
+const ImageSubmission = ({currentPrompt, gameId }) => {
+
+  const [playerGamesList, setPlayerGamesList] = useState([]);
+  const [userPayload, setUserPayload] = useState(null);
+
 
   const handleSumbissionTables = async () => {
     const {data: gamesPayload, error: gamesPayloadError} = await supabase
-      .from('games')
+      .from('playergame')
       .select(`*,
-               playergame (game_id, id)`)
-      .eq('id', gameId)
+               users (username, image_url)`)
+      .eq('game_id', gameId);
 
 
     if (gamesPayloadError) {
@@ -26,21 +28,35 @@ const ImageSubmission = ({
 
     console.log('gamesPayload: ', gamesPayload);
 
+    setPlayerGamesList(gamesPayload);
+
+  }
+
+  const createSubmissionTables = async () => {
+
+    const Userpayload = await getUserPayloadFromStorage();
+    
+    if (Userpayload) {
+
+      setUserPayload(Userpayload);
+
+
+      const {data: submissionsTable, error: submissionsTableError} = await supabase
+      .from('submissions')
+      .insert(`*`)
+      .eq('game_id', gameId);
+
+
+      
+    }
+
   }
 
 
-
-
-
   useEffect(() => {
+    handleSumbissionTables();
   }, []);
   
-
-
-
-
-
-
   return (
     <View>
       <LinearGradient
@@ -55,6 +71,7 @@ const ImageSubmission = ({
             </View>
         </View>
       </LinearGradient>
+      <ImageList lobbyData={playerGamesList} />
     </View>
   )
 }
