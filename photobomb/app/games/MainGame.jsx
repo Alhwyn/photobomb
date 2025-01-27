@@ -61,6 +61,42 @@ const Main = () => {
         }
     };
 
+    const renderButtons = () => {
+        if (isPrompter) {
+            // Prompter view
+            return isPrompterSubmit ? (
+                <Button
+                    title='Submit'
+                    colors={theme.buttonGradient.success} 
+                    onPress={PrompterButtonSubmit}
+                />
+            ) : (
+                <Button 
+                    title='Pick photo' 
+                    colors={theme.buttonGradient.secondary} 
+                    onPress={() => setCurrentStage('Prompt')}
+                    width='50%'
+                />
+            );
+        } else {
+            // Non-prompter view
+            return currentStage === 'ImageSubmission' ? (
+                <Button
+                    title='Upload Image'
+                    colors={theme.buttonGradient.primary}
+                    onPress={() => handleImageUpload()}
+                />
+            ) : (
+                <Button
+                    title='Upload Image'
+                    colors={theme.buttonGradient.disabled}
+                    disabled={true}
+                />
+            );
+        }
+    };
+    
+
 
     const fetchUserData = async () => {
         try {
@@ -260,7 +296,7 @@ const Main = () => {
         {/* Header with Profile */}
         <View style={styles.header}> 
             {/* Profile Pic Component */}
-            <Profile image_url={userPayload.image_url}/>
+            <Profile image_url={userPayload?.image_url}/>
              
             <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
             {isPrompter ? (
@@ -277,18 +313,7 @@ const Main = () => {
         </View>
         <View style={styles.touchContainer}>
             {
-                isPrompterSubmit ? <Button
-                                        title='Submit'
-                                        colors={theme.buttonGradient.success} 
-                                        onPress={()=> PrompterButtonSubmit()}
-                                    /> 
-                                    :
-                                    <Button 
-                                        title='Pick photo' 
-                                        colors={theme.buttonGradient.secondary} 
-                                        onPress={()=> setCurrentStage('Prompt')}
-                                        width='50%'
-                                    />         
+                renderButtons()
             }
         </View>
     </SafeAreaView>
