@@ -23,12 +23,11 @@ const Prompter = ({ onPromptSelect }) => {
 
     const fetchRandomPrompts = async () => {
         try {
-            const { data, error } = await supabase
-                .from('prompts')
-                .select('*')
-                .order('id', { ascending: false })
-                .limit(5);
 
+            const { data, error } = await supabase
+                .rpc('get_random_prompts', { limit_count: 5 }); // Pass the limit as a parameter
+
+            
             if (error) {
                 console.error('Something went wrong with fetching prompts: ', error.message);
                 return;
