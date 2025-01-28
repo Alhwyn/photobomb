@@ -63,21 +63,30 @@ const Main = () => {
 
     const renderButtons = () => {
         if (isPrompter) {
-            // Prompter view
-            return isPrompterSubmit ? (
-                <Button
-                    title='Submit'
-                    colors={theme.buttonGradient.success} 
-                    onPress={PrompterButtonSubmit}
-                />
-            ) : (
-                <Button 
-                    title='Pick photo' 
-                    colors={theme.buttonGradient.secondary} 
-                    onPress={() => setCurrentStage('Prompt')}
-                    width='50%'
-                />
-            );
+            if (currentStage === 'Prompt') {
+                return isPrompterSubmit ? (
+                    <Button
+                        title='Submit'
+                        colors={theme.buttonGradient.success} 
+                        onPress={PrompterButtonSubmit}
+                    />
+                ) : (
+                    <Button 
+                        title='Pick photo' 
+                        colors={theme.buttonGradient.secondary} 
+                        onPress={() => setCurrentStage('Prompt')}
+                        width='50%'
+                    />
+                );
+            } else if (currentStage === 'ImageGallery') {
+                return (
+                    <Button
+                        title='You are the prompter'
+                        colors={theme.buttonGradient.primary}
+                        onPress={() => console.log('Submit')}
+                    />
+                );
+            }
         } else {
             // Non-prompter view
             return currentStage === 'ImageSubmission' ? (
