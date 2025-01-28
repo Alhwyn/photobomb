@@ -89,23 +89,26 @@ const Main = () => {
             }
         } else {
             // Non-prompter view
-            return currentStage === 'ImageSubmission' ? (
+            return currentStage === 'ImageGallery' ? (
                 <Button
                     title='Upload Image'
                     colors={theme.buttonGradient.primary}
-                    onPress={() => handleImageUpload()}
+                    onPress={handleImageUpload}
                 />
             ) : (
                 <Button
                     title='Upload Image'
                     colors={theme.buttonGradient.disabled}
-                    disabled={true}
+                    onPress={handleImageUpload}
                 />
             );
         }
     };
-    
 
+    const handleImageUpload = () => {
+        console.log('Image upload');
+
+    };
 
     const fetchUserData = async () => {
         try {
