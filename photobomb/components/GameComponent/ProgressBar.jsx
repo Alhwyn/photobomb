@@ -16,7 +16,6 @@ const ProgressBar = ({ duration = 5000, color = 'purple' }) => {
             }
         );
 
-
         loopAnimation.start();
 
         return () => loopAnimation.stop(); 

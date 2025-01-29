@@ -54,18 +54,13 @@ const UpdateUser = () => {
       });
 
       console.log('this is the result: ', result);
-
-
       console.log('this is the uri', result?.assets?.[0]?.uri);
-
-
       setProfileImage(result?.assets?.[0]?.uri);
       
     } catch (error) {
       Alert.alert('Error', 'Failed to select an image.');
     }
-  };
-
+  }
   const uploadImageToSupabase = async (uri) => {
     if (!uri) return null;
   
