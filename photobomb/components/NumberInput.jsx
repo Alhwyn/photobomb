@@ -10,7 +10,7 @@ const NumberInput = (props) => {
   const handleFocus = () => {
     setIsFocused(true);
     Animated.timing(animatedBorder, {
-      toValue: 1, // End value for the animation
+      toValue: 1, 
       duration: 300,
       useNativeDriver: false,
     }).start();
@@ -19,7 +19,7 @@ const NumberInput = (props) => {
   const handleBlur = () => {
     setIsFocused(false);
     Animated.timing(animatedBorder, {
-      toValue: 0, // Reset animation to initial value
+      toValue: 0, 
       duration: 300,
       useNativeDriver: false,
     }).start();
@@ -27,7 +27,7 @@ const NumberInput = (props) => {
 
   const borderColor = animatedBorder.interpolate({
     inputRange: [0, 1],
-    outputRange: ['white', '#8A2BE2'], // Default color to purple gradient color
+    outputRange: ['white', '#8A2BE2'], 
     borderWidth: 10
   });
 
@@ -42,13 +42,13 @@ const NumberInput = (props) => {
       {props.icon && props.icon}
       <TextInput
         style={[
-            { flex: 1, color: 'white', textAlign: 'center', fontWeight: theme.fonts.extraBold }, // Center-align the text
+            { flex: 1, color: 'white', textAlign: 'center', fontWeight: theme.fonts.extraBold }, 
         ]}
         placeholder="Enter 6-digit PIN"
         placeholderTextColor={theme.colors.textLight}
         ref={props.inputRef && props.inputRef}
-        keyboardType="numeric" // Restrict to numeric keyboard
-        maxLength={6} // Limit input to 6 characters
+        keyboardType="numeric" 
+        maxLength={6} 
         onFocus={handleFocus}
         onBlur={handleBlur}
         {...props}
@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
     height: hp(7.2),
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2, // Default border width
-    borderColor: 'white', // Default border color
+    borderWidth: 2, 
+    borderColor: 'white', 
     borderRadius: theme.radius.xxl,
     borderCurve: 'continuous',
     paddingHorizontal: 18,
