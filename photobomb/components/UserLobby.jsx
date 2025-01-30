@@ -26,7 +26,6 @@ const UserLobby = ({ lobbyData }) => {
       </View>
     );
   };
-
   return (
     <FlatList
       data={lobbyData} 

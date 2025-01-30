@@ -10,7 +10,7 @@ export const Input = (props) => {
   const handleFocus = () => {
     setIsFocused(true);
     Animated.timing(animatedBorder, {
-      toValue: 1, // End value for the animation
+      toValue: 1,
       duration: 300,
       useNativeDriver: false,
     }).start();
@@ -19,7 +19,7 @@ export const Input = (props) => {
   const handleBlur = () => {
     setIsFocused(false);
     Animated.timing(animatedBorder, {
-      toValue: 0, // Reset animation to initial value
+      toValue: 0, 
       duration: 300,
       useNativeDriver: false,
     }).start();
@@ -32,7 +32,7 @@ export const Input = (props) => {
 
   const borderColor = animatedBorder.interpolate({
     inputRange: [0, 1],
-    outputRange: ['white', '#8A2BE2'], // Default color to purple gradient color
+    outputRange: ['white', '#8A2BE2'], 
     borderWidth: 10
   });
 
