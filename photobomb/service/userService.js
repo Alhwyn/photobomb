@@ -115,7 +115,6 @@ export const verifyUserFromStorage = async () => {
       console.error('Error fetching user from database:', error.message);
       return { success: false, msg: error.message };
     }
-
     // Check if the database record matches the local storage data
     if (data && data.id === uuid) {
       console.log('User verification successful:', data);
