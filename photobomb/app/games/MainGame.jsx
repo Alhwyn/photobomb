@@ -28,6 +28,9 @@ const Main = () => {
     const [gameID, setGameId] = useState(null);
     const [selectedPrompt, setSelectedPrompt] = useState(null);
 
+    const [isUploading, setIsUploading] = useState(false);
+    const [image, setImage] = useState(null);
+
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
         setIsPrompterSubmit(true);
@@ -260,6 +263,25 @@ const Main = () => {
 
     };
 
+
+    const handleSelectImage = async () => {
+        try {
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaType,
+                allowsEditing: true,
+                quality: 0.7,
+            });
+
+            console.log('this is the result: ', result);
+            console.log('this is the uri', result?.assets?.[0]?.uri);
+
+        } catch (error) {
+            Alert.alert('Error', 'Failed to select an image.');
+        };
+
+    };
+
     useEffect(() => {
         const initiallizeGameData = async () => {
             try {
@@ -300,6 +322,9 @@ const Main = () => {
             supabase.removeChannel(roundSubscription);
         }
     }, [gameID]);
+
+
+
 
 
   return (
