@@ -285,7 +285,7 @@ const Main = () => {
 
     };
 
-    onst uploadImageToSupabase = async (uri) => {
+    const uploadImageToSupabase = async (uri) => {
         if (!uri) return null;
       
         try {
