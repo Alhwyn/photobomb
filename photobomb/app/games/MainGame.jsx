@@ -16,6 +16,9 @@ import Prompter from '../../components/GameComponent/Prompter';
 import GameLoading from '../../components/GameComponent/GameLoading';
 import ImageSubmission from '../../components/GameComponent/ImageSubmission';
 
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+
 const Main = () => {
     const router = useRouter()
     const [userPayload, setUserPayload] = useState(null); 
@@ -281,6 +284,45 @@ const Main = () => {
         };
 
     };
+
+    onst uploadImageToSupabase = async (uri) => {
+        if (!uri) return null;
+      
+        try {
+          const fileName = uri.split('/').pop(); // Extract filename
+          const fileType = fileName.split('.').pop().toLowerCase(); // Extract file extension and normalize to lowercase
+          const mimeType = fileType === 'jpg' ? 'image/jpeg' : `image/${fileType}`;
+      
+          // Read file content as base64 string
+          const fileContent = await FileSystem.readAsStringAsync(uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+      
+          // Supabase expects binary data, so we convert base64 to a Uint8Array
+          const fileBuffer = Uint8Array.from(atob(fileContent), (c) =>
+            c.charCodeAt(0)
+          );
+      
+          console.log('Uploading image:', uri);
+      
+          // Upload to Supabase
+          const { data, error } = await supabase.storage
+            .from('uploads')
+            .upload(`profiles/${fileName}`, fileBuffer, {
+              contentType: mimeType,
+            });
+      
+          if (error) {
+            console.error('Supabase storage upload error:', error.message);
+            return null;
+          }
+      
+          return data?.path;
+        } catch (error) {
+          console.error('Image upload failed:', error.message);
+          return null;
+        }
+      };
 
     useEffect(() => {
         const initiallizeGameData = async () => {
