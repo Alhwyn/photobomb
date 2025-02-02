@@ -99,22 +99,19 @@ const Main = () => {
                 <Button
                     title='Upload Image'
                     colors={theme.buttonGradient.primary}
-                    onPress={handleImageUpload}
+                    onPress={handleSelectImage}
                 />
             ) : (
                 <Button
                     title='Upload Image'
                     colors={theme.buttonGradient.disabled}
-                    onPress={handleImageUpload}
+                    onPress={handleSelectImage}
                 />
             );
         }
     };
 
-    const handleImageUpload = () => {
-        console.log('Image upload');
 
-    };
 
     const fetchUserData = async () => {
         try {
