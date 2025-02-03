@@ -145,14 +145,8 @@ const Main = () => {
         }
     };
 
-    const mainGameUpdateHandler = async (payload) => {
+    const mainRoundUpdateHandler = async (payload) => {
         try {
-
-            console.log('Thsi is the paylaod of the mainGameUpdateHandler: ', payload);
-
-
-            console.log('This is the game id: ', gameID);
-            console.log('This is the user prompt id: ', payload?.new?.prompt_id);
 
             if (payload?.eventType === 'UPDATE') {
 
@@ -179,6 +173,14 @@ const Main = () => {
             console.error('Error in the mainGameUpdateHandler: ', error.message);
         }
     };
+
+    const mainSubmissionUpdateHandler = async (payload) => {
+        try {
+
+        } catch(error) {
+            console.error('Error in the mainSubmissionUpdateHandler: ', error.message);
+        }
+    }
 
 
     const checkUserRole = async () => {
@@ -249,11 +251,14 @@ const Main = () => {
                 .eq('game_id', gameID)
                 .select();
 
-            if (PromptSumbitDataError) {
+            if (!PromptSumbitDataError) {
+                await createSubmissionsForPlayers();
+                setCurrentStage('ImageGallery');
+
+            } else {
                 console.error('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
                 return {success: false, message: PromptSumbitDataError.message};
             }
-
             console.log('PrompterButtonSubmit: ', PromptSubmitData);
             
 
@@ -321,6 +326,58 @@ const Main = () => {
         }
       };
 
+      const createSubmissionsForPlayers = async () => {
+        try {
+
+            // 1 get all the players in teh game
+
+            const {data: players, error: playersError} = await supabase
+                .from('playergame')
+                .select(`*,
+                         users (username, image_url)`)
+                .eq('game_id', gameID);
+
+            if (playersError) {
+                console.error('Error in createSubmissionsForPlayers: ', playersError.message);
+                return {success: false, message: playersError.message};
+            }
+
+            // 2 get teh current round id
+
+            const {data: roundData, error: roundError} = await supabase
+                .from('round')
+                .select(`*`)
+                .eq('game_id', gameID)
+                .single();
+
+            if (roundError) {  
+                console.error('Error in createSubmissionsForPlayers: ', roundError.message);
+                return {success: false, message: roundError.message};
+            }
+
+            // 3. Create submission entries for each player
+
+            const submissionPromises = players.map(player => {
+                return supabase
+                    .from('submissions')
+                    .insert({
+                        round_id: roundData.id,
+                        player_id: player.id,
+                        photo_uri: null,
+                    });
+            });
+
+            await Promise.all(submissionPromises);
+            console.log('Created submissions for all players');
+
+        } catch(error) {
+            console.error('Error in createSubmissionsForPlayers: ', error.message);
+            return {success: false, message: error.message};
+        }
+
+
+      };
+
     useEffect(() => {
         const initiallizeGameData = async () => {
             try {
@@ -353,7 +410,13 @@ const Main = () => {
         const roundSubscription = supabase
             .channel('roundUpdates')
             .on('postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainGameUpdateHandler)
+                { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
+            .subscribe();
+
+        const submissionSubscription = supabase
+            .channel('submissionUpdates')
+            .on('postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}` }, mainSubmissionUpdateHandler)
             .subscribe();
 
 
@@ -361,9 +424,6 @@ const Main = () => {
             supabase.removeChannel(roundSubscription);
         }
     }, [gameID]);
-
-
-
 
 
   return (
