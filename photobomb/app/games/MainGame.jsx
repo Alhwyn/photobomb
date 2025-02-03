@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity, Modal, Image } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Button from '../../components/Button';
 import { StatusBar } from 'expo-status-bar'
@@ -34,6 +34,9 @@ const Main = () => {
 
     const [isUploading, setIsUploading] = useState(false);
     const [image, setImage] = useState(null);
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedImageUri, setSelectedImageUri] = useState(null);
 
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
@@ -112,8 +115,6 @@ const Main = () => {
         }
     };
 
-
-
     const fetchUserData = async () => {
         try {
             const Userpayload = await getUserPayloadFromStorage();
@@ -163,7 +164,6 @@ const Main = () => {
                 }
 
                 console.log('This is the prompt data: ', promptDataTable);
-
                 setSelectedPrompt(promptDataTable);
 
                 setPromptSubmitted(true);
@@ -280,8 +280,12 @@ const Main = () => {
                 quality: 0.7,
             });
 
-            console.log('this is the result: ', result);
-            console.log('this is the uri', result?.assets?.[0]?.uri);
+            if (!result.cancelled) {   
+                console.log('this is the result: ', result);
+                console.log('this is the uri', result?.assets?.[0]?.uri);
+                setSelectedImageUri(result?.assets?.[0]?.uri);
+                setIsModalVisible(true);
+            }
 
         } catch (error) {
             Alert.alert('Error', 'Failed to select an image.');
@@ -380,6 +384,17 @@ const Main = () => {
 
       };
 
+    const confirmImageSelection = () => {
+        setIsModalVisible(false);
+        // Additional logic to handle the confirmed image selection
+    };
+
+    const cancelImageSelection = () => {
+        setIsModalVisible(false);
+        setSelectedImageUri(null);
+    };
+
+
     useEffect(() => {
         const initiallizeGameData = async () => {
             try {
@@ -458,6 +473,25 @@ const Main = () => {
                 renderButtons()
             }
         </View>
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isModalVisible}
+            onRequestClose={() => setIsModalVisible(false)}
+        >
+            <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalText}>Confirm your photo selection</Text>
+                    {selectedImageUri && (
+                        <Image source={{ uri: selectedImageUri }} style={styles.selectedImage} />
+                    )}
+                    <View style={styles.modalButtons}>
+                        <Button title="Cancel" onPress={cancelImageSelection} />
+                        <Button title="Confirm" onPress={confirmImageSelection} />
+                    </View>
+                </View>
+            </View>
+        </Modal>
     </SafeAreaView>
     );
 }
@@ -520,7 +554,36 @@ const styles = StyleSheet.create({
     styleprogressBar: {
         marginBottom: 32,
         alignItems: 'center',
-    }
+    },
+
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: 300,
+        padding: 20,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalText: {
+        marginBottom: 10,
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    selectedImage: {
+        width: 200,
+        height: 200,
+        marginBottom: 20,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
   });
   
 export default Main
