@@ -166,8 +166,8 @@ const Main = () => {
 
                 setSelectedPrompt(promptDataTable);
 
-
-                setCurrentStage('ImageGallery')
+                setPromptSubmitted(true);
+                setCurrentStage('ImageGallery');
             }
 
         } catch(error) {
@@ -255,7 +255,7 @@ const Main = () => {
             if (!PromptSumbitDataError) {
                 await createSubmissionsForPlayers();
                 setCurrentStage('ImageGallery');
-                setPromptSubmitted(true);
+                
 
             } else {
                 console.error('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
