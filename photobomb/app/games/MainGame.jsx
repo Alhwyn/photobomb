@@ -384,9 +384,17 @@ const Main = () => {
 
       };
 
-    const confirmImageSelection = () => {
-        setIsModalVisible(false);
+    const confirmImageSelection = async () => {
+
         // Additional logic to handle the confirmed image selection
+
+        const uploadResult = await uploadImageToSupabase(selectedImageUri);
+        if (uploadResult) {
+
+        }
+        setIsModalVisible(false);
+        
+
     };
 
     const cancelImageSelection = () => {
@@ -417,7 +425,7 @@ const Main = () => {
                 setIsPrompter(GetRolePlayerBool?.data?.is_creator); 
 
             } catch(error) {
-                console.error('Error in USe Effect: '. error.message);
+                console.error('Error in Use Effect: '. error.message);
             };
             
         };
