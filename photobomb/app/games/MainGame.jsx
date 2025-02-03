@@ -316,7 +316,7 @@ const Main = () => {
           // Upload to Supabase
           const { data, error } = await supabase.storage
             .from('uploads')
-            .upload(`profiles/${fileName}`, fileBuffer, {
+            .upload(`gamesubmissions/${fileName}`, fileBuffer, {
               contentType: mimeType,
             });
       
