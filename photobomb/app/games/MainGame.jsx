@@ -30,6 +30,7 @@ const Main = () => {
 
     const [gameID, setGameId] = useState(null);
     const [selectedPrompt, setSelectedPrompt] = useState(null);
+    const [promptSubmitted, setPromptSubmitted] = useState(false);
 
     const [isUploading, setIsUploading] = useState(false);
     const [image, setImage] = useState(null);
@@ -254,6 +255,7 @@ const Main = () => {
             if (!PromptSumbitDataError) {
                 await createSubmissionsForPlayers();
                 setCurrentStage('ImageGallery');
+                setPromptSubmitted(true);
 
             } else {
                 console.error('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
@@ -436,10 +438,14 @@ const Main = () => {
              
             <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
             {isPrompter ? (
-                    <Text style={styles.text}>You are the Prompter</Text>
+                    promptSubmitted ? (
+                        <Text style={styles.text}>Bob picked the prompt</Text>
+                    ) : (
+                        <Text style={styles.text}>You are the Prompter</Text>
+                    )
                 ) : (
                     <Text style={styles.text}>is picking a prompt...</Text>
-            )}
+             )}
         </View>
         <View style={styles.styleprogressBar}>
             <ProgressBar duration={5000} color="#52307c" />
