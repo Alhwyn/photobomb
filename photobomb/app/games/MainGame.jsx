@@ -32,11 +32,10 @@ const Main = () => {
     const [selectedPrompt, setSelectedPrompt] = useState(null);
     const [promptSubmitted, setPromptSubmitted] = useState(false);
 
-    const [isUploading, setIsUploading] = useState(false);
-    const [image, setImage] = useState(null);
-
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
+
+
 
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
@@ -356,25 +355,44 @@ const Main = () => {
                 .eq('game_id', gameID)
                 .single();
 
+
             if (roundError) {  
                 console.error('Error in createSubmissionsForPlayers: ', roundError.message);
                 return {success: false, message: roundError.message};
             }
 
-            // 3. Create submission entries for each player
+            // 3. Get the prompter_id
 
-            const submissionPromises = players.map(player => {
-                return supabase
-                    .from('submissions')
-                    .insert({
-                        round_id: roundData.id,
-                        player_id: player.id,
-                        photo_uri: null,
-                    });
-            });
+            const {data: prompterData, error: prompterError} = await supabase
+                .from('round')
+                .select(`*`)
+                .eq('game_id', gameID)
+                .single();
+
+            if (prompterError) {
+                console.error('Error in createSubmissionsForPlayers: ', prompterError.message);
+                return {success: false, message: prompterError.message};
+            }
+
+            const prompterId = prompterData.prompter_id;
+
+            const submissionPromises = players
+                .filter(player => player.id !== prompterId)
+                .map(player => {
+                    return supabase
+                        .from('submissions')
+                        .insert({
+                            round_id: roundData.id,
+                            player_id: player.id,
+                            photo_uri: null,
+                            game_id: gameID,
+                        });
+                });
 
             await Promise.all(submissionPromises);
             console.log('Created submissions for all players');
+
+            return {success: true, message: 'Created submissions for all players'};
 
         } catch(error) {
             console.error('Error in createSubmissionsForPlayers: ', error.message);
@@ -391,8 +409,53 @@ const Main = () => {
         const uploadResult = await uploadImageToSupabase(selectedImageUri);
         if (uploadResult) {
 
+            console.log('this is the upload result: ', uploadResult);
+
+            
+
+
+            const { data: playergameData, error: playergameError} = await supabase
+                .from('playergame')
+                .select(`*`)
+                .eq('game_id', gameID)
+                .eq('player_id', userPayload?.id)
+                .single();
+
+            if (playergameError) {
+                console.error('Error in confirmImageSelection: ', playergameError.message);
+                return {success: false, message: playergameError.message};
+            }
+
+            const fileName = uri.split('/').pop(); // Extract filename
+            const photoUri = `gamesubmissions/${fileName}`;
+            const playerGameId = playergameData.id;
+
+
+            // update the submissions table with the photo_uri
+
+            const {data, error} = await supabase
+                .from('submissions')
+                .update({
+                    photo_uri: photoUri,
+                })
+                .eq('game_id', gameID)
+                .eq('player_id', playerGameId)
+
+
+            if (error) {
+                console.error('Error in confirmImageSelection: ', error.message);
+                return {success: false, message: error.message};
+            }
+
+            console.log('this is the data in confirmImageSelection: ', data);
+            
+    
         }
+
+
         setIsModalVisible(false);
+
+
         
 
     };
@@ -447,6 +510,7 @@ const Main = () => {
 
         return () => {
             supabase.removeChannel(roundSubscription);
+            supabase.removeChannel(submissionSubscription);
         }
     }, [gameID]);
 
