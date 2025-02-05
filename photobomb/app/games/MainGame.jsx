@@ -176,6 +176,15 @@ const Main = () => {
 
     const mainSubmissionUpdateHandler = async (payload) => {
         try {
+            console.log('New submission detected:', payload.new);
+
+
+            if (payload?.eventType === 'UPDATE') {
+
+                console.log('New submission detected:', payload.new);
+                console.log('New submission detected:', payload.new);
+
+            }
 
         } catch(error) {
             console.error('Error in the mainSubmissionUpdateHandler: ', error.message);
@@ -495,7 +504,7 @@ const Main = () => {
         const submissionSubscription = supabase
             .channel('submissionUpdates')
             .on('postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}` }, mainSubmissionUpdateHandler)
+                { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}` }, mainSubmissionUpdateHandler)
             .subscribe();
 
 
