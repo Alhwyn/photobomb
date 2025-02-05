@@ -35,25 +35,24 @@ const Main = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
 
-
-
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
         setIsPrompterSubmit(true);
         console.log('Selected prompt in Main: ', promptData);
-    };
+        }
+    
 
     const renderComponent = () => {
 
-        const components =  {
-            Prompt: <Prompter onPromptSelect={handlePromptSelect}/>,
-            ImageGallery:  <Gallery/>,
+        /**
+         * Prompt: <Prompter onPromptSelect={handlePromptSelect}/>,
+           ImageGallery:  <Gallery/>,
             UserPromptSelection: <PromptSelection/>,
             WaitPrompter: <GameLoading/>,
             HandleImageSubmit: <ImageSubmission/>
     
-        }
-
+         */
+            
         console.log('this is the game stage: ', currentStage);
 
         if (currentStage === 'Prompt') {
@@ -67,7 +66,15 @@ const Main = () => {
         } else if (currentStage === 'ImageGallery') {
             
             return <ImageSubmission currentPrompt={selectedPrompt?.text} gameId={gameID}/>;
-        }
+
+        } else if (currentStage === 'UserImageSelection') {
+            if (isPrompter) {
+                return <PromptSelection />;
+            } else {    
+                return <GameLoading />;
+            }
+        };
+
     };
 
     const renderButtons = () => {
@@ -113,7 +120,6 @@ const Main = () => {
             );
         }
     };
-
     const fetchUserData = async () => {
         try {
             const Userpayload = await getUserPayloadFromStorage();
