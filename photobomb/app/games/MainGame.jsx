@@ -293,7 +293,7 @@ const Main = () => {
     };
 
     const uploadImageToSupabase = async (uri) => {
-        if (!uri) return null;
+        if (!uri) return {success: false, message: "no uri"};
       
         try {
           const fileName = uri.split('/').pop(); // Extract filename
@@ -321,13 +321,17 @@ const Main = () => {
       
           if (error) {
             console.error('Supabase storage upload error:', error.message);
-            return null;
+            return {success: false, message: error.message};
           }
       
-          return data?.path;
+
+
+          return {success: true, message: data}
+
+          
         } catch (error) {
           console.error('Image upload failed:', error.message);
-          return null;
+          return {success: false, message: error.message};
         }
       };
 
@@ -404,60 +408,47 @@ const Main = () => {
 
     const confirmImageSelection = async () => {
 
-        // Additional logic to handle the confirmed image selection
+        await uploadImageToSupabase(selectedImageUri);
 
-        const uploadResult = await uploadImageToSupabase(selectedImageUri);
-        if (uploadResult) {
+        const { data: playergameData, error: playergameError} = await supabase
+            .from('playergame')
+            .select(`*`)
+            .eq('game_id', gameID)
+            .eq('player_id', userPayload.id)
+            .single();
 
-            console.log('this is the upload result: ', uploadResult);
-
-            
-
-
-            const { data: playergameData, error: playergameError} = await supabase
-                .from('playergame')
-                .select(`*`)
-                .eq('game_id', gameID)
-                .eq('player_id', userPayload?.id)
-                .single();
-
-            if (playergameError) {
-                console.error('Error in confirmImageSelection: ', playergameError.message);
-                return {success: false, message: playergameError.message};
-            }
-
-            const fileName = uri.split('/').pop(); // Extract filename
-            const photoUri = `gamesubmissions/${fileName}`;
-            const playerGameId = playergameData.id;
-
-
-            // update the submissions table with the photo_uri
-
-            const {data, error} = await supabase
-                .from('submissions')
-                .update({
-                    photo_uri: photoUri,
-                })
-                .eq('game_id', gameID)
-                .eq('player_id', playerGameId)
-
-
-            if (error) {
-                console.error('Error in confirmImageSelection: ', error.message);
-                return {success: false, message: error.message};
-            }
-
-            console.log('this is the data in confirmImageSelection: ', data);
-            
-    
+        if (playergameError) {
+            console.error('Error in confirmImageSelection: ', playergameError.message);
+            return {success: false, message: playergameError.message};
         }
 
+        console.log('this is the playergameData: ', playergameData);
 
-        setIsModalVisible(false);
+        const fileName = selectedImageUri.split('/').pop(); // Extract filename
+        const photoUri = `gamesubmissions/${fileName}`;
+        const playerGameId = playergameData.id;
+
+        // update the submissions table with the photo_uri
+
+        const {data, error} = await supabase
+            .from('submissions')
+            .update({
+                photo_uri: photoUri,
+            })
+            .eq('game_id', gameID)
+            .eq('player_id', playerGameId)
 
 
+        if (error) {
+            console.error('Error in confirmImageSelection: ', error.message);
+            return {success: false, message: error.message};
+        }
+
+        console.log('this is the data in confirmImageSelection: ', data);
+            
         
 
+        setIsModalVisible(false);
     };
 
     const cancelImageSelection = () => {
