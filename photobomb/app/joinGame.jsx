@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FlatList, StyleSheet, Text, View, Pressable, ImageBackground, TouchableWithoutFeedback, Keyboard, SafeAreaView, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import NumberInput from '../components/NumberInput';
