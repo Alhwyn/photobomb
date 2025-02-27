@@ -20,6 +20,7 @@ const UpdateUser = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [userId, setUserId] = useState(null);
+  
 
   useEffect(() => {
     const fetchUserPayload = async () => {
@@ -33,6 +34,9 @@ const UpdateUser = () => {
 
         setUserId(payload.id);
         setUsername(payload.username || '');
+
+        console.log(userId);
+        console.log(username);
 
         const getImageUrl = getSupabaseUrl(payload?.image_url);
 
@@ -126,11 +130,15 @@ const UpdateUser = () => {
         // Update the image_url in AsyncStorage
         const userPayloadString = await AsyncStorage.getItem('userPayload');
         let updatedPayload;
+
+        console.log(userPayloadString);
+
   
         if (userPayloadString) {
           const existingPayload = JSON.parse(userPayloadString);
           updatedPayload = {
             ...existingPayload,
+            username: username,
             image_url: imageUrl,
           };
         } else {

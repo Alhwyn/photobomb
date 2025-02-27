@@ -293,29 +293,39 @@ const Lobby = () => {
         else false it it remove the the player game row
         */
         // the player data
-        console.log('this is the player data: ', localPlayerData);
 
-        console.log('this is the player_id: ', localPlayerData?.id);
-        console.log('this is the is_Creator', UserIsCreator);
+        try {
+            console.log('this is the player data: ', localPlayerData);
 
-        if (UserIsCreator === localPlayerData?.id) {
-            const checkGameDelete = await deleteGame(gameId);
+            console.log('this is the player_id: ', localPlayerData?.id);
+            console.log('this is the is_Creator', UserIsCreator);
 
-            if (!checkGameDelete.success) {
-                console.error('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
-            } else {
-                console.log('Succesfully deleted the game.')
+            if (UserIsCreator === localPlayerData?.id) {
+                const checkGameDelete = await deleteGame(gameId);
+
+                if (!checkGameDelete.success) {
+                    console.error('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
+                } else {
+                    console.log('Succesfully deleted the game.')
+                }
+
+            }  else {
+                deletePlayerGame(localPlayerData?.id, gameId);
+
+                if (!checkGameDelete.success) {
+                    console.log('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
+                } else {
+                    console.log('Succesfully deleted the game.')
+                }
             }
 
-        }  else {
-            deletePlayerGame(localPlayerData?.id, gameId);
+            router.back();
 
-            if (!checkGameDelete.success) {
-                console.log('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
-            } else {
-                console.log('Succesfully deleted the game.')
-            }
+        } catch(error) {
+            console.error('Error in handleExitLobby: ', error.message);
+            router.back();
         }
+        
 
     };
     const handleStartGame = async () => {
@@ -340,7 +350,6 @@ const Lobby = () => {
                 <Text style={styles.text}>{gamePin}</Text>
             </LinearGradient>
         </View>
-        
         <UserLobby
             lobbyData={players}
         />
