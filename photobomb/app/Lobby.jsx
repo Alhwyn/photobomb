@@ -76,11 +76,6 @@ const Lobby = () => {
 
             }
 
-                      
-
-
-            
-            
             getLocalPLayerData(getUserPayload);
             setUserIsCreator(data?.playergame?.[0]?.is_creator);
 
@@ -130,6 +125,7 @@ const Lobby = () => {
                 }
 
                 console.log(`Fetched username for player ID ${payload.new.player_id}:`, userData.username);
+
 
                 const newPlayer = { ...payload.new, users: { username: userData.username } };
 
@@ -257,7 +253,6 @@ const Lobby = () => {
             { event: '*', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handlePLayerLobby)
         .subscribe();
 
-        // Add logging to debug
         if (!channelLobby) {
             console.error('Failed to subscribe to lobby updates');
         }
