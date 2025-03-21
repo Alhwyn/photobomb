@@ -12,7 +12,7 @@ import Loading from '../components/Loading';
 
 
 const CreateUser = () => {
-    const [username, setUsername] = useState(''); // State for username
+    const [username, setUsername] = useState(''); 
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 

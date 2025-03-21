@@ -2,60 +2,68 @@ import { StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import ImageList from './ImageList';
-import { getUserPayloadFromStorage } from '../../service/userService';
+import ImageListPromptSelection from './ImageListPromptSelection';
 
 
 const ImageSubmission = ({currentPrompt, gameId }) => {
 
   const [playerGamesList, setPlayerGamesList] = useState([]);
+  const [playersubmissionsList, setPlayersubmissionsList] = useState([]);
   const [userPayload, setUserPayload] = useState(null);
 
+  useEffect(() => {
+    handleSumbissionTables();
+
+    const submissionsSubscription = supabase
+      .channel('submissions-channel')
+      .on('postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'submissions',
+          filter: `game_id=eq.${gameId}`
+        },
+        (payload) => {
+          console.log('Submission update received:', payload);
+          handleSumbissionTables();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      submissionsSubscription.unsubscribe();
+    };
+  }, [gameId]);
 
   const handleSumbissionTables = async () => {
     const {data: gamesPayload, error: gamesPayloadError} = await supabase
-      .from('playergame')
-      .select(`*,
-               users (username, image_url)`)
+    .from('playergame')
+    .select(`*,
+             users (username, image_url) `)
+    .eq('game_id', gameId);
+
+    const {data: submissionsPayload, error: submissionsPayloadError} = await supabase
+      .from('submissions')
+      .select(`*`)
       .eq('game_id', gameId);
 
+    if (submissionsPayloadError) {
+      console.error('Error fetching submission data: ', submissionsPayloadError.message);
+      return {success: false, error: submissionsPayloadError.message};
+    }
 
     if (gamesPayloadError) {
       console.error('Error fetching game data: ', gamesPayloadError.message);
       return {success: false, error: gamesPayloadError.message};
     }
 
-
     console.log('gamesPayload: ', gamesPayload);
 
+    console.log('submissionsPayload: ', submissionsPayload);
+
+    setPlayersubmissionsList(submissionsPayload);
     setPlayerGamesList(gamesPayload);
-
   }
-
-  const createSubmissionTables = async () => {
-
-    const Userpayload = await getUserPayloadFromStorage();
-    
-    if (Userpayload) {
-
-      setUserPayload(Userpayload);
-
-
-      const {data: submissionsTable, error: submissionsTableError} = await supabase
-        .from('submissions')
-        .insert(`*`)
-        .eq('game_id', gameId);
-
-
-
-    }
-
-  }
-
-
-  useEffect(() => {
-    handleSumbissionTables();
-  }, []);
   
   return (
     <View style={styles.container}> 
@@ -71,7 +79,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
             </View>
         </View>
       </LinearGradient>
-      <ImageList lobbyData={playerGamesList} />
+      <ImageListPromptSelection lobbyData={playerGamesList} submissionData={playersubmissionsList} />
     </View>
   )
 }

@@ -8,7 +8,7 @@ import { getUserPayloadFromStorage } from '../service/userService';
 import { checkGamePin, CreateGameID, addUserToLobby, getGameId } from '../service/gameService';
 
 
-// Function to generate unique six digit game ID
+
 const generateUniquePin = async () => {
     let unique = false;
     let pin;
@@ -17,7 +17,7 @@ const generateUniquePin = async () => {
         pin = Math.floor(100000 + Math.random() * 900000).toString();
         unique = !(await checkGamePin(pin));
     }
-    return pin; // return the unique PIN
+    return pin; 
 }
 
 const gameModes = [

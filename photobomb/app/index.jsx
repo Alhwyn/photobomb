@@ -14,14 +14,14 @@ const Index = () => {
 
         if (response.success) {
           console.log('User verified successfully:', response.payload);
-          router.replace('Main'); // Navigate to lobby.jsx if verification is successful
+          router.replace('Main'); 
         } else {
           console.log('User verification failed:', response.msg);
-          router.replace('CreateUser'); // Navigate to CreateUser.jsx if verification fails
+          router.replace('CreateUser');
         }
       } catch (error) {
         console.error('Error during initialization:', error.message);
-        router.replace('CreateUser'); // Navigate to CreateUser.jsx on unexpected errors
+        router.replace('CreateUser'); 
       }
     };
 

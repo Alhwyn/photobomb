@@ -50,7 +50,6 @@ const Main = () => {
             UserPromptSelection: <PromptSelection/>,
             WaitPrompter: <GameLoading/>,
             HandleImageSubmit: <ImageSubmission/>
-    
          */
             
         console.log('this is the game stage: ', currentStage);
