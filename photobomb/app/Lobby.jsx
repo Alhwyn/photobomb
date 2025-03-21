@@ -13,8 +13,6 @@ import { supabase } from '../lib/supabase';
 import { startGame } from '../service/gameStartService';
 import Loading from '../components/Loading';
 
-
-
 const Lobby = () => {
     const router = useRouter();
     const [gamePin, setGamePin] = useState(null);
@@ -56,7 +54,6 @@ const Lobby = () => {
 
             setGameId(data.playergame[0]?.game_id);
 
-
             console.log('Where is the game id: ', gameId)
 
         
@@ -84,10 +81,7 @@ const Lobby = () => {
         } catch(error) {
             console.error('There is an error on setStateLobbyFunction: ', error.message);
             return {success: false, message: 'data success'};
-
-
         }
-
     }
 
     const handlePLayerLobby = async (payload) => {
@@ -125,7 +119,6 @@ const Lobby = () => {
                 }
 
                 console.log(`Fetched username for player ID ${payload.new.player_id}:`, userData.username);
-
 
                 const newPlayer = { ...payload.new, users: { username: userData.username } };
 

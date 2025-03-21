@@ -181,21 +181,29 @@ const Main = () => {
 
     const mainSubmissionUpdateHandler = async (payload) => {
         try {
-            console.log('New submission detected:', payload.new);
-
-
             if (payload?.eventType === 'UPDATE') {
-
-                console.log('New submission detected:', payload.new);
-                console.log('New submission detected:', payload.new);
-
+                // Check if all non-prompter players have submitted
+                const { data: submissions, error } = await supabase
+                    .from('submissions')
+                    .select('*')
+                    .eq('game_id', gameID);
+    
+                if (error) {
+                    console.error('Error checking submissions:', error.message);
+                    return;
+                }
+    
+                // Check if all submissions have photo_uri
+                const allSubmitted = submissions.every(sub => sub.photo_uri !== null);
+                
+                if (allSubmitted) {
+                    setCurrentStage('ImageGallery');
+                }
             }
-
         } catch(error) {
-            console.error('Error in the mainSubmissionUpdateHandler: ', error.message);
+            console.error('Error in mainSubmissionUpdateHandler:', error.message);
         }
     }
-
 
     const checkUserRole = async () => {
         /**
@@ -438,11 +446,9 @@ const Main = () => {
 
         console.log('this is the playergameData: ', playergameData);
 
-        const fileName = selectedImageUri.split('/').pop(); // Extract filename
+        const fileName = selectedImageUri.split('/').pop();
         const photoUri = `gamesubmissions/${fileName}`;
         const playerGameId = playergameData.id;
-
-        // update the submissions table with the photo_uri
 
         const {data, error} = await supabase
             .from('submissions')
