@@ -31,6 +31,7 @@ const Main = () => {
     const [gameID, setGameId] = useState(null);
     const [selectedPrompt, setSelectedPrompt] = useState(null);
     const [promptSubmitted, setPromptSubmitted] = useState(false);
+    const [imagesSelected, setImagesSelected] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
@@ -41,9 +42,7 @@ const Main = () => {
         console.log('Selected prompt in Main: ', promptData);
         }
     
-
     const renderComponent = () => {
-
         /**
          * Prompt: <Prompter onPromptSelect={handlePromptSelect}/>,
            ImageGallery:  <Gallery/>,
@@ -119,6 +118,8 @@ const Main = () => {
             );
         }
     };
+
+
     const fetchUserData = async () => {
         try {
             const Userpayload = await getUserPayloadFromStorage();
@@ -172,6 +173,8 @@ const Main = () => {
 
                 setPromptSubmitted(true);
                 setCurrentStage('ImageGallery');
+
+                const submissionStatus = await checkPlayerSubmission();
             }
 
         } catch(error) {
@@ -357,11 +360,28 @@ const Main = () => {
         }
       };
 
+      const checkPlayerSubmission = async () => {
+
+        const { data, error } = await supabase
+            .from("round")
+            .select(`*`)
+            .eq('game_id', gameID)
+            .single();
+
+
+        if (error) {
+            console.error('Error in checkPlayerSubmission: ', error.message);
+            return {success: false, message: error.message};
+        }
+
+        console.log('this is the data in checkPlayerSubmission: \n\n', data);
+
+      }
+
       const createSubmissionsForPlayers = async () => {
         try {
 
             // 1 get all the players in teh game
-
             const {data: players, error: playersError} = await supabase
                 .from('playergame')
                 .select(`*,
@@ -374,7 +394,6 @@ const Main = () => {
             }
 
             // 2 get teh current round id
-
             const {data: roundData, error: roundError} = await supabase
                 .from('round')
                 .select(`*`)
@@ -428,6 +447,13 @@ const Main = () => {
 
       };
 
+      
+
+    const cancelImageSelection = () => {
+        setIsModalVisible(false);
+        setSelectedImageUri(null);
+    };
+
     const confirmImageSelection = async () => {
 
         await uploadImageToSupabase(selectedImageUri);
@@ -469,13 +495,8 @@ const Main = () => {
         
 
         setIsModalVisible(false);
+        setImagesSelected(true);
     };
-
-    const cancelImageSelection = () => {
-        setIsModalVisible(false);
-        setSelectedImageUri(null);
-    };
-
 
     useEffect(() => {
         const initiallizeGameData = async () => {
