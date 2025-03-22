@@ -173,8 +173,6 @@ const Main = () => {
 
                 setPromptSubmitted(true);
                 setCurrentStage('ImageGallery');
-
-                const submissionStatus = await checkPlayerSubmission();
             }
 
         } catch(error) {
@@ -197,11 +195,8 @@ const Main = () => {
                 }
     
                 // Check if all submissions have photo_uri
-                const allSubmitted = submissions.every(sub => sub.photo_uri !== null);
+                const submissionStatus = await checkAllPlayerSubmission();
                 
-                if (allSubmitted) {
-                    setCurrentStage('ImageGallery');
-                }
             }
         } catch(error) {
             console.error('Error in mainSubmissionUpdateHandler:', error.message);
@@ -321,23 +316,21 @@ const Main = () => {
         if (!uri) return {success: false, message: "no uri"};
       
         try {
-          const fileName = uri.split('/').pop(); // Extract filename
-          const fileType = fileName.split('.').pop().toLowerCase(); // Extract file extension and normalize to lowercase
+          const fileName = uri.split('/').pop(); 
+          const fileType = fileName.split('.').pop().toLowerCase(); 
           const mimeType = fileType === 'jpg' ? 'image/jpeg' : `image/${fileType}`;
       
-          // Read file content as base64 string
           const fileContent = await FileSystem.readAsStringAsync(uri, {
             encoding: FileSystem.EncodingType.Base64,
           });
       
-          // Supabase expects binary data, so we convert base64 to a Uint8Array
+          
           const fileBuffer = Uint8Array.from(atob(fileContent), (c) =>
             c.charCodeAt(0)
           );
       
           console.log('Uploading image:', uri);
       
-          // Upload to Supabase
           const { data, error } = await supabase.storage
             .from('uploads')
             .upload(`gamesubmissions/${fileName}`, fileBuffer, {
@@ -349,8 +342,6 @@ const Main = () => {
             return {success: false, message: error.message};
           }
       
-
-
           return {success: true, message: data}
 
           
@@ -360,21 +351,18 @@ const Main = () => {
         }
       };
 
-      const checkPlayerSubmission = async () => {
+      const checkAllPlayerSubmission = async () => {
 
-        const { data, error } = await supabase
-            .from("round")
-            .select(`*`)
-            .eq('game_id', gameID)
-            .single();
+        const roundData = await getRoundData(gameID);
+
+        /// for the total number player inthe round: roundData.data.total_players
+
+        console.log('this is the roundData \n\n: ', roundData.data.total_players);
 
 
-        if (error) {
-            console.error('Error in checkPlayerSubmission: ', error.message);
-            return {success: false, message: error.message};
-        }
+        const submissionData = await getSubmissionData(gameID);
 
-        console.log('this is the data in checkPlayerSubmission: \n\n', data);
+        console.log('this is the submissionData: ', submissionData);
 
       }
 

@@ -258,7 +258,34 @@ export const getRoundData = async (gameId) => {
 }
 
 
+export const getSubmissionData = async (game_id) => {
+    /**
+     * fetches data for a specific submission round from the round table
+     * @param {string} gameId - The ID of the game to fetch round data for.
+     * @returns {Promise<Object>} - an object indicating the success of the operationor an error message
+     */
 
+    try {
+
+        const {data, error } = await supabase
+          .from('submissions')
+          .select('*')
+          .eq('game_id', game_id)
+
+        if (error) {
+            console.error('Error on fetching the data on the submission table gameService.js', error.message);
+            return {success: false, message: error.message};
+        }
+
+        console.log('successfully fetch the data fron the submission table');
+
+        return {success: true, data: data};
+
+    } catch (error) {
+        console.error('Error on fetching the data on the round table gameService.js', error.message);
+        return {success: false, message: error.message};
+    }
+}
 
 
 
