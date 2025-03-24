@@ -5,7 +5,6 @@ const Gallery = () => {
     const [showAllImages, setShowAllImages] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(300)).current;  // Start from outside screen
 
     const images = [
         { uri: require('../../assets/images/mode1.png'), description: 'Local Image 1' },
@@ -111,6 +110,7 @@ const Gallery = () => {
     );
 };
 
+
 export default Gallery;
 
 const styles = StyleSheet.create({
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        width: '90%', // Slightly wider container
-        aspectRatio: 1, // Maintain square aspect ratio
+        width: '10%', 
+        aspectRatio: 1,
         borderRadius: 20, 
         maxHeight: 400, 
         borderRadius: 15,
