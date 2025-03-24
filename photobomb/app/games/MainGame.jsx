@@ -368,8 +368,6 @@ const Main = () => {
 
       const createSubmissionsForPlayers = async () => {
         try {
-
-            // 1 get all the players in teh game
             const {data: players, error: playersError} = await supabase
                 .from('playergame')
                 .select(`*,
@@ -380,8 +378,6 @@ const Main = () => {
                 console.error('Error in createSubmissionsForPlayers: ', playersError.message);
                 return {success: false, message: playersError.message};
             }
-
-            // 2 get teh current round id
             const {data: roundData, error: roundError} = await supabase
                 .from('round')
                 .select(`*`)
@@ -393,8 +389,6 @@ const Main = () => {
                 console.error('Error in createSubmissionsForPlayers: ', roundError.message);
                 return {success: false, message: roundError.message};
             }
-
-            // 3. Get the prompter_id
 
             const {data: prompterData, error: prompterError} = await supabase
                 .from('round')
@@ -546,7 +540,7 @@ const Main = () => {
             <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
             {isPrompter ? (
                     promptSubmitted ? (
-                        <Text style={styles.text}>Bob picked the prompt</Text>
+                        <Text style={styles.text}> picked the prompt</Text>
                     ) : (
                         <Text style={styles.text}>You are the Prompter</Text>
                     )

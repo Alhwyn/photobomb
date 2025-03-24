@@ -39,7 +39,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
     const {data: gamesPayload, error: gamesPayloadError} = await supabase
     .from('playergame')
     .select(`*,
-             users (username, image_url) `)
+             users (username, image_url, id) `)
     .eq('game_id', gameId);
 
     const {data: submissionsPayload, error: submissionsPayloadError} = await supabase
