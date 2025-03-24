@@ -9,7 +9,6 @@ const Index = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Verify user from local storage
         const response = await verifyUserFromStorage();
 
         if (response.success) {

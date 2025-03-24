@@ -7,10 +7,6 @@ import { useRouter } from 'expo-router';
 import { handleCreateUser } from '../service/userService';
 import Loading from '../components/Loading';
 
-
-
-
-
 const CreateUser = () => {
     const [username, setUsername] = useState(''); 
     const router = useRouter();
@@ -51,7 +47,7 @@ const CreateUser = () => {
             <Button 
                 title='Create' 
                 colors={theme.buttonGradient.secondary} 
-                onPress={handlingCreatingUser} // Call the function here
+                onPress={handlingCreatingUser}
                 value={username}
 
             />

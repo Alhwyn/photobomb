@@ -6,14 +6,13 @@ const _layout = () => {
   return (
     <Stack
       screenOptions={{
-        headerShown: false, // Keeps the header hidden for all screens
+        headerShown: false, 
       }}
     >
-      {/* Disable gesture for Lobby screen */}
       <Stack.Screen
         name="Lobby"
         options={{
-          gestureEnabled: false, // Disables swipe gestures for this screen
+          gestureEnabled: false, 
         }}
       />
     </Stack>

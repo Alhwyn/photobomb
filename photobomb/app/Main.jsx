@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router'
 import Profile from '../components/Profile';
 import { theme } from '../constants/theme';
 import { getUserPayloadFromStorage } from '../service/userService'
-// Setting
+
 const Main = () => {
     const router = useRouter();
     const [userPayload, setUserPayload] = useState(null); 
@@ -69,7 +69,7 @@ const Main = () => {
         <View style={styles.touchContainer}>
             <Button
                 title="Create Game"
-                colors={theme.buttonGradient.primary} // Blue to Indigo
+                colors={theme.buttonGradient.primary} 
                 onPress={()=> router.push('gameSelector')}
             />
             <Button 
@@ -121,8 +121,8 @@ const styles = StyleSheet.create({
     },
     bombText: {
         color: 'white',
-        fontSize: 36, // Make it large
-        fontWeight: '600', // Semi-bold for "pop"
+        fontSize: 36, 
+        fontWeight: '600', 
         textAlign: 'center',
     },
     usernameText: {

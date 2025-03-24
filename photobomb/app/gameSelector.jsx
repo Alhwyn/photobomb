@@ -23,7 +23,6 @@ const generateUniquePin = async () => {
 const gameModes = [
   { id: '1', name: 'Classic', image: require('../assets/images/mode1.png'), gradient: ['#0000FF', '#1E90FF']},
 ];
-// console.log(`Selected ${item.name}`
 const GameSelector = () => {
   const router = useRouter();
 
@@ -35,7 +34,6 @@ const GameSelector = () => {
       
       if (!data) throw new Error('User ID not found in AsyncStorage.');
 
-      // Generate a unique PIN
       const pin = await generateUniquePin();
 
       const result = await CreateGameID(pin, data);
@@ -47,9 +45,7 @@ const GameSelector = () => {
       const createPlayerGame = await addUserToLobby(data?.id, getGamePayload?.data?.id, true);
 
       console.log("Game created:", result);
-      console.log("Game create now player ID", createPlayerGame)
 
-      // Navigate to Lobby screen with game details
       router.push({
         pathname: 'Lobby'
     });
@@ -98,26 +94,26 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 16,
-    backgroundColor: '#121212', // Sleek dark background
+    backgroundColor: '#121212', 
   },
   item: {
     flex: 1,
     margin: 12,
     borderRadius: 16,
-    overflow: 'hidden', // Ensures images don't overflow
+    overflow: 'hidden', 
   },
   image: {
     height: 150,
-    justifyContent: 'flex-end', // Align text container at the bottom
+    justifyContent: 'flex-end', 
   },
   imageBorder: {
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    borderBottomLeftRadius: 0, // Flat bottom edge
+    borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
   },
   textContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.007)', // Semi-transparent black for text background
+    backgroundColor: 'rgba(0, 0, 0, 0.007)',
     paddingVertical: 8,
     paddingLeft: 15
 
@@ -125,7 +121,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#ffffff', // Clean white text for contrast
+    color: '#ffffff',
     fontFamily: 'System',
   },
   title: {
