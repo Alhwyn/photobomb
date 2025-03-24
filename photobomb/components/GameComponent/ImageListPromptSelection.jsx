@@ -9,26 +9,27 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
 
   const filteredLobbyData = lobbyData.filter(player => !player.is_creator);
 
-  console.log("this is the ImageListPromptselection: ", filteredLobbyData);
-  console.log("this is the submissionData: ", submissionData);
-
   const renderItem = ({ item }) => {
     const { users } = item;
     const { username, image_url } = users;
     const getImageUri = getSupabaseUrl(image_url);
 
-    console.log("this is the getImageUri: ", item.player_id);
+
 
 
     const playerSubmission = submissionData.find(
-      submission => submission.player_id === item.player_id
-    ); 
 
+      submission => (
+        console.log('submission: ', submission.player_id),
+        console.log('item: ', item.id),
+
+        submission.player_id === item?.id
+      )
+    ); 
 
     const hasSubmitted = playerSubmission?.photo_uri !== null
 
-    console.log("this is the playerSubmissio bleh: ", playerSubmission);
-    console.log("this is the playerSubmission: ", hasSubmitted);
+
 
     return (
       <View style={styles.itemContainer}>
