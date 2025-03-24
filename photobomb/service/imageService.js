@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { supabaseUrl } from '../constants';
 
-export const getSupabaseFileUrl = (filePath) => {
+export const getImageUploads = (filePath) => {
     /**
      * retreives a public url for a file stored in the  supabase 'user-profiles' bucket.
      * @param {string} filePath = the path of the file in the supabase storag bucket.

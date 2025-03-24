@@ -163,8 +163,7 @@ const Lobby = () => {
             }
     
             console.log('Updated players list from server:', updatedPlayers);
-    
-            // Update the players state with the new lis
+
             setPlayers(updatedPlayers);
         } catch (error) {
             console.error('Error during handleRemoveUser:', error.message);
@@ -203,7 +202,7 @@ const Lobby = () => {
                 if (!setUsersetStateLobby) {
                     console.error('Thier is an error in setStateLobby');
                 }
-                // else here
+            
                 const { data: gamePayload } = await supabase
                     .from('playergame')
                     .select(`

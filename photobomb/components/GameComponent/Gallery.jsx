@@ -1,5 +1,6 @@
 import { SafeAreaView, StyleSheet, Text, View, Image, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
+import { getSupabaseUrl } from '../../service/imageService';
 
 const Gallery = () => {
     const [showAllImages, setShowAllImages] = useState(false);
@@ -91,9 +92,9 @@ const Gallery = () => {
                 <View style={styles.imageGrid}>
                     {images.map((image, index) => (
                         <TouchableOpacity
-                            key={index}
-                            style={styles.imageWrapper}
-                            onPress={() => console.log('Image pressed:', index)}
+                        key={index}
+                        style={styles.imageWrapper}
+                        onPress={() => console.log('Image pressed:', index)}
                         >
                             <Image
                                 source={image.uri}
@@ -110,7 +111,6 @@ const Gallery = () => {
     );
 };
 
-
 export default Gallery;
 
 const styles = StyleSheet.create({
@@ -120,52 +120,44 @@ const styles = StyleSheet.create({
         paddingVertical: 0,
     },
     scrollContent: {
-        alignItems: 'center',
-        paddingBottom: 20,
+        alignItems: 'center'
     },
     title: {
         fontSize: 24,
         color: '#ffffff',
-        marginBottom: 15,
         textAlign: 'center',
     },
     imageGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-around',
-        paddingHorizontal: 10,
+        justifyContent: 'space-around'
+    },
+    image: {
+        width: '100%',
+        height: 150,
+        borderRadius: 20,
+    },
+    singleImageWrapper: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%', 
+        maxHeight: 500, 
+    },
+    singleImage: {
+        width: '100%',
+        height: 400,
+        aspectRatio: 1,
+    },
+    description: {
+        color: '#ccc',
+        fontSize: 14,
+        textAlign: 'center',
     },
     imageWrapper: {
         marginBottom: 15,
         width: '30%',
         alignItems: 'center',
         borderRadius: 15,
-    },
-    image: {
-        width: '100%',
-        height: 150,
-        borderRadius: 10,
-    },
-    singleImageWrapper: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '10%', 
-        aspectRatio: 1,
-        borderRadius: 20, 
-        maxHeight: 400, 
-        borderRadius: 15,
-        marginVertical: 20,
-    },
-    singleImage: {
-        width: 300,
-        height: 300,
-        borderRadius: 20,
-    },
-    description: {
-        color: '#ccc',
-        marginTop: 5,
-        fontSize: 14,
-        textAlign: 'center',
     },
 });

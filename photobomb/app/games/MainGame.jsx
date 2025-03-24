@@ -15,6 +15,7 @@ import Prompter from '../../components/GameComponent/Prompter';
 import GameLoading from '../../components/GameComponent/GameLoading';
 import ImageSubmission from '../../components/GameComponent/ImageSubmission';
 import { checkAllPlayerSubmission, getSubmissionData } from '../../service/gameService'
+import { getSupabaseUrl } from '../../service/imageService';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -405,8 +406,6 @@ const Main = () => {
 
       };
 
-      
-
     const cancelImageSelection = () => {
         setIsModalVisible(false);
         setSelectedImageUri(null);
@@ -497,7 +496,7 @@ const Main = () => {
         {/* Header with Profile */}
         <View style={styles.header}> 
             {/* Profile Pic Component */}
-            <Profile image_url={userPayload?.image_url}/>
+            <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
              
             <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
             {isPrompter ? (
@@ -569,7 +568,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         flexDirection: 'row',
         backgroundColor: "#1A1A1A",
-        padding: 90,
+        padding: 40,
         borderWidth: 1, 
         borderTopColor: '#333333', 
         justifyContent: 'center', 
