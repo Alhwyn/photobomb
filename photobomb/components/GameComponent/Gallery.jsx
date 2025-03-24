@@ -5,6 +5,7 @@ const Gallery = () => {
     const [showAllImages, setShowAllImages] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(300)).current;  // Start from outside screen
 
     const images = [
         { uri: require('../../assets/images/mode1.png'), description: 'Local Image 1' },
@@ -28,6 +29,7 @@ const Gallery = () => {
             useNativeDriver: true,
         }).start();
     };
+
 
     useEffect(() => {
         console.log('showAllImages:', showAllImages);
@@ -145,6 +147,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     singleImageWrapper: {
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         width: '90%', // Slightly wider container

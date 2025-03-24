@@ -15,9 +15,6 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
     const { username, image_url } = users;
     const getImageUri = getSupabaseUrl(image_url);
 
-
-
-
     const playerSubmission = submissionData.find(
 
       submission => (
