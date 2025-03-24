@@ -390,21 +390,10 @@ const Main = () => {
                 return {success: false, message: roundError.message};
             }
 
-            const {data: prompterData, error: prompterError} = await supabase
-                .from('round')
-                .select(`*`)
-                .eq('game_id', gameID)
-                .single();
-
-            if (prompterError) {
-                console.error('Error in createSubmissionsForPlayers: ', prompterError.message);
-                return {success: false, message: prompterError.message};
-            }
-
-            const prompterId = prompterData.prompter_id;
+            const prompterId = roundData.prompter_id;
 
             const submissionPromises = players
-                .filter(player => player.id !== prompterId)
+                .filter(player => !player.is_creator)
                 .map(player => {
                     return supabase
                         .from('submissions')

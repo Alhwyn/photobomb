@@ -9,6 +9,7 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
 
   const filteredLobbyData = lobbyData.filter(player => !player.is_creator);
 
+
   const renderItem = ({ item }) => {
     const { users } = item;
     const { username, image_url } = users;
@@ -28,8 +29,6 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
     ); 
 
     const hasSubmitted = playerSubmission?.photo_uri !== null
-
-
 
     return (
       <View style={styles.itemContainer}>
