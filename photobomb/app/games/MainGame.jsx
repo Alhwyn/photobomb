@@ -15,6 +15,7 @@ import { getRoundData } from '../../service/gameService';
 import Prompter from '../../components/GameComponent/Prompter';
 import GameLoading from '../../components/GameComponent/GameLoading';
 import ImageSubmission from '../../components/GameComponent/ImageSubmission';
+import { checkAllPlayerSubmission, getSubmissionData } from '../../service/gameService'
 
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -39,7 +40,6 @@ const Main = () => {
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
         setIsPrompterSubmit(true);
-        console.log('Selected prompt in Main: ', promptData);
         }
     
     const renderComponent = () => {
@@ -60,7 +60,6 @@ const Main = () => {
             } else {
                 return <GameLoading />;
             }
-
         } else if (currentStage === 'ImageGallery') {
             
             return <ImageSubmission currentPrompt={selectedPrompt?.text} gameId={gameID}/>;
@@ -102,7 +101,6 @@ const Main = () => {
                 );
             }
         } else {
-            // Non-prompter view
             return currentStage === 'ImageGallery' ? (
                 <Button
                     title='Upload Image'
@@ -135,17 +133,12 @@ const Main = () => {
                     .eq('id', Userpayload?.id)
                     .single();
     
-                console.log('Fetched data: ', data);
-                console.log('This is the game data in MainGame: ', data.playergame[0].game_id);
-    
                 setGameId(data.playergame[0].game_id);
 
                 if (error) {
                     console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
                 }
 
-                console.log('Retreiving player data went succesful: ', data);
-                console.log('This is the game id: ', gameID);
             }
         } catch(error) {
             console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
@@ -168,7 +161,6 @@ const Main = () => {
                     return {success: false, message: promptDataError.message};
                 }
 
-                console.log('This is the prompt data: ', promptDataTable);
                 setSelectedPrompt(promptDataTable);
 
                 setPromptSubmitted(true);
@@ -183,7 +175,6 @@ const Main = () => {
     const mainSubmissionUpdateHandler = async (payload) => {
         try {
             if (payload?.eventType === 'UPDATE') {
-                // Check if all non-prompter players have submitted
                 const { data: submissions, error } = await supabase
                     .from('submissions')
                     .select('*')
@@ -191,10 +182,9 @@ const Main = () => {
     
                 if (error) {
                     console.error('Error checking submissions:', error.message);
-                    return;
+                    return {success: false, message: error.message};;
                 }
-    
-                // Check if all submissions have photo_uri
+
                 const submissionStatus = await checkAllPlayerSubmission();
                 
             }
@@ -218,8 +208,6 @@ const Main = () => {
                 .eq('player_id', userPayload?.id)
                 .single();
 
-                console.log('the payload:', fetchPlayerGameData);
-
             if (playerGameError) {
                 console.error('Error in the checkUserRole:  ', playerGameError.message);
                 return {success: false, message: playerGameError.message};
@@ -242,7 +230,6 @@ const Main = () => {
                          users (username, image_url)`)
                 .eq('id', playerGameId)
                 .single();
-                console.log('Fetched the paylaod of the dataPLayerGame: ', dataPlayerGame);
 
             if (errorPLayerGame) {
                 console.error('Error on View PlayerGameTable: ', error.message)
@@ -280,7 +267,6 @@ const Main = () => {
                 console.error('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
                 return {success: false, message: PromptSumbitDataError.message};
             }
-            console.log('PrompterButtonSubmit: ', PromptSubmitData);
             
 
         } catch(error) {
@@ -329,8 +315,6 @@ const Main = () => {
             c.charCodeAt(0)
           );
       
-          console.log('Uploading image:', uri);
-      
           const { data, error } = await supabase.storage
             .from('uploads')
             .upload(`gamesubmissions/${fileName}`, fileBuffer, {
@@ -362,7 +346,7 @@ const Main = () => {
 
         const submissionData = await getSubmissionData(gameID);
 
-        console.log('this is the submissionData: ', submissionData);
+        console.log('this is the submissionData: ', submissionData.data);
 
       }
 
@@ -404,7 +388,6 @@ const Main = () => {
                 });
 
             await Promise.all(submissionPromises);
-            console.log('Created submissions for all players');
 
             return {success: true, message: 'Created submissions for all players'};
 
@@ -439,8 +422,6 @@ const Main = () => {
             return {success: false, message: playergameError.message};
         }
 
-        console.log('this is the playergameData: ', playergameData);
-
         const fileName = selectedImageUri.split('/').pop();
         const photoUri = `gamesubmissions/${fileName}`;
         const playerGameId = playergameData.id;
@@ -459,10 +440,6 @@ const Main = () => {
             return {success: false, message: error.message};
         }
 
-        console.log('this is the data in confirmImageSelection: ', data);
-            
-        
-
         setIsModalVisible(false);
         setImagesSelected(true);
     };
@@ -473,19 +450,11 @@ const Main = () => {
 
                 await fetchUserData();
                 const RoundDataPayload = await getRoundData(gameID);
-                console.log('this is the Round data bob: ', RoundDataPayload);
                 const RetreivePrompterPayload = await viewPlayerGameTable(RoundDataPayload?.data?.prompter_id);
 
-                console.log('Recieve teh RetreivePrompterPayload in teh bobby wegjweegj: ', RetreivePrompterPayload);
-
-                // get the state of username of the of the palyoad of the 
                 setShowPrompterPayload(RetreivePrompterPayload);
-                console.log('This is the set Round payload:', showPrompterPayload);
                 const GetRolePlayerBool = await checkUserRole();
-                console.log('this is the GetRolePlayerBool: ', GetRolePlayerBool);
 
-                // boolean of the user client selection of the game
-                console.log(GetRolePlayerBool?.data?.is_creator);
                 setIsPrompter(GetRolePlayerBool?.data?.is_creator); 
 
             } catch(error) {

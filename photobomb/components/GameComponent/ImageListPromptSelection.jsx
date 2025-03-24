@@ -21,9 +21,6 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
     const playerSubmission = submissionData.find(
 
       submission => (
-        console.log('submission: ', submission.player_id),
-        console.log('item: ', item.id),
-
         submission.player_id === item?.id
       )
     ); 
