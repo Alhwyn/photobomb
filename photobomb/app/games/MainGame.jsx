@@ -390,8 +390,6 @@ const Main = () => {
                 return {success: false, message: roundError.message};
             }
 
-            const prompterId = roundData.prompter_id;
-
             const submissionPromises = players
                 .filter(player => !player.is_creator)
                 .map(player => {
