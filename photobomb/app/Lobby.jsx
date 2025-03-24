@@ -30,8 +30,6 @@ const Lobby = () => {
             const getUserPayload = await getUserPayloadFromStorage();
             const userId = getUserPayload?.id;
 
-            console.log('this is the userPayload:  ', getUserPayload);
-
             if (!userId) {
                 console.error('User ID is null. Cannot fetch lobby state.');
                 return { success: false, message: 'User ID is missing' };
@@ -49,8 +47,6 @@ const Lobby = () => {
                 `)
                 .eq('id', userId)
                 .single();
-
-            console.log('Fetched data: ', data);
 
             setGameId(data.playergame[0]?.game_id);
 
@@ -106,10 +102,9 @@ const Lobby = () => {
 
                 console.log('Player Joined: ', payload.new);
 
-                // fetch the username from user table 
                 const { data: userData, error } = await supabase
                     .from('users')
-                    .select('username')
+                    .select('username, image_url')
                     .eq('id', payload.new.player_id)
                     .single();
 
@@ -120,7 +115,7 @@ const Lobby = () => {
 
                 console.log(`Fetched username for player ID ${payload.new.player_id}:`, userData.username);
 
-                const newPlayer = { ...payload.new, users: { username: userData.username } };
+                const newPlayer = { ...payload.new, users: { username: userData.username, image_url: userData.image_url  } };
 
                 console.log('New player object:', newPlayer);
 
@@ -280,7 +275,6 @@ const Lobby = () => {
 
         else false it it remove the the player game row
         */
-        // the player data
 
         try {
             console.log('this is the player data: ', localPlayerData);
