@@ -6,7 +6,6 @@ import { useRouter } from 'expo-router'
 import Profile from '../../components/Profile';
 import { theme } from '../../constants/theme';
 import { getUserPayloadFromStorage } from '../../service/userService';
-import PromptCard from '../../components/GameComponent/PromptCard';
 import Gallery from '../../components/GameComponent/Gallery';
 import PromptSelection from '../../components/GameComponent/PromptSelection';
 import ProgressBar from '../../components/GameComponent/ProgressBar';
@@ -70,6 +69,8 @@ const Main = () => {
             } else {    
                 return <GameLoading />;
             }
+        } else if (currentStage === 'GalleryTime') {
+            return <Gallery />;
         };
 
     };
@@ -186,7 +187,11 @@ const Main = () => {
                 }
 
                 const submissionStatus = await checkAllPlayerSubmission();
-                
+
+                if (submissionStatus) {
+                    setCurrentStage('GalleryTime'); 
+                };
+
             }
         } catch(error) {
             console.error('Error in mainSubmissionUpdateHandler:', error.message);
@@ -275,7 +280,6 @@ const Main = () => {
 
     };
 
-
     const handleSelectImage = async () => {
         try {
 
@@ -339,14 +343,16 @@ const Main = () => {
 
         const roundData = await getRoundData(gameID);
 
-        /// for the total number player inthe round: roundData.data.total_players
-
         console.log('this is the roundData \n\n: ', roundData.data.total_players);
 
 
         const submissionData = await getSubmissionData(gameID);
 
+        const allSubmitted = submissionData.data.every(submission => submission.photo_uri !== null);
+
         console.log('this is the submissionData: ', submissionData.data);
+
+        return allSubmitted;
 
       }
 
