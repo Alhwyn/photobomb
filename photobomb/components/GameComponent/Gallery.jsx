@@ -1,11 +1,15 @@
 import { SafeAreaView, StyleSheet, Text, View, Image, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
 import { getSupabaseUrl } from '../../service/imageService';
+import Loading from '../Loading';
+import { getSubmissionData } from '../../service/gameService';
 
-const Gallery = () => {
+const Gallery = ({ gameId }) => {
     const [showAllImages, setShowAllImages] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [loading, setLoading] = useState(true);
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const [imageUrlList, setImageUrlList] = useState([]);
 
     const images = [
         { uri: require('../../assets/images/mode1.png'), description: 'Local Image 1' },
@@ -32,6 +36,22 @@ const Gallery = () => {
 
 
     useEffect(() => {
+        const fetchImageList = async () => {
+            const getImageListPayload = await getSubmissionDataRetrieve(gameId);
+
+            console.log('getImageListPayload:', getImageListPayload);
+
+            if (!getImageListPayload) {
+                console.error('Error fetching image list');
+
+                return {msg: error.message, success: false};
+            }
+        };
+
+        fetchImageList();
+
+
+
         console.log('showAllImages:', showAllImages);
         if (!showAllImages) {
             fadeIn();
@@ -54,10 +74,28 @@ const Gallery = () => {
         }
     }, [showAllImages]);
 
+    const getSubmissionDataRetrieve = async (game_id) => {
+        try {
+
+            console.log(game_id);
+            const getSubmissionDataResponse = await getSubmissionData(game_id);
+
+            if (!getSubmissionDataResponse.success) {
+                console.error('Error fetching submission data:', getSubmissionDataResponse.error);
+                return;
+            }
+
+
+            return getSubmissionDataResponse.data
+        } catch (error) {
+            console.error('Error fetching submission data:', error);
+        }
+    };
+
+
     const renderSingleImage = () => {
         const currentImage = images[currentImageIndex];
         console.log('Current image URI:', currentImage.uri);
-        console.log('Current image description:', currentImage.description);
 
         return (
             <SafeAreaView style={styles.container}>
@@ -74,7 +112,6 @@ const Gallery = () => {
                             onError={(error) => console.log('Image loading error:', error.nativeEvent)}
                             onLoad={() => console.log('Image loaded successfully for URI:', currentImage.uri)}
                         />
-                        <Text style={styles.description}>{currentImage.description}</Text>
                     </Animated.View>
                 </ScrollView>
             </SafeAreaView>

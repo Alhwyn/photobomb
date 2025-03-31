@@ -71,7 +71,7 @@ const Main = () => {
                 return <GameLoading />;
             }
         } else if (currentStage === 'GalleryTime') {
-            return <Gallery />;
+            return <Gallery gameId={gameID} />;
         };
 
     };
