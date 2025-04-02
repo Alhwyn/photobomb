@@ -218,6 +218,7 @@ const Main = () => {
         }
     }
 
+    
     const checkUserRole = async () => {
         /**
          * in this function will look for the locat user role of the game 
