@@ -43,8 +43,6 @@ const Gallery = ({ gameId }) => {
             }
 
             setImageUrlList(getImageListPayload);
-
-            console.log('Image URL List:', getImageListPayload);
             setLoading(false); 
         };
 
@@ -56,7 +54,8 @@ const Gallery = ({ gameId }) => {
                 fadeOut();
                 setTimeout(() => {
                     setCurrentImageIndex((prev) => {
-                        if (prev === imageUrlList.length - 1) {
+
+                        if (!imageUrlList || imageUrlList.length === 0) {
                             setShowAllImages(true);
                             return prev;
                         }
