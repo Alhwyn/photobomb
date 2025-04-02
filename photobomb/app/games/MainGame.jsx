@@ -515,6 +515,10 @@ const Main = () => {
                 {renderComponent()}
         </View>
         <View style={styles.touchContainer}>
+            <View>
+                <Text style={styles.score}>Score: </Text>
+                <Text style={styles.score}>{showPrompterPayload?.data?.score}</Text>
+            </View>
             {
                 renderButtons()
             }
@@ -573,6 +577,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center', 
         alignItems: 'center', 
     },
+    score: {
+        position: 'relative', 
+        right: 50,
+        fontWeight: 'bold', // Make the text bold
+        color: 'white', // Ensure the text is visible
+        fontSize: 16, // Adjust font size as needed
+        zIndex: 1, // Ensure it appears above other elements
+    },
     usernameText: {
         color: 'white',
         fontWeight: theme.fonts.extraBold,
@@ -630,6 +642,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
     },
+    
   });
   
 export default Main

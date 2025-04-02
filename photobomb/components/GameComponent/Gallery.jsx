@@ -2,7 +2,9 @@ import { SafeAreaView, StyleSheet, Text, View, Image, TouchableOpacity, Animated
 import React, { useEffect, useState, useRef } from 'react';
 import { getSupabaseUrl } from '../../service/imageService';
 import Loading from '../Loading';
+import Button from '../Button';
 import { getSubmissionData } from '../../service/gameService';
+import { updateUserScore } from '../../service/gameService';
 
 // ...existing imports...
 
@@ -12,8 +14,10 @@ const Gallery = ({ gameId }) => {
     const [loading, setLoading] = useState(true); 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [imageUrlList, setImageUrlList] = useState(null);
+    const [imagesSelected, setImagesSelected] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedImageUri, setSelectedImageUri] = useState(null);
 
     const fadeOut = () => {
         Animated.timing(fadeAnim, {
@@ -29,6 +33,34 @@ const Gallery = ({ gameId }) => {
             duration: 500,
             useNativeDriver: true,
         }).start();
+    };
+
+    const cancelImageSelection = () => {
+        setIsModalVisible(false);
+        setSelectedImageUri(null);
+    };
+
+    const confirmImageSelection = async () => {
+
+
+        const selectedImagePayload = imageUrlList[currentImageIndex];
+
+        console.log('Selected this is the player id:', selectedImagePayload.player_id);
+
+        console.log('Selected this is the game id', selectedImagePayload.game_id);
+
+        const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id);
+
+
+        console.log('Check score update:', checkScoreUpdate);
+
+
+
+        setIsModalVisible(false);
+        setImagesSelected(true);
+
+
+
     };
 
     useEffect(() => {
@@ -87,6 +119,18 @@ const Gallery = ({ gameId }) => {
         }
     };
 
+    const getIMageUrlFromIndex = (index) => {
+
+        
+        const currentImagePayload = imageUrlList[index];
+
+        setSelectedImageUri(getSupabaseUrl(currentImagePayload.photo_uri));
+
+        console.log('Selected image URI:', selectedImageUri);
+        setIsModalVisible(true);
+
+    }
+
     const renderSingleImage = () => {
         const currentImage = imageUrlList[currentImageIndex];
         console.log(currentImage);
@@ -132,7 +176,7 @@ const Gallery = ({ gameId }) => {
                         <TouchableOpacity
                             key={index}
                             style={styles.imageWrapper}
-                            onPress={() => console.log('Image pressed:', r)}
+                            onPress={() => getIMageUrlFromIndex(index)}
                         >
                             <Image
                                 source={{ uri: getSupabaseUrl(image.photo_uri) }}

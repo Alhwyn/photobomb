@@ -287,6 +287,36 @@ export const getSubmissionData = async (game_id) => {
     }
 }
 
+export const updateUserScore = async (player_id, game_id) => {
+    /**
+     * Increments the score of a user in the playergame table.
+     * @param {string} player_id - The ID of the player whose score to update.
+     * @param {string} game_id - The ID of the game associated with the player.
+     * @param {number} incrementBy - The amount to increment the score by (default is 1).
+     * @returns {Promise<Object>} - An object indicating the success of the operation or an error message.
+     */
+    try {
+        const { data, error } = await supabase
+            .from('playergame')
+            .update({ score: 1 }) // Increment the score
+            .eq('game_id', game_id)
+            .eq('id', player_id);
+            
+
+        console.log('data from the update user score: ', data);
+
+        if (error) {
+            console.error('Error incrementing user score: ', error.message);
+            return { success: false, msg: error.message };
+        }
+
+        return { success: true, data: data };
+    } catch (error) {
+        console.error('Error incrementing user score: ', error.message);
+        return { success: false, msg: error.message };
+    }
+};
+
 
 
 
