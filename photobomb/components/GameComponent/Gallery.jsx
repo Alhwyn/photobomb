@@ -3,8 +3,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getSupabaseUrl } from '../../service/imageService';
 import Loading from '../Loading';
 import Button from '../Button';
-import { getSubmissionData } from '../../service/gameService';
-import { updateUserScore } from '../../service/gameService';
+import { getSubmissionData, getPlayerGame, updateUserScore } from '../../service/gameService';
+
+
 
 // ...existing imports...
 
@@ -49,7 +50,11 @@ const Gallery = ({ gameId }) => {
 
         console.log('Selected this is the game id', selectedImagePayload.game_id);
 
-        const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id);
+        const currentPlayerSore = await getPlayerGame(selectedImagePayload.player_id);
+
+
+
+        const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id, currentPlayerSore.data.score);
 
 
         console.log('Check score update:', checkScoreUpdate);

@@ -180,6 +180,7 @@ export const checkUserInLobby = async (userId) => {
         .select(`
             player_id,
             game_id,
+            score,
             users (username, image_url),
             games (game_pin)
         `)
@@ -196,6 +197,35 @@ export const checkUserInLobby = async (userId) => {
     } catch(error) {
         console.error('GameService.jsx Error when user joining the lobby: ', error.message);
         return {success: false, msg: error.message};
+    }
+
+}
+
+
+export const getPlayerGame = async (player_id) => {
+    /**
+     * retrieves the game data for a specific player from the playergame table
+     * @param {string} player_id - The ID of the player to fetch game data for.
+     * @returns {Promise<Object>} - an object indicating the success of the operationor an error message
+     */
+    try {
+        const {data, error} = await supabase
+        .from('playergame')
+        .select('*')
+        .eq('id', player_id)
+        .single();
+
+        if (error) {
+            console.error('Error on fetching the data on the playergame table gameService.js', error.message);
+            return {success: false, message: error.message};
+        }
+
+        console.log('successfully fetch the data fron the playergame table');
+
+        return {success: true, data: data};
+    } catch (error) {
+        console.error('Error on fetching the data on the playergame table gameService.js', error.message);
+        return {success: false, message: error.message};
     }
 
 }
@@ -287,7 +317,7 @@ export const getSubmissionData = async (game_id) => {
     }
 }
 
-export const updateUserScore = async (player_id, game_id) => {
+export const updateUserScore = async (player_id, game_id, current_score) => {
     /**
      * Increments the score of a user in the playergame table.
      * @param {string} player_id - The ID of the player whose score to update.
@@ -298,7 +328,7 @@ export const updateUserScore = async (player_id, game_id) => {
     try {
         const { data, error } = await supabase
             .from('playergame')
-            .update({ score: 1 }) // Increment the score
+            .update({ score: current_score+1 }) // Increment the score
             .eq('game_id', game_id)
             .eq('id', player_id);
             

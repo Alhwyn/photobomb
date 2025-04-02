@@ -196,6 +196,26 @@ const Main = () => {
         } catch(error) {
             console.error('Error in mainSubmissionUpdateHandler:', error.message);
         }
+    };
+
+    const mainPlayerGameUpdateHandler = async (payload) => {
+        try {
+            if (payload?.eventType === 'UPDATE') {
+                const { data: data, error } = await supabase
+                    .from('playergame')
+                    .select('*')
+                    .eq('game_id', gameID);
+    
+                if (error) {
+                    console.error('Error checking submissions:', error.message);
+                    return {success: false, message: error.message};;
+                }
+
+                setShowPrompterPayload({data: data});
+            }
+        } catch(error) {
+            console.error('Error in mainSubmissionUpdateHandler:', error.message);
+        }
     }
 
     const checkUserRole = async () => {
@@ -481,10 +501,17 @@ const Main = () => {
                 { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}` }, mainSubmissionUpdateHandler)
             .subscribe();
 
+        const playerGameSubscription = supabase
+        .channel('submissionUpdates')
+        .on('postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` }, mainPlayerGameUpdateHandler)
+        .subscribe();
+
 
         return () => {
             supabase.removeChannel(roundSubscription);
             supabase.removeChannel(submissionSubscription);
+            supabase.removeChannel(playerGameSubscription)
         }
     }, [gameID]);
 
