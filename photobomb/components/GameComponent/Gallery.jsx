@@ -4,19 +4,14 @@ import { getSupabaseUrl } from '../../service/imageService';
 import Loading from '../Loading';
 import { getSubmissionData } from '../../service/gameService';
 
+// ...existing imports...
+
 const Gallery = ({ gameId }) => {
     const [showAllImages, setShowAllImages] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true); // Track loading state
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const [imageUrlList, setImageUrlList] = useState([]);
-
-    const images = [
-        { uri: require('../../assets/images/mode1.png'), description: 'Local Image 1' },
-        { uri: require('../../assets/images/mode2.png'), description: 'Local Image 2' },
-        { uri: require('../../assets/images/mode3.png'), description: 'Local Image 3' },
-        { uri: require('../../assets/images/mode4.png'), description: 'Local Image 4' },
-    ];
+    const [imageUrlList, setImageUrlList] = useState(null);
 
     const fadeOut = () => {
         Animated.timing(fadeAnim, {
@@ -34,32 +29,34 @@ const Gallery = ({ gameId }) => {
         }).start();
     };
 
-
     useEffect(() => {
         const fetchImageList = async () => {
+            setLoading(true);  
             const getImageListPayload = await getSubmissionDataRetrieve(gameId);
 
             console.log('getImageListPayload:', getImageListPayload);
 
             if (!getImageListPayload) {
                 console.error('Error fetching image list');
-
-                return {msg: error.message, success: false};
+                setLoading(false);
+                return;
             }
+
+            setImageUrlList(getImageListPayload);
+
+            console.log('Image URL List:', getImageListPayload);
+            setLoading(false); 
         };
 
         fetchImageList();
 
-
-
-        console.log('showAllImages:', showAllImages);
         if (!showAllImages) {
             fadeIn();
             const timer = setInterval(() => {
                 fadeOut();
                 setTimeout(() => {
                     setCurrentImageIndex((prev) => {
-                        if (prev === images.length - 1) {
+                        if (prev === imageUrlList.length - 1) {
                             setShowAllImages(true);
                             return prev;
                         }
@@ -76,8 +73,6 @@ const Gallery = ({ gameId }) => {
 
     const getSubmissionDataRetrieve = async (game_id) => {
         try {
-
-            console.log(game_id);
             const getSubmissionDataResponse = await getSubmissionData(game_id);
 
             if (!getSubmissionDataResponse.success) {
@@ -85,38 +80,43 @@ const Gallery = ({ gameId }) => {
                 return;
             }
 
-
-            return getSubmissionDataResponse.data
+            return getSubmissionDataResponse.data;
         } catch (error) {
             console.error('Error fetching submission data:', error);
         }
     };
 
-
     const renderSingleImage = () => {
-        const currentImage = images[currentImageIndex];
-        console.log('Current image URI:', currentImage.uri);
+        const currentImage = imageUrlList[currentImageIndex];
+        console.log(currentImage);
+        console.log('Current image URI:', currentImage.photo_uri);
 
         return (
             <SafeAreaView style={styles.container}>
-                <Text style={styles.title}> Users Submissions</Text>
+                <Text style={styles.title}>Users Submissions</Text>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <Animated.View style={[styles.singleImageWrapper, { opacity: fadeAnim }]}>
-
-                        {/* Original image */}
                         <Image
                             key={currentImageIndex}
-                            source={currentImage.uri}
+                            source={{ uri: getSupabaseUrl(currentImage.photo_uri) }}
                             style={styles.singleImage}
                             resizeMode="contain"
                             onError={(error) => console.log('Image loading error:', error.nativeEvent)}
-                            onLoad={() => console.log('Image loaded successfully for URI:', currentImage.uri)}
+                            onLoad={() => console.log('Image loaded successfully for URI:', currentImage.photo_uri)}
                         />
                     </Animated.View>
                 </ScrollView>
             </SafeAreaView>
         );
     };
+
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Loading />
+            </SafeAreaView>
+        );
+    }
 
     if (!showAllImages) {
         return renderSingleImage();
@@ -127,17 +127,17 @@ const Gallery = ({ gameId }) => {
             <Text style={styles.title}>Select the best submission</Text>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.imageGrid}>
-                    {images.map((image, index) => (
+                    {imageUrlList.map((image, index) => (
                         <TouchableOpacity
-                        key={index}
-                        style={styles.imageWrapper}
-                        onPress={() => console.log('Image pressed:', index)}
+                            key={index}
+                            style={styles.imageWrapper}
+                            onPress={() => console.log('Image pressed:', index)}
                         >
                             <Image
-                                source={image.uri}
+                                source={{ uri: getSupabaseUrl(image.photo_uri) }}
                                 style={styles.image}
                                 onError={(error) => console.log('Image loading error:', error.nativeEvent)}
-                                onLoad={() => console.log('Image loaded successfully for URI:', image.uri)}
+                                onLoad={() => console.log('Image loaded successfully for URI:', image.photo_uri)}
                             />
                             <Text style={styles.description}>{image.description}</Text>
                         </TouchableOpacity>
