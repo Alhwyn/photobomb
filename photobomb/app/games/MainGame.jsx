@@ -111,9 +111,8 @@ const Main = () => {
                 />
             ) : (
                 <Button
-                    title='Upload Image'
-                    colors={theme.buttonGradient.disabled}
-                    onPress={handleSelectImage}
+                    title='Selected Image'
+                    colors={theme.buttonGradient.secondary}
                 />
             );
         }

@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View, Image, TouchableOpacity, Animated, ScrollView } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, Image, TouchableOpacity, Animated, ScrollView, Modal } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
 import { getSupabaseUrl } from '../../service/imageService';
 import Loading from '../Loading';
@@ -9,9 +9,11 @@ import { getSubmissionData } from '../../service/gameService';
 const Gallery = ({ gameId }) => {
     const [showAllImages, setShowAllImages] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [loading, setLoading] = useState(true); // Track loading state
+    const [loading, setLoading] = useState(true); 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [imageUrlList, setImageUrlList] = useState(null);
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     const fadeOut = () => {
         Animated.timing(fadeAnim, {
@@ -130,7 +132,7 @@ const Gallery = ({ gameId }) => {
                         <TouchableOpacity
                             key={index}
                             style={styles.imageWrapper}
-                            onPress={() => console.log('Image pressed:', index)}
+                            onPress={() => console.log('Image pressed:', r)}
                         >
                             <Image
                                 source={{ uri: getSupabaseUrl(image.photo_uri) }}
@@ -143,6 +145,26 @@ const Gallery = ({ gameId }) => {
                     ))}
                 </View>
             </ScrollView>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isModalVisible}
+                onRequestClose={() => setIsModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalText}>Confirm your photo selection</Text>
+                        {selectedImageUri && (
+                            <Image source={{ uri: selectedImageUri }} style={styles.selectedImage} />
+                        )}
+                        <View style={styles.modalButtons}>
+                            <Button title="Cancel" onPress={cancelImageSelection} />
+                            <Button title="Confirm" onPress={confirmImageSelection} />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            
         </SafeAreaView>
     );
 };
@@ -195,5 +217,33 @@ const styles = StyleSheet.create({
         width: '30%',
         alignItems: 'center',
         borderRadius: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: 300,
+        padding: 20,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalText: {
+        marginBottom: 10,
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    selectedImage: {
+        width: 200,
+        height: 200,
+        marginBottom: 20,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
     },
 });
