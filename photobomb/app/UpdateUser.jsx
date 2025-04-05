@@ -10,7 +10,7 @@ import Input from '../components/Input';
 import Profile from '../components/Profile';
 import { theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
-import { getUserPayloadFromStorage } from '../service/userService';
+import { getUserPayloadFromStorage } from '../service/userServicnpxe';
 import { getSupabaseUrl } from '../service/imageService';
 
 
