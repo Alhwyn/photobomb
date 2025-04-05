@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import ImageListPromptSelection from './ImageListPromptSelection';
+import { getSubmissionData } from '../../service/imageService';
 
 
 const ImageSubmission = ({currentPrompt, gameId }) => {
@@ -42,12 +43,9 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
              users (username, image_url, id) `)
     .eq('game_id', gameId);
 
-    const {data: submissionsPayload, error: submissionsPayloadError} = await supabase
-      .from('submissions')
-      .select(`*`)
-      .eq('game_id', gameId);
+  const submissionsPayload = await getSubmissionData(gameId);
 
-    if (submissionsPayloadError) {
+    if (!submissionsPayload.success) {
       console.error('Error fetching submission data: ', submissionsPayloadError.message);
       return {success: false, error: submissionsPayloadError.message};
     }
@@ -57,11 +55,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
       return {success: false, error: gamesPayloadError.message};
     }
 
-    console.log('gamesPayload: ', gamesPayload);
-
-    console.log('submissionsPayload: ', submissionsPayload);
-
-    setPlayersubmissionsList(submissionsPayload);
+    setPlayersubmissionsList(submissionsPayload.data);
     setPlayerGamesList(gamesPayload);
   }
   

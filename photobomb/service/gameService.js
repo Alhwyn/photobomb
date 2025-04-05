@@ -181,7 +181,7 @@ export const checkUserInLobby = async (userId) => {
             player_id,
             game_id,
             score,
-            users (username, image_url),
+            users (username, image_url, id),
             games (game_pin)
         `)
         .eq('player_id', userId)

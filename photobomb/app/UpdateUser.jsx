@@ -10,7 +10,7 @@ import Input from '../components/Input';
 import Profile from '../components/Profile';
 import { theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
-import { getUserPayloadFromStorage } from '../service/userServicnpxe';
+import { getUserPayloadFromStorage } from '../service/userService';
 import { getSupabaseUrl } from '../service/imageService';
 
 
@@ -40,7 +40,7 @@ const UpdateUser = () => {
 
         const getImageUrl = getSupabaseUrl(payload?.image_url);
 
-        setProfileImage(getImageUrl); // Pre-fill image if it exists
+        setProfileImage(getImageUrl);
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch user data.');
       }
@@ -69,23 +69,20 @@ const UpdateUser = () => {
     if (!uri) return null;
   
     try {
-      const fileName = uri.split('/').pop(); // Extract filename
-      const fileType = fileName.split('.').pop().toLowerCase(); // Extract file extension and normalize to lowercase
+      const fileName = uri.split('/').pop(); 
+      const fileType = fileName.split('.').pop().toLowerCase(); 
       const mimeType = fileType === 'jpg' ? 'image/jpeg' : `image/${fileType}`;
   
-      // Read file content as base64 string
       const fileContent = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
   
-      // Supabase expects binary data, so we convert base64 to a Uint8Array
       const fileBuffer = Uint8Array.from(atob(fileContent), (c) =>
         c.charCodeAt(0)
       );
   
       console.log('Uploading image:', uri);
   
-      // Upload to Supabase
       const { data, error } = await supabase.storage
         .from('uploads')
         .upload(`profiles/${fileName}`, fileBuffer, {
@@ -120,14 +117,13 @@ const UpdateUser = () => {
   
       let imageUrl = profileImage;
   
-      // Upload image only if it's a new URI
       if (profileImage && !profileImage.startsWith('http')) {
         imageUrl = await uploadImageToSupabase(profileImage);
   
         if (!imageUrl) {
           throw new Error('Image upload failed. Please try again.');
         }
-        // Update the image_url in AsyncStorage
+    
         const userPayloadString = await AsyncStorage.getItem('userPayload');
         let updatedPayload;
 
@@ -153,7 +149,7 @@ const UpdateUser = () => {
         console.log('Updated AsyncStorage with new image_url:', updatedPayload);
       }
   
-      // Update the user record in Supabase
+      
       const { data, error } = await supabase
         .from('users') // Ensure the correct table name
         .update({ username, image_url: imageUrl })

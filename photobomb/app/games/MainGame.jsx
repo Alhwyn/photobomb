@@ -14,12 +14,12 @@ import { getRoundData } from '../../service/gameService';
 import Prompter from '../../components/GameComponent/Prompter';
 import GameLoading from '../../components/GameComponent/GameLoading';
 import ImageSubmission from '../../components/GameComponent/ImageSubmission';
-import { checkAllPlayerSubmission, getSubmissionData } from '../../service/gameService'
+import { getSubmissionData } from '../../service/gameService'
 import { getSupabaseUrl } from '../../service/imageService';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-
+// gamesPayload: 
 const Main = () => {
     const router = useRouter()
     const [userPayload, setUserPayload] = useState(null); 
@@ -90,13 +90,12 @@ const Main = () => {
                         title='Pick photo' 
                         colors={theme.buttonGradient.secondary} 
                         onPress={() => setCurrentStage('Prompt')}
-                        width='50%'
                     />
                 );
             } else if (currentStage === 'ImageGallery') {
                 return (
                     <Button
-                        title='You are the prompter'
+                        title='the prompter'
                         colors={theme.buttonGradient.primary}
                         onPress={() => console.log('Submit')}
                     />
@@ -137,12 +136,12 @@ const Main = () => {
                 setGameId(data.playergame[0].game_id);
 
                 if (error) {
-                    console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
+                    console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
                 }
 
             }
         } catch(error) {
-            console.error('Somehting went wrong with fetching user data MainGame.jsx', error.message);
+            console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
         }
     };
 
@@ -158,7 +157,7 @@ const Main = () => {
                     .single();
 
                 if (promptDataError) {
-                    console.error('Error in the mainGameUpdateHandler: ', promptDataError.message);
+                    console.log('Error in the mainGameUpdateHandler: ', promptDataError.message);
                     return {success: false, message: promptDataError.message};
                 }
 
@@ -176,25 +175,26 @@ const Main = () => {
     const mainSubmissionUpdateHandler = async (payload) => {
         try {
             if (payload?.eventType === 'UPDATE') {
-                const { data: submissions, error } = await supabase
-                    .from('submissions')
-                    .select('*')
-                    .eq('game_id', gameID);
+                const submissionPayload = await getSubmissionData(gameID);
     
-                if (error) {
-                    console.error('Error checking submissions:', error.message);
-                    return {success: false, message: error.message};;
+                if (submissionPayload.error) {
+                    console.log('Error checking submissions:', submissionPayload.error.message);
+                    return;
                 }
-
-                const submissionStatus = await checkAllPlayerSubmission();
-
-                if (submissionStatus) {
-                    setCurrentStage('GalleryTime'); 
-                };
-
+    
+                console.log('Submission data:', submissionPayload.data);
+    
+                const allSubmitted = submissionPayload.data.every(submission => submission.photo_uri !== null);
+    
+                if (allSubmitted) {
+                    console.log('All players have submitted their photos.');
+                    setCurrentStage('GalleryTime');
+                } else {
+                    console.log('Waiting for more submissions.');
+                }
             }
-        } catch(error) {
-            console.error('Error in mainSubmissionUpdateHandler:', error.message);
+        } catch (error) {
+            console.log('Error in mainSubmissionUpdateHandler:', error.message);
         }
     };
 
@@ -207,18 +207,16 @@ const Main = () => {
                     .eq('game_id', gameID);
     
                 if (error) {
-                    console.error('Error checking submissions:', error.message);
+                    console.log('Error checking submissions:', error.message);
                     return {success: false, message: error.message};;
                 }
 
-                setShowPrompterPayload({data: data});
             }
         } catch(error) {
             console.error('Error in mainSubmissionUpdateHandler:', error.message);
         }
     }
 
-    
     const checkUserRole = async () => {
         /**
          * in this function will look for the locat user role of the game 
@@ -235,7 +233,7 @@ const Main = () => {
                 .single();
 
             if (playerGameError) {
-                console.error('Error in the checkUserRole:  ', playerGameError.message);
+                console.log('Error in the checkUserRole:  ', playerGameError.message);
                 return {success: false, message: playerGameError.message};
 
             }
@@ -258,13 +256,13 @@ const Main = () => {
                 .single();
 
             if (errorPLayerGame) {
-                console.error('Error on View PlayerGameTable: ', error.message)
+                console.log('Error on View PlayerGameTable: ', error.message)
                 return {success: false, message: error.message}
             }
 
             return {success: true, data: dataPlayerGame}
         } catch(error) {
-            console.error('Error on View PlayerGameTable: ', error.message)
+            console.log('Error on View PlayerGameTable: ', error.message)
             return {success: false, message: error.message}
         }
     };
@@ -290,7 +288,7 @@ const Main = () => {
                 
 
             } else {
-                console.error('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
+                console.log('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
                 return {success: false, message: PromptSumbitDataError.message};
             }
             
@@ -311,8 +309,6 @@ const Main = () => {
             });
 
             if (!result.cancelled) {   
-                console.log('this is the result: ', result);
-                console.log('this is the uri', result?.assets?.[0]?.uri);
                 setSelectedImageUri(result?.assets?.[0]?.uri);
                 setIsModalVisible(true);
             }
@@ -347,7 +343,7 @@ const Main = () => {
             });
       
           if (error) {
-            console.error('Supabase storage upload error:', error.message);
+            console.log('Supabase storage upload error:', error.message);
             return {success: false, message: error.message};
           }
       
@@ -355,27 +351,11 @@ const Main = () => {
 
           
         } catch (error) {
-          console.error('Image upload failed:', error.message);
+          console.log('Image upload failed:', error.message);
           return {success: false, message: error.message};
         }
       };
 
-      const checkAllPlayerSubmission = async () => {
-
-        const roundData = await getRoundData(gameID);
-
-        console.log('this is the roundData \n\n: ', roundData.data.total_players);
-
-
-        const submissionData = await getSubmissionData(gameID);
-
-        const allSubmitted = submissionData.data.every(submission => submission.photo_uri !== null);
-
-        console.log('this is the submissionData: ', submissionData.data);
-
-        return allSubmitted;
-
-      }
 
       const createSubmissionsForPlayers = async () => {
         try {
@@ -397,7 +377,7 @@ const Main = () => {
 
 
             if (roundError) {  
-                console.error('Error in createSubmissionsForPlayers: ', roundError.message);
+                console.log('Error in createSubmissionsForPlayers: ', roundError.message);
                 return {success: false, message: roundError.message};
             }
 
@@ -419,7 +399,7 @@ const Main = () => {
             return {success: true, message: 'Created submissions for all players'};
 
         } catch(error) {
-            console.error('Error in createSubmissionsForPlayers: ', error.message);
+            console.log('Error in createSubmissionsForPlayers: ', error.message);
             return {success: false, message: error.message};
         }
 
@@ -443,7 +423,7 @@ const Main = () => {
             .single();
 
         if (playergameError) {
-            console.error('Error in confirmImageSelection: ', playergameError.message);
+            console.log('Error in confirmImageSelection: ', playergameError.message);
             return {success: false, message: playergameError.message};
         }
 
@@ -461,7 +441,7 @@ const Main = () => {
 
 
         if (error) {
-            console.error('Error in confirmImageSelection: ', error.message);
+            console.log('Error in confirmImageSelection: ', error.message);
             return {success: false, message: error.message};
         }
 
@@ -483,7 +463,7 @@ const Main = () => {
                 setIsPrompter(GetRolePlayerBool?.data?.is_creator); 
 
             } catch(error) {
-                console.error('Error in Use Effect: '. error.message);
+                console.log('Error in Use Effect: '. error.message);
             };
             
         };
