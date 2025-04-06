@@ -517,7 +517,7 @@ const Main = () => {
              )}
         </View>
         <View style={styles.styleprogressBar}>
-            <ProgressBar duration={5000} color="#52307c" />
+            {/* <ProgressBar duration={5000} color="#52307c" /> */}
         </View>
         <View style={styles.gameContainer}>
                 {renderComponent()}
@@ -584,8 +584,8 @@ const styles = StyleSheet.create({
         borderTopColor: '#333333', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: 150, // Add minimum height
-        maxHeight: 150, // Add minimum height
+        minHeight: 150, 
+        maxHeight: 150,
     },
     scoreContainer: {
         position: 'absolute',

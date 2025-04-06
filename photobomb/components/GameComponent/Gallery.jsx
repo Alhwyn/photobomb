@@ -4,10 +4,8 @@ import { getSupabaseUrl } from '../../service/imageService';
 import Loading from '../Loading';
 import Button from '../Button';
 import { getSubmissionData, getPlayerGame, updateUserScore } from '../../service/gameService';
+import { BlurView } from 'expo-blur';
 
-
-
-// ...existing imports...
 
 const Gallery = ({ gameId }) => {
     const [showAllImages, setShowAllImages] = useState(false);
@@ -96,7 +94,7 @@ const Gallery = ({ gameId }) => {
                         return nextIndex;
                     });
                 }, 500);
-            }, 5000);
+            }, 3000);
     
             return () => clearInterval(timer);
         }
@@ -115,25 +113,39 @@ const Gallery = ({ gameId }) => {
     }
 
     const renderSingleImage = () => {
+        if (!imageUrlList || !imageUrlList[currentImageIndex]) {
+            return (
+                <SafeAreaView style={styles.container}>
+                    <Loading />
+                </SafeAreaView>
+            );
+        }
         const currentImage = imageUrlList[currentImageIndex];
-        console.log(currentImage);
-        console.log('Current image URI:', currentImage.photo_uri);
+        const imageUri = getSupabaseUrl(currentImage.photo_uri);
 
         return (
             <SafeAreaView style={styles.container}>
-                <Text style={styles.title}>Users Submissions</Text>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <Animated.View style={[styles.singleImageWrapper, { opacity: fadeAnim }]}>
-                        <Image
-                            key={currentImageIndex}
-                            source={{ uri: getSupabaseUrl(currentImage.photo_uri) }}
-                            style={styles.singleImage}
-                            resizeMode="contain"
-                            onError={(error) => console.log('Image loading error:', error.nativeEvent)}
-                            onLoad={() => console.log('Image loaded successfully for URI:', currentImage.photo_uri)}
-                        />
-                    </Animated.View>
-                </ScrollView>
+                
+                <View style={styles.imageBackgroundContainer}>
+                    {/* Background blur layer */}
+                    <Image 
+                        source={{ uri: imageUri }}
+                        style={styles.blurredBackground}
+                        blurRadius={20}
+                    />
+                    {/* Main image on top */}
+                    <View style={styles.mainImageContainer}>
+                        <Animated.View style={[{ opacity: fadeAnim }]}>
+                            <Image
+                                key={currentImageIndex}
+                                source={{ uri: imageUri }}
+                                style={styles.singleImage}
+                                resizeMode="contain"
+                                onError={(error) => console.log('Image loading error:', error.nativeEvent)}
+                            />
+                        </Animated.View>
+                    </View>
+                </View>
             </SafeAreaView>
         );
     };
@@ -173,8 +185,6 @@ const Gallery = ({ gameId }) => {
                 </View>
             </ScrollView>
 
-
-            
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -202,78 +212,120 @@ const Gallery = ({ gameId }) => {
 export default Gallery;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-        paddingVertical: 0,
+    blurOverlay: {
+        zIndex: 1, // Ensure the blur is under the content
     },
-    scrollContent: {
-        alignItems: 'center',
-        flex: 1,
-    },
-    title: {
-        fontSize: 24,
-        color: '#ffffff',
-        textAlign: 'center',
-    },
-    imageGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between'
-    },
-    image: {
-        width: 150,
-        height: 150,
-        borderRadius: 20,
-        padding: 5,
-    },
-    singleImageWrapper: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    singleImage: {
+    blurredBackground: {
+        position: 'absolute',
         width: '100%',
-        height: 400,
-        aspectRatio: 1,
+        height: '100%',
+        opacity: 0.7,
+        resizeMode: 'cover', 
+    },
+    container: {
+        backgroundColor: '#121212',
+        flex: 1,
+    },
+    contentLayer: {
+        position: '',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 2, 
+        width: '100%',
+        height: '100%',
     },
     description: {
         color: '#ccc',
         fontSize: 14,
         textAlign: 'center',
     },
+    image: {
+        borderRadius: 20,
+        height: 150,
+        padding: 5,
+        width: 150,
+    },
+    imageBackgroundContainer: {
+        flex: 1,
+        width: 500,
+        height: 1000,
+        maxWidth: '100%',
+        maxHeight: '100%',
+    },
+    imageGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between'
+    },
     imageWrapper: {
-        marginBottom: 15,
         alignItems: 'center',
         borderRadius: 15,
+        marginBottom: 15,
     },
-    modalContainer: {
-        flex: 1,
+    mainImageContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10, 
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        width: 300,
-        padding: 20,
-        backgroundColor: 'white',
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    modalText: {
-        marginBottom: 10,
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    selectedImage: {
-        width: 275,
-        height: 275,
-        marginBottom: 20,
-        borderRadius: 10,
+        width: '100%',
+        height: '100%',
     },
     modalButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
+    },
+    modalContainer: {
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        flex: 1,
+        justifyContent: 'center',
+    },
+    modalContent: {
+        alignItems: 'center',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        width: 300,
+    },
+    modalText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    scrollContent: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    selectedImage: {
+        borderRadius: 10,
+        height: 275,
+        marginBottom: 20,
+        width: 275,
+    },
+    singleImage: {
+        width: 700, 
+        height: 700, 
+        maxWidth: '100%', 
+        resizeMode: 'contain',
+    },
+    singleImageWrapper: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+        paddingHorizontal: 20,
+    },
+    title: {
+        color: '#ffffff',
+        fontSize: 24,
+        textAlign: 'center',
     },
 });
