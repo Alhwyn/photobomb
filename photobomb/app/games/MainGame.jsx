@@ -200,11 +200,14 @@ const Main = () => {
 
     const mainPlayerGameUpdateHandler = async (payload) => {
         try {
+
+            console.log('Submission update received:', payload);
             if (payload?.eventType === 'UPDATE') {
                 const { data: data, error } = await supabase
                     .from('playergame')
                     .select('*')
                     .eq('game_id', gameID);
+
     
                 if (error) {
                     console.log('Error checking submissions:', error.message);
@@ -477,10 +480,20 @@ const Main = () => {
             .subscribe();
 
         const submissionSubscription = supabase
-            .channel('submissionUpdates')
-            .on('postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}` }, mainSubmissionUpdateHandler)
-            .subscribe();
+        .channel('submissions-channel')
+        .on('postgres_changes', 
+            {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'submissions',
+            filter: `game_id=eq.${gameID}`
+            },
+            (payload) => {
+            console.log('Submission update received:', payload);
+            mainSubmissionUpdateHandler(payload);
+            }
+        )
+        .subscribe();
 
         const playerGameSubscription = supabase
         .channel('submissionUpdates')

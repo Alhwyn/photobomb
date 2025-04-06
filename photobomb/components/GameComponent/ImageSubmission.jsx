@@ -3,14 +3,13 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import ImageListPromptSelection from './ImageListPromptSelection';
-import { getSubmissionData } from '../../service/imageService';
+import { getSubmissionData } from '../../service/gameService';
 
 
 const ImageSubmission = ({currentPrompt, gameId }) => {
 
   const [playerGamesList, setPlayerGamesList] = useState([]);
   const [playersubmissionsList, setPlayersubmissionsList] = useState([]);
-  const [userPayload, setUserPayload] = useState(null);
 
   useEffect(() => {
     handleSumbissionTables();
@@ -25,7 +24,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
           filter: `game_id=eq.${gameId}`
         },
         (payload) => {
-          console.log('Submission update received:', payload);
+          //console.log('Submission update received:', payload);
           handleSumbissionTables();
         }
       )

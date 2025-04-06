@@ -227,7 +227,8 @@ const styles = StyleSheet.create({
         paddingVertical: 0,
     },
     scrollContent: {
-        alignItems: 'center'
+        alignItems: 'center',
+        flex: 1,
     },
     title: {
         fontSize: 24,
@@ -237,19 +238,18 @@ const styles = StyleSheet.create({
     imageGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-around'
+        justifyContent: 'space-between'
     },
     image: {
-        width: '100%',
+        width: 150,
         height: 150,
         borderRadius: 20,
+        padding: 5,
     },
     singleImageWrapper: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        width: '100%', 
-        maxHeight: 500, 
     },
     singleImage: {
         width: '100%',
@@ -263,7 +263,6 @@ const styles = StyleSheet.create({
     },
     imageWrapper: {
         marginBottom: 15,
-        width: '30%',
         alignItems: 'center',
         borderRadius: 15,
     },
