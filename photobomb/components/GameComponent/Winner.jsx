@@ -46,10 +46,14 @@ const Winner = ({ winnerData, currentPrompt }) => {
     <View style={styles.container}>
       
       <View style={styles.header}>
-        <Profile image_url={getSupabaseUrl(winnerData?.image_url)}/>
-        <Text style={styles.titleText}>
-          {winnerData.username} got the best photo for 
-        </Text>
+        <View style={styles.profileRow}>
+          <Profile image_url={getSupabaseUrl(winnerData?.image_url)}/>
+          <Text style={styles.titleText}>
+            {winnerData.username} got the best photo for 
+          </Text>
+
+        </View>
+        
         <LinearGradient
           colors={['#d3d3d3', '#e8e8e8']}
           style={styles.promptCard}
@@ -113,10 +117,12 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden', 
   },
+  profileRow: {
+    flexDirection: 'row', 
+  },
   header: {
     alignItems: 'column',
     width: '100%',
-
   },
   imageContainer: {
     alignItems: 'center',
@@ -132,6 +138,7 @@ const styles = StyleSheet.create({
   },
   promptCard: {
     borderRadius: 12,
+    marginTop: 5,
     padding: 2,
     width: '90%',
   },
@@ -146,10 +153,11 @@ const styles = StyleSheet.create({
   },
   titleText: {
     color: 'white',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+    padding: 5,
   },
   winnerImage: {
     borderRadius: 25, // Rounded corners for the image
