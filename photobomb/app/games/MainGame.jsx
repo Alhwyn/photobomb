@@ -16,6 +16,7 @@ import GameLoading from '../../components/GameComponent/GameLoading';
 import ImageSubmission from '../../components/GameComponent/ImageSubmission';
 import { getSubmissionData } from '../../service/gameService'
 import { getSupabaseUrl } from '../../service/imageService';
+import Winner from '../../components/GameComponent/Winner';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -36,6 +37,8 @@ const Main = () => {
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
+
+    const [winnerData, setWinnerData] = useState(null);
 
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
@@ -72,7 +75,10 @@ const Main = () => {
             }
         } else if (currentStage === 'GalleryTime') {
             return <Gallery gameId={gameID} currentPrompt={selectedPrompt?.text} prompter={isPrompter}/>;
-        };
+        } else if (currentStage === 'Winner') {
+            return <Winner winnerData={winnerData} />;
+            
+        }
 
     };
 
@@ -203,17 +209,27 @@ const Main = () => {
 
             console.log('Submission update received:', payload);
             if (payload?.eventType === 'UPDATE') {
+                
                 const { data: data, error } = await supabase
                     .from('playergame')
-                    .select('*')
-                    .eq('game_id', gameID);
+                    .select(`*,
+                             submissions (photo_uri),
+                             users (username, image_url)`)
+                    .eq('player_id', payload?.new?.player_id)
+                    .single();
 
-    
                 if (error) {
                     console.log('Error checking submissions:', error.message);
                     return {success: false, message: error.message};;
                 }
+                setWinnerData({
+                    username: data.users.username,
+                    image_url: data.users.image_url,
+                    photo_uri: data.submissions[0].photo_uri,
+                    prompt: selectedPrompt?.text,
+                });
 
+                setCurrentStage('Winner');
             }
         } catch(error) {
             console.error('Error in mainSubmissionUpdateHandler:', error.message);
