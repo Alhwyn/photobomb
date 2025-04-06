@@ -3,17 +3,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getSupabaseUrl } from '../../service/imageService';
 import Loading from '../Loading';
 import Button from '../Button';
+import { LinearGradient } from 'expo-linear-gradient'
 import { getSubmissionData, getPlayerGame, updateUserScore } from '../../service/gameService';
-import { BlurView } from 'expo-blur';
 
 
-const Gallery = ({ gameId }) => {
+const Gallery = ({ gameId, currentPrompt, prompter }) => {
     const [showAllImages, setShowAllImages] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [loading, setLoading] = useState(true); 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [imageUrlList, setImageUrlList] = useState(null);
-    const [isPrompter, setIsPrompter] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
@@ -63,9 +62,6 @@ const Gallery = ({ gameId }) => {
                 return;
             }
             
-            console.log('getImageListPayload: 1', getImageListPayload);
-            console.log('getImageListPayload: 2', getImageListPayload.data);
-            
             setImageUrlList(getImageListPayload.data);
             setLoading(false); 
         };
@@ -107,7 +103,6 @@ const Gallery = ({ gameId }) => {
 
         setSelectedImageUri(getSupabaseUrl(currentImagePayload.photo_uri));
 
-        console.log('Selected image URI:', selectedImageUri);
         setIsModalVisible(true);
 
     }
@@ -164,14 +159,35 @@ const Gallery = ({ gameId }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+            {prompter && (
             <Text style={styles.title}>Select the best submission</Text>
+            )}
+            {!prompter && (
+                <Text style={styles.title}>View submissions</Text>
+            )}
+            <LinearGradient
+                colors={['#d3d3d3', '#e8e8e8']}
+                style={[styles.card]}
+                >
+                <View style={styles.card}>
+                    <View style={styles.content}>
+                        <Text style={[styles.promptText]}>
+                            {currentPrompt}
+                        </Text>
+                    </View>
+                </View>
+                </LinearGradient>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.imageGrid}>
                     {imageUrlList.map((image, index) => (
                         <TouchableOpacity
                             key={index}
-                            style={styles.imageWrapper}
-                            onPress={() => getIMageUrlFromIndex(index)}
+                            style={[
+                                styles.imageWrapper, 
+                                !prompter && styles.disabledImageWrapper
+                            ]}
+                            onPress={() => prompter ? getIMageUrlFromIndex(index) : null}
+                            disabled={!prompter}
                         >
                             <Image
                                 source={{ uri: getSupabaseUrl(image.photo_uri) }}
@@ -222,9 +238,19 @@ const styles = StyleSheet.create({
         opacity: 0.7,
         resizeMode: 'cover', 
     },
+    card: {
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+      },
     container: {
         backgroundColor: '#121212',
         flex: 1,
+    },
+    content: {
+    margin: 15,
+
     },
     contentLayer: {
         position: '',
@@ -328,4 +354,9 @@ const styles = StyleSheet.create({
         fontSize: 24,
         textAlign: 'center',
     },
+    promptText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+      }
 });

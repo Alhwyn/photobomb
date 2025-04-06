@@ -71,7 +71,7 @@ const Main = () => {
                 return <GameLoading />;
             }
         } else if (currentStage === 'GalleryTime') {
-            return <Gallery gameId={gameID} />;
+            return <Gallery gameId={gameID} currentPrompt={selectedPrompt?.text} prompter={isPrompter}/>;
         };
 
     };
@@ -627,34 +627,33 @@ const styles = StyleSheet.create({
         marginBottom: 32,
         alignItems: 'center',
     },
-
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
     modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        flex: 1,
+        justifyContent: 'center',
     },
     modalContent: {
-        width: 300,
-        padding: 20,
+        alignItems: 'center',
         backgroundColor: 'white',
         borderRadius: 10,
-        alignItems: 'center',
+        padding: 20,
+        width: 300,
     },
     modalText: {
-        marginBottom: 10,
         fontSize: 18,
         fontWeight: 'bold',
+        marginBottom: 10,
     },
     selectedImage: {
         width: 200,
         height: 200,
         marginBottom: 20,
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
     },
     
   });
