@@ -1,31 +1,38 @@
 import { StyleSheet, Text, View, Image, Animated, Easing } from 'react-native'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { getSupabaseUrl } from '../../service/imageService'
+import ConfettiCannon from 'react-native-confetti-cannon'
 
-const Winner = ({ winnerData }) => {
-  // Animation value for rotation
-  const spinValue = useRef(new Animated.Value(0)).current;
+const Winner = ({ winnerData, currentPrompt }) => {
+  const scaleAnim = useRef(new Animated.Value(0.2)).current;
+  const positionAnim = useRef(new Animated.Value(200)).current;
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
-    // Create an infinite spinning animation
-    Animated.loop(
-      Animated.timing(spinValue, {
+
+    const timer = setTimeout(() => {
+      setShowConfetti(true);
+    }, 300);
+    
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 10000, // 10 seconds per rotation
-        easing: Easing.linear,
+        duration: 800,
+        easing: Easing.elastic(1.2),
+        useNativeDriver: true,
+      }),
+      Animated.timing(positionAnim, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.out(Easing.back(1.7)),
         useNativeDriver: true,
       })
-    ).start();
+    ]).start();
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // Map the spin value to a rotation interpolation
-  const spin = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
-
-  // Handle case when no winner data is available yet
   if (!winnerData) {
     return (
       <View style={styles.container}>
@@ -34,9 +41,9 @@ const Winner = ({ winnerData }) => {
     );
   }
 
-
   return (
     <View style={styles.container}>
+      
       <View style={styles.header}>
         <Text style={styles.titleText}>
           {winnerData.username} got the best photo for
@@ -46,7 +53,7 @@ const Winner = ({ winnerData }) => {
           style={styles.promptCard}
         >
           <View style={styles.promptContent}>
-            <Text style={styles.promptText}>{winnerData.prompt}</Text>
+            <Text style={styles.promptText}>{currentPrompt}</Text>
           </View>
         </LinearGradient>
       </View>
@@ -55,7 +62,12 @@ const Winner = ({ winnerData }) => {
         <Animated.View
           style={[
             styles.animatedContainer,
-            { transform: [{ rotate: spin }] }
+            { 
+              transform: [
+                { scale: scaleAnim },
+                { translateY: positionAnim }
+              ] 
+            }
           ]}
         >
           <Image
@@ -69,6 +81,16 @@ const Winner = ({ winnerData }) => {
       <View style={styles.footer}>
         <Text style={styles.scoreText}>+1 points!</Text>
       </View>
+
+      {showConfetti && (
+        <ConfettiCannon
+          count={200}
+          origin={{x: -10, y: 0}}
+          explosionSpeed={350}
+          fallSpeed={3000}
+          fadeOut={true}
+        />
+      )}
     </View>
   )
 }
@@ -91,6 +113,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     padding: 20,
+    position: 'relative',
+    overflow: 'hidden', 
   },
   footer: {
     alignItems: 'center',
@@ -106,6 +130,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   loadingText: {
     color: 'white',

@@ -76,7 +76,7 @@ const Main = () => {
         } else if (currentStage === 'GalleryTime') {
             return <Gallery gameId={gameID} currentPrompt={selectedPrompt?.text} prompter={isPrompter}/>;
         } else if (currentStage === 'Winner') {
-            return <Winner winnerData={winnerData} />;
+            return <Winner winnerData={winnerData} currentPrompt={selectedPrompt?.text} />;
             
         }
 
@@ -226,7 +226,6 @@ const Main = () => {
                     username: data.users.username,
                     image_url: data.users.image_url,
                     photo_uri: data.submissions[0].photo_uri,
-                    prompt: selectedPrompt?.text,
                 });
 
                 setCurrentStage('Winner');
