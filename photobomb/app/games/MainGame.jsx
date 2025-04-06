@@ -55,23 +55,17 @@ const Main = () => {
                 return <GameLoading />;
             }
         } else if (currentStage === 'ImageGallery') {
-            
             return <ImageSubmission currentPrompt={selectedPrompt?.text} gameId={gameID}/>;
-
         } else if (currentStage === 'GalleryTime') {
             return <Gallery gameId={gameID} currentPrompt={selectedPrompt?.text} prompter={isPrompter}/>;
         } else if (currentStage === 'Winner') {
             return <Winner winnerData={winnerData} currentPrompt={selectedPrompt?.text} />;
             
         }
-
     };
 
-
     const renderButtons = () => {
-
         if (currentStage === 'Prompt') {
-
             if (isPrompter) {
                 return isPrompterSubmit ? (
                     <Button
@@ -90,7 +84,6 @@ const Main = () => {
                 return <Button title='Wait for Prompter' colors={theme.buttonGradient.secondary} onPress={() => console.log('wait for the Prompter')}
             />
             }
-
         } else if (currentStage === 'ImageGallery') {
             if (isPrompter) {
                 return (
@@ -100,14 +93,12 @@ const Main = () => {
                         onPress={() => console.log('Submit')}
                     />
                 );
-
             } else {
                 return imagesSelected ? (
                     <Button
                         title='Selected Image'
                         colors={theme.buttonGradient.secondary}
                     />
-                    
                 ) : (
                     
                     <Button
@@ -117,15 +108,64 @@ const Main = () => {
                     />
                 );
             }
-
         } else if (currentStage === 'GalleryTime') {
             return;
 
         } else if (currentStage === 'Winner') {
             return;
         };
+    };
 
+    const renderHeaderText = () => {
+        if (currentStage === 'Prompt') {
+            if (isPrompter) {
+                return isPrompterSubmit ? (
+                    <Button
+                        title='Submit'
+                        colors={theme.buttonGradient.success} 
+                        onPress={PrompterButtonSubmit}
+                    />
+                ) : (
+                    <Button 
+                        title='Pick photo' 
+                        colors={theme.buttonGradient.secondary} 
+                        onPress={() => setCurrentStage('Prompt')}
+                    />
+                );
+            } else {
+                return <Button title='Wait for Prompter' colors={theme.buttonGradient.secondary} onPress={() => console.log('wait for the Prompter')}
+            />
+            }
+        } else if (currentStage === 'ImageGallery') {
+            if (isPrompter) {
+                return (
+                    <Button
+                        title='Wait for the players...'
+                        colors={theme.buttonGradient.primary}
+                        onPress={() => console.log('Submit')}
+                    />
+                );
+            } else {
+                return imagesSelected ? (
+                    <Button
+                        title='Selected Image'
+                        colors={theme.buttonGradient.secondary}
+                    />
+                ) : (
+                    
+                    <Button
+                        title='Upload Image'
+                        colors={theme.buttonGradient.primary}
+                        onPress={handleSelectImage}
+                    />
+                );
+            }
+        } else if (currentStage === 'GalleryTime') {
+            return;
 
+        } else if (currentStage === 'Winner') {
+            return;
+        };
     };
 
 
