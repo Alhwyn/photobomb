@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { getSupabaseUrl } from '../../service/imageService'
 import ConfettiCannon from 'react-native-confetti-cannon'
+import Profile from '../Profile'
 
 const Winner = ({ winnerData, currentPrompt }) => {
   const scaleAnim = useRef(new Animated.Value(0.2)).current;
@@ -45,8 +46,9 @@ const Winner = ({ winnerData, currentPrompt }) => {
     <View style={styles.container}>
       
       <View style={styles.header}>
+        <Profile image_url={getSupabaseUrl(winnerData?.image_url)}/>
         <Text style={styles.titleText}>
-          {winnerData.username} got the best photo for
+          {winnerData.username} got the best photo for 
         </Text>
         <LinearGradient
           colors={['#d3d3d3', '#e8e8e8']}
@@ -76,10 +78,6 @@ const Winner = ({ winnerData, currentPrompt }) => {
             resizeMode="cover"
           />
         </Animated.View>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.scoreText}>+1 points!</Text>
       </View>
 
       {showConfetti && (
@@ -112,25 +110,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     flex: 1,
     justifyContent: 'space-between',
-    padding: 20,
     position: 'relative',
     overflow: 'hidden', 
   },
-  footer: {
-    alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 30,
-  },
   header: {
-    alignItems: 'center',
-    marginTop: 40,
+    alignItems: 'column',
     width: '100%',
+
   },
   imageContainer: {
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
     overflow: 'hidden',
+    marginBottom: 150,
   },
   loadingText: {
     color: 'white',
@@ -139,23 +132,17 @@ const styles = StyleSheet.create({
   },
   promptCard: {
     borderRadius: 12,
-    marginTop: 15,
     padding: 2,
     width: '90%',
   },
   promptContent: {
     borderRadius: 10,
-    padding: 15,
+    padding: 10,
   },
   promptText: {
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  scoreText: {
-    color: '#ffd700', // Gold color for points
-    fontSize: 28,
-    fontWeight: 'bold',
   },
   titleText: {
     color: 'white',
@@ -166,7 +153,7 @@ const styles = StyleSheet.create({
   },
   winnerImage: {
     borderRadius: 25, // Rounded corners for the image
-    height: 250,
-    width: 250,
+    height: 300,
+    width: 300,
   },
 })

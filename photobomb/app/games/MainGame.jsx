@@ -7,7 +7,6 @@ import Profile from '../../components/Profile';
 import { theme } from '../../constants/theme';
 import { getUserPayloadFromStorage } from '../../service/userService';
 import Gallery from '../../components/GameComponent/Gallery';
-import PromptSelection from '../../components/GameComponent/PromptSelection';
 import ProgressBar from '../../components/GameComponent/ProgressBar';
 import { supabase } from '../../lib/supabase';
 import { getRoundData } from '../../service/gameService';
@@ -20,7 +19,7 @@ import Winner from '../../components/GameComponent/Winner';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-// gamesPayload: 
+
 const Main = () => {
     const router = useRouter()
     const [userPayload, setUserPayload] = useState(null); 
@@ -46,14 +45,6 @@ const Main = () => {
         }
     
     const renderComponent = () => {
-        /**
-         * Prompt: <Prompter onPromptSelect={handlePromptSelect}/>,
-           ImageGallery:  <Gallery/>,
-            UserPromptSelection: <PromptSelection/>,
-            WaitPrompter: <GameLoading/>,
-            HandleImageSubmit: <ImageSubmission/>
-         */
-            
         console.log('this is the game stage: ', currentStage);
 
         if (currentStage === 'Prompt') {
@@ -67,12 +58,6 @@ const Main = () => {
             
             return <ImageSubmission currentPrompt={selectedPrompt?.text} gameId={gameID}/>;
 
-        } else if (currentStage === 'UserImageSelection') {
-            if (isPrompter) {
-                return <PromptSelection />;
-            } else {    
-                return <GameLoading />;
-            }
         } else if (currentStage === 'GalleryTime') {
             return <Gallery gameId={gameID} currentPrompt={selectedPrompt?.text} prompter={isPrompter}/>;
         } else if (currentStage === 'Winner') {
@@ -82,9 +67,12 @@ const Main = () => {
 
     };
 
+
     const renderButtons = () => {
-        if (isPrompter) {
-            if (currentStage === 'Prompt') {
+
+        if (currentStage === 'Prompt') {
+
+            if (isPrompter) {
                 return isPrompterSubmit ? (
                     <Button
                         title='Submit'
@@ -98,29 +86,46 @@ const Main = () => {
                         onPress={() => setCurrentStage('Prompt')}
                     />
                 );
-            } else if (currentStage === 'ImageGallery') {
+            } else {
+                return <Button title='Wait for Prompter' colors={theme.buttonGradient.secondary} onPress={() => console.log('wait for the Prompter')}
+            />
+            }
+
+        } else if (currentStage === 'ImageGallery') {
+            if (isPrompter) {
                 return (
                     <Button
-                        title='the prompter'
+                        title='Wait for the players...'
                         colors={theme.buttonGradient.primary}
                         onPress={() => console.log('Submit')}
                     />
                 );
+
+            } else {
+                return imagesSelected ? (
+                    <Button
+                        title='Selected Image'
+                        colors={theme.buttonGradient.secondary}
+                    />
+                    
+                ) : (
+                    
+                    <Button
+                        title='Upload Image'
+                        colors={theme.buttonGradient.primary}
+                        onPress={handleSelectImage}
+                    />
+                );
             }
-        } else {
-            return currentStage === 'ImageGallery' ? (
-                <Button
-                    title='Upload Image'
-                    colors={theme.buttonGradient.primary}
-                    onPress={handleSelectImage}
-                />
-            ) : (
-                <Button
-                    title='Selected Image'
-                    colors={theme.buttonGradient.secondary}
-                />
-            );
-        }
+
+        } else if (currentStage === 'GalleryTime') {
+            return;
+
+        } else if (currentStage === 'Winner') {
+            return;
+        };
+
+
     };
 
 
@@ -666,9 +671,10 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     selectedImage: {
-        width: 200,
-        height: 200,
+        borderRadius: 10,
+        height: 275,
         marginBottom: 20,
+        width: 275,
     },
     
   });

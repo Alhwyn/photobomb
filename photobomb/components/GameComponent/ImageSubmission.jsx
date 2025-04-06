@@ -24,7 +24,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
           filter: `game_id=eq.${gameId}`
         },
         (payload) => {
-          //console.log('Submission update received:', payload);
+      
           handleSumbissionTables();
         }
       )
