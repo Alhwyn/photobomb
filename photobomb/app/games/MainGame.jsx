@@ -174,6 +174,7 @@ const Main = () => {
 
     const mainSubmissionUpdateHandler = async (payload) => {
         try {
+
             if (payload?.eventType === 'UPDATE') {
                 const submissionPayload = await getSubmissionData(gameID);
     
@@ -181,7 +182,6 @@ const Main = () => {
                     console.log('Error checking submissions:', submissionPayload.error.message);
                     return;
                 }
-    
                 console.log('Submission data:', submissionPayload.data);
     
                 const allSubmitted = submissionPayload.data.every(submission => submission.photo_uri !== null);
@@ -462,7 +462,6 @@ const Main = () => {
 
                 setShowPrompterPayload(RetreivePrompterPayload);
                 const GetRolePlayerBool = await checkUserRole();
-
                 setIsPrompter(GetRolePlayerBool?.data?.is_creator); 
 
             } catch(error) {
@@ -470,7 +469,6 @@ const Main = () => {
             };
             
         };
-
         initiallizeGameData();
 
         const roundSubscription = supabase
@@ -480,27 +478,16 @@ const Main = () => {
             .subscribe();
 
         const submissionSubscription = supabase
-        .channel('submissions-channel')
-        .on('postgres_changes', 
-            {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'submissions',
-            filter: `game_id=eq.${gameID}`
-            },
-            (payload) => {
-            console.log('Submission update received:', payload);
-            mainSubmissionUpdateHandler(payload);
-            }
-        )
-        .subscribe();
+            .channel('submissionsUpdates')
+            .on('postgres_changes', 
+                {event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}`}, mainSubmissionUpdateHandler)
+            .subscribe();
 
         const playerGameSubscription = supabase
-        .channel('submissionUpdates')
+        .channel('playerGameUpdates')
         .on('postgres_changes',
             { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` }, mainPlayerGameUpdateHandler)
         .subscribe();
-
 
         return () => {
             supabase.removeChannel(roundSubscription);
@@ -536,7 +523,7 @@ const Main = () => {
                 {renderComponent()}
         </View>
         <View style={styles.touchContainer}>
-            <View>
+            <View style={styles.scoreContainer}>
                 <Text style={styles.score}>Score: </Text>
                 <Text style={styles.score}>{showPrompterPayload?.data?.score}</Text>
             </View>
@@ -597,14 +584,20 @@ const styles = StyleSheet.create({
         borderTopColor: '#333333', 
         justifyContent: 'center', 
         alignItems: 'center', 
+        minHeight: 150, // Add minimum height
+        maxHeight: 150, // Add minimum height
+    },
+    scoreContainer: {
+        position: 'absolute',
+        top: 10,
+        left: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     score: {
-        position: 'relative', 
-        right: 50,
-        fontWeight: 'bold', // Make the text bold
-        color: 'white', // Ensure the text is visible
-        fontSize: 16, // Adjust font size as needed
-        zIndex: 1, // Ensure it appears above other elements
+        fontWeight: 'bold',
+        color: 'white',
+        fontSize: 16,
     },
     usernameText: {
         color: 'white',

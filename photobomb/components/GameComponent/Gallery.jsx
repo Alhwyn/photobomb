@@ -43,7 +43,6 @@ const Gallery = ({ gameId }) => {
 
     const confirmImageSelection = async () => {
 
-
         const selectedImagePayload = imageUrlList[currentImageIndex];
 
         console.log('Selected this is the player id:', selectedImagePayload.player_id);
@@ -52,36 +51,28 @@ const Gallery = ({ gameId }) => {
 
         const currentPlayerSore = await getPlayerGame(selectedImagePayload.player_id);
 
-
-
         const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id, currentPlayerSore.data.score);
 
 
         console.log('Check score update:', checkScoreUpdate);
 
-
-
         setIsModalVisible(false);
         setImagesSelected(true);
-
-
 
     };
 
     useEffect(() => {
         const fetchImageList = async () => {
             setLoading(true);  
-            const getImageListPayload = await getSubmissionDataRetrieve(gameId);
+            const getImageListPayload = await getSubmissionData(gameId);
 
             console.log('getImageListPayload:', getImageListPayload);
 
-            if (!getImageListPayload) {
+            if (!getImageListPayload.success) {
                 console.error('Error fetching image list');
-                setLoading(false);
-                return;
             }
 
-            setImageUrlList(getImageListPayload);
+            setImageUrlList(getImageListPayload.data);
             setLoading(false); 
         };
 
@@ -93,12 +84,14 @@ const Gallery = ({ gameId }) => {
                 fadeOut();
                 setTimeout(() => {
                     setCurrentImageIndex((prev) => {
+                        console.log('Current image index:', imageUrlList);
+                        const nextIndex = (prev + 1) % imageUrlList.length; 
 
-                        if (!imageUrlList || imageUrlList.length === 0) {
+                        if (nextIndex === 0 && prev > 0) {
                             setShowAllImages(true);
                             return prev;
                         }
-                        const nextIndex = prev + 1;
+                        
                         fadeIn();
                         return nextIndex;
                     });
@@ -108,21 +101,6 @@ const Gallery = ({ gameId }) => {
             return () => clearInterval(timer);
         }
     }, [showAllImages]);
-
-    const getSubmissionDataRetrieve = async (game_id) => {
-        try {
-            const getSubmissionDataResponse = await getSubmissionData(game_id);
-
-            if (!getSubmissionDataResponse.success) {
-                console.error('Error fetching submission data:', getSubmissionDataResponse.error);
-                return;
-            }
-
-            return getSubmissionDataResponse.data;
-        } catch (error) {
-            console.error('Error fetching submission data:', error);
-        }
-    };
 
     const getIMageUrlFromIndex = (index) => {
 
