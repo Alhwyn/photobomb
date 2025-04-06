@@ -299,7 +299,9 @@ export const getSubmissionData = async (game_id) => {
 
         const {data, error } = await supabase
           .from('submissions')
-          .select('*')
+          .select(`*,
+                   playergame (score, player_id, is_creator)
+                `)
           .eq('game_id', game_id)
 
         if (error) {

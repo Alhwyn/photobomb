@@ -15,7 +15,7 @@ const Gallery = ({ gameId }) => {
     const [loading, setLoading] = useState(true); 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [imageUrlList, setImageUrlList] = useState(null);
-    const [imagesSelected, setImagesSelected] = useState(false);
+    const [isPrompter, setIsPrompter] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
@@ -45,16 +45,9 @@ const Gallery = ({ gameId }) => {
 
         const selectedImagePayload = imageUrlList[currentImageIndex];
 
-        console.log('Selected this is the player id:', selectedImagePayload.player_id);
-
-        console.log('Selected this is the game id', selectedImagePayload.game_id);
-
         const currentPlayerSore = await getPlayerGame(selectedImagePayload.player_id);
 
         const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id, currentPlayerSore.data.score);
-
-
-        console.log('Check score update:', checkScoreUpdate);
 
         setIsModalVisible(false);
         setImagesSelected(true);
@@ -65,28 +58,35 @@ const Gallery = ({ gameId }) => {
         const fetchImageList = async () => {
             setLoading(true);  
             const getImageListPayload = await getSubmissionData(gameId);
-
-            console.log('getImageListPayload:', getImageListPayload);
-
+            
             if (!getImageListPayload.success) {
-                console.error('Error fetching image list');
+                console.log('Error fetching image list');
+                setLoading(false);
+                return;
             }
-
+            
+            console.log('getImageListPayload: 1', getImageListPayload);
+            console.log('getImageListPayload: 2', getImageListPayload.data);
+            
             setImageUrlList(getImageListPayload.data);
             setLoading(false); 
         };
-
+    
         fetchImageList();
+    }, [gameId]);
+    
 
-        if (!showAllImages) {
+    useEffect(() => {
+
+        if (imageUrlList && !showAllImages) {
             fadeIn();
             const timer = setInterval(() => {
                 fadeOut();
                 setTimeout(() => {
                     setCurrentImageIndex((prev) => {
-                        console.log('Current image index:', imageUrlList);
-                        const nextIndex = (prev + 1) % imageUrlList.length; 
-
+                        console.log('Current image index, imageUrlList:', imageUrlList);
+                        const nextIndex = (prev + 1) % imageUrlList.length;
+                        
                         if (nextIndex === 0 && prev > 0) {
                             setShowAllImages(true);
                             return prev;
@@ -97,10 +97,10 @@ const Gallery = ({ gameId }) => {
                     });
                 }, 500);
             }, 5000);
-
+    
             return () => clearInterval(timer);
         }
-    }, [showAllImages]);
+    }, [imageUrlList, showAllImages]);
 
     const getIMageUrlFromIndex = (index) => {
 
@@ -172,6 +172,9 @@ const Gallery = ({ gameId }) => {
                     ))}
                 </View>
             </ScrollView>
+
+
+            
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -263,9 +266,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     selectedImage: {
-        width: 200,
-        height: 200,
+        width: 275,
+        height: 275,
         marginBottom: 20,
+        borderRadius: 10,
     },
     modalButtons: {
         flexDirection: 'row',
