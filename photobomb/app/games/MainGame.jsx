@@ -118,53 +118,50 @@ const Main = () => {
 
     const renderHeaderText = () => {
         if (currentStage === 'Prompt') {
-            if (isPrompter) {
-                return isPrompterSubmit ? (
-                    <Button
-                        title='Submit'
-                        colors={theme.buttonGradient.success} 
-                        onPress={PrompterButtonSubmit}
-                    />
-                ) : (
-                    <Button 
-                        title='Pick photo' 
-                        colors={theme.buttonGradient.secondary} 
-                        onPress={() => setCurrentStage('Prompt')}
-                    />
-                );
-            } else {
-                return <Button title='Wait for Prompter' colors={theme.buttonGradient.secondary} onPress={() => console.log('wait for the Prompter')}
-            />
-            }
-        } else if (currentStage === 'ImageGallery') {
-            if (isPrompter) {
-                return (
-                    <Button
-                        title='Wait for the players...'
-                        colors={theme.buttonGradient.primary}
-                        onPress={() => console.log('Submit')}
-                    />
-                );
-            } else {
-                return imagesSelected ? (
-                    <Button
-                        title='Selected Image'
-                        colors={theme.buttonGradient.secondary}
-                    />
-                ) : (
+            return (
+                <View style={styles.header}> 
+                    {/* Profile Pic Component */}
+                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
                     
-                    <Button
-                        title='Upload Image'
-                        colors={theme.buttonGradient.primary}
-                        onPress={handleSelectImage}
-                    />
-                );
-            }
+                    <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
+                    <Text style={styles.text}>picking the prompt...</Text>
+                    
+                </View>
+            )
+        } else if (currentStage === 'ImageGallery') {
+            return (
+                <View style={styles.header}> 
+                    {/* Profile Pic Component */}
+                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
+                    
+                    <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
+                    <Text style={styles.text}>picked the prompt...</Text>
+                    
+                </View>
+            )
         } else if (currentStage === 'GalleryTime') {
-            return;
+            return (
+                <View style={styles.header}> 
+                    {/* Profile Pic Component */}
+                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
+                    
+                    <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
+                    <Text style={styles.text}>picking the winner...</Text>
+                    
+                </View>
+            )
 
         } else if (currentStage === 'Winner') {
-            return;
+            return (
+                <View style={styles.header}> 
+                    {/* Profile Pic Component */}
+                    <Profile image_url={getSupabaseUrl(winnerData?.image_url)}/>
+                    
+                    <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
+                    <Text style={styles.text}>got the best photo for</Text>
+                    
+                </View>
+            )
         };
     };
 
@@ -260,13 +257,15 @@ const Main = () => {
                     .select(`*,
                              submissions (photo_uri),
                              users (username, image_url)`)
-                    .eq('player_id', payload?.new?.player_id)
+                    .eq('id', payload?.new?.id)
                     .single();
 
                 if (error) {
                     console.log('Error checking submissions:', error.message);
                     return {success: false, message: error.message};;
                 }
+
+                console.log('Submission data this is the winner data:', data);
                 setWinnerData({
                     username: data.users.username,
                     image_url: data.users.image_url,
@@ -561,21 +560,7 @@ const Main = () => {
     <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
         {/* Header with Profile */}
-        <View style={styles.header}> 
-            {/* Profile Pic Component */}
-            <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
-             
-            <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
-            {isPrompter ? (
-                    promptSubmitted ? (
-                        <Text style={styles.text}> picked the prompt</Text>
-                    ) : (
-                        <Text style={styles.text}>You are the Prompter</Text>
-                    )
-                ) : (
-                    <Text style={styles.text}>is picking a prompt...</Text>
-             )}
-        </View>
+        {renderHeaderText()}
         <View style={styles.styleprogressBar}>
             {/* <ProgressBar duration={5000} color="#52307c" /> */}
         </View>

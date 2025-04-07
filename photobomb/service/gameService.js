@@ -18,7 +18,7 @@ export const checkGamePin = async (pin) => {
             return { success: false, msg: error.message};
         }
         if (!data || data.length === 0) {
-            console.error(' No games found with this PIN.')
+            console.log(' No games found with this PIN.')
             return false;
         }
         console.log('Game PIN exists:  ', data);
@@ -27,7 +27,6 @@ export const checkGamePin = async (pin) => {
         console.error('Error checking PIN', error.message);
         return { success: false, msg: error.message};
     }
-
 }
 export const getGameId = async (userId) => {
     /**
@@ -274,7 +273,7 @@ export const getRoundData = async (gameId) => {
           .single();
 
         if (error) {
-            console.error('Error on fetching the data on the round table gameService.js', error.message);
+            console.log('Error on fetching the data on the round table gameService.js', error.message);
             return {success: false, message: error.message};
         }
 

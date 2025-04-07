@@ -46,14 +46,6 @@ const Winner = ({ winnerData, currentPrompt }) => {
     <View style={styles.container}>
       
       <View style={styles.header}>
-        <View style={styles.profileRow}>
-          <Profile image_url={getSupabaseUrl(winnerData?.image_url)}/>
-          <Text style={styles.titleText}>
-            {winnerData.username} got the best photo for 
-          </Text>
-
-        </View>
-        
         <LinearGradient
           colors={['#d3d3d3', '#e8e8e8']}
           style={styles.promptCard}
