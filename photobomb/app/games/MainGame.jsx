@@ -122,7 +122,7 @@ const Main = () => {
             return (
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
-                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
+                    <Profile image_url={getSupabaseUrl(userPayload?.image_url)}/>
                     
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picking the prompt...</Text>
@@ -133,7 +133,7 @@ const Main = () => {
             return (
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
-                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
+                    <Profile image_url={getSupabaseUrl(userPayload?.image_url)}/>
                     
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picked the prompt...</Text>
@@ -144,7 +144,7 @@ const Main = () => {
             return (
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
-                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
+                    <Profile image_url={getSupabaseUrl(userPayload?.image_url)}/>
                     
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picking the winner...</Text>
