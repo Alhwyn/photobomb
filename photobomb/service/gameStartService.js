@@ -159,7 +159,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
 
             console.log("Preparing to insert into rounds with values:", {
                 game_id,
-                prompter_id: nextPrompterId,
+                prompter_id: players[prompterIndex],
                 round: nextRound,
                 total_players: totalPlayers,
             });
@@ -168,7 +168,7 @@ const handleRoundTable = async (game_id, prompter_id) => {
                 .from("round")
                 .insert({
                     game_id: game_id,
-                    prompter_id: nextPrompterId?.id,
+                    prompter_id: players[prompterIndex].id,
                     round: nextRound,
                     total_players: totalPlayers,
                 });

@@ -64,6 +64,7 @@ const Main = () => {
         }
     };
 
+    
     const renderButtons = () => {
         if (currentStage === 'Prompt') {
             if (isPrompter) {
