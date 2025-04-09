@@ -15,7 +15,7 @@ export const getImageUploads = (filePath) => {
             .getPublicUrl(filePath);
 
         if (error) {
-            console.error('Error fetching public URL:', error.message);
+            console.log('Error fetching public URL:', error.message);
             return null;
         }
 

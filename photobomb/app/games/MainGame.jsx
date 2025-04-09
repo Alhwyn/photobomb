@@ -44,6 +44,7 @@ const Main = () => {
         setIsPrompterSubmit(true);
         }
     
+        
     const renderComponent = () => {
         console.log('this is the game stage: ', currentStage);
 
