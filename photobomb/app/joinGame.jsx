@@ -7,6 +7,9 @@ import Button from '../components/Button';
 import { useRouter } from 'expo-router';
 import { checkGamePin, addUserToLobby } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
+import { checkDuplicateGameId } from '../service/gameStartService';
+
+
 
 
 const joinGame = () => {
@@ -27,6 +30,8 @@ const joinGame = () => {
 
       console.log('joinGame: data success; ', isValidPin);
 
+      
+
       if (!isValidPin.success) {
         Alert.alert('Invalid game Pin: ', 'The game entered does not exist,')
         setisLoading(false);
@@ -35,7 +40,13 @@ const joinGame = () => {
 
       const userPayload = await getUserPayloadFromStorage();
 
+
       console.log(isValidPin?.data?.[0]?.id);
+
+
+      console.log(checkDuplicateGameId(userPayload?.id));
+
+
       const result = await addUserToLobby(userPayload?.id, isValidPin?.data?.[0]?.id, false);
     
       if (result?.success) {

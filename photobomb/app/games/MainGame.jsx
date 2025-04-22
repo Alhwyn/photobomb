@@ -44,7 +44,7 @@ const Main = () => {
         setIsPrompterSubmit(true);
         }
     
-        
+
     const renderComponent = () => {
         console.log('this is the game stage: ', currentStage);
 
@@ -369,7 +369,7 @@ const Main = () => {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaType,
                 allowsEditing: true,
-                quality: 0.7,
+                quality: 0.6,
             });
 
             if (!result.cancelled) {   

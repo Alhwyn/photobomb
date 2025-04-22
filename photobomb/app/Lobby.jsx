@@ -10,8 +10,9 @@ import { getUserPayloadFromStorage } from '../service/userService';
 import ExitButton from '../components/ExitButton';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
-import { startGame } from '../service/gameStartService';
+import { startGame,  } from '../service/gameStartService';
 import Loading from '../components/Loading';
+
 
 const Lobby = () => {
     const router = useRouter();
@@ -42,15 +43,16 @@ const Lobby = () => {
             const { data, error } = await supabase
                 .from('users')
                 .select(`*,
-                            games (game_pin, id, game_creator),
-                            playergame (is_creator, player_id, game_id)
+                        games (game_pin, id, game_creator, created_at),
+                        playergame (is_creator, player_id, game_id, created_at)
                 `)
                 .eq('id', userId)
+                .order('created_at', { referencedTable: 'games', ascending: false })
                 .single();
 
-            setGameId(data.playergame[0]?.game_id);
 
-            console.log('Where is the game id: ', gameId)
+            setGameId(data.games[0].id);
+
 
         
             if (!data?.playergame[0]?.is_creator) {
@@ -197,23 +199,37 @@ const Lobby = () => {
              * game_id.
              */
             try {
-                const setUsersetStateLobby = await setStateLobby();
-
-                if (!setUsersetStateLobby) {
-                    console.error('Thier is an error in setStateLobby');
+                if (!gameId) {
+                    await setStateLobby();
+                    return; // Exit and let the useEffect run again when gameId updates
                 }
+
+                console.log('Fetching players for game ID:', gameId);
+                
+
+
             
-                const { data: gamePayload } = await supabase
+                const { data: gamePayload, error } = await supabase
                     .from('playergame')
                     .select(`
                         *,
                         users (username, image_url)
-                        `)
+                    `)
                     .eq('game_id', gameId);
 
-                console.log('this is the game Payload:  ', gamePayload);
-    
-                setPlayers(gamePayload);
+
+                if (error) {
+                    console.error('Error fetching players:', error.message);
+                    return;
+                }
+
+                console.log('Players payload:', gamePayload);
+            
+                if (gamePayload && gamePayload.length > 0) {
+                    setPlayers(gamePayload);
+                } else {
+                    console.log('No players found for game ID:', gameId);
+                }
     
             } catch(error) {
                 console.error('Error fetching the players:  ', error.message);

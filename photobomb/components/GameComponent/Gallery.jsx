@@ -40,14 +40,12 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
-
-    // Function to preload all images in the gallery
+    
     const preloadImages = async (images) => {
       if (!images) return;
       
       const uris = images.map(image => getSupabaseUrl(image.photo_uri));
       
-      // Initialize loading states for all images
       const initialLoadingStates = {};
       uris.forEach(uri => {
         initialLoadingStates[uri] = true;
@@ -96,8 +94,8 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
 
     const confirmImageSelection = async () => {
         const selectedImagePayload = imageUrlList[currentImageIndex];
-        const currentPlayerSore = await getPlayerGame(selectedImagePayload.player_id);
-        const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id, currentPlayerSore.data.score);
+        //const currentPlayerSore = await getPlayerGame(selectedImagePayload.player_id);
+        //const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id, currentPlayerSore.data.score);
         setIsModalVisible(false);
         setImagesSelected(true);
     };

@@ -197,3 +197,32 @@ const handleRoundTable = async (game_id, prompter_id) => {
         return { success: false, message: error.message};
     }
 };
+
+
+export const checkDuplicateGameId = async (userId) => {
+
+    /*
+     * Check if the user has already created a game with the same game_id
+     * 
+     * @param {number} userId - The id of the user to check.
+     * @returns {boolean} - True if a duplicate game_id exists, false otherwise.
+     */
+
+    try {
+        const { data, error } = await supabase
+            .from("games")
+            .select("id")
+            .eq("user_id", userId)
+
+
+        if (error) {
+            console.log("Error checking for duplicate game ID: ", error.message);
+            return false;
+        }
+
+       
+    } catch (error) {
+        console.log("Error in checkDuplicateGameId: ", error.message);
+        return false;
+    }
+}
