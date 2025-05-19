@@ -135,7 +135,7 @@ export const startGame = async (gameId, players) => {
     }
 };
 
-const handleRoundTable = async (game_id, prompter_id) => {
+export const handleRoundTable = async (game_id, prompter_id) => {
     /*
      * This is the following table needs to create the round table in supabase
      * - game_id
@@ -157,11 +157,10 @@ const handleRoundTable = async (game_id, prompter_id) => {
     }
 
     try {
-
         // fetch the game data of the game_id
         const { data: gameData, error: gameError } = await supabase
             .from("games")
-            .select("status")
+            .select("status, current_round")
             .eq("id", game_id)
             .single();
 
@@ -170,69 +169,140 @@ const handleRoundTable = async (game_id, prompter_id) => {
             return { success: false, message: gameError.message};
         }
 
-        if (gameData.status !== "lobby") {
-            
-            const nextRound = Math.floor(gameData.current_round ? gameData.current_round + 1 : 1);
+        // Calculate the next round number
+        const nextRound = Math.floor(gameData.current_round ? gameData.current_round + 1 : 1);
+        let roundPrompterID;
 
-            const {data: players, error: playerError} = await supabase
-                .from("playergame")
-                .select("id, turn_order")
-                .eq("game_id", game_id)
-                .order("turn_order", { ascending: true });
+        // Get all players in this game, ordered by turn_order
+        const { data: players, error: playerError } = await supabase
+            .from("playergame")
+            .select("id, player_id, turn_order")
+            .eq("game_id", game_id)
+            .order("turn_order", { ascending: true });
 
-            if (playerError) {
-                console.log("Error fethcing player list: ", playerError.message);
-                return { success: false, message: playerError.message };
-            }
+        if (playerError) {
+            console.log("Error fetching player list: ", playerError.message);
+            return { success: false, message: playerError.message };
+        }
 
-            // Determine the next prompter
+        const totalPlayers = players.length;
+
+        if (gameData.status === "lobby") {
+            // For the first round, use the provided prompter_id from the first player
+            roundPrompterID = prompter_id;
+        } else {
+            // For subsequent rounds, find the current prompter and determine the next one
             const prompterIndex = players.findIndex(player => player.id === prompter_id);
-            const nextPrompterIndex = (prompterIndex + 1) % players.length;
-            const nextPrompterId = players[nextPrompterIndex];
-
             
-            const totalPlayers = Math.floor(players.length);
-
-            if (!nextPrompterId) {
-                console.log("Error determining the next prompter: nextPrompter problem");
-                return { success: false, message: "Unable to determine the next prompter"};
+            if (prompterIndex === -1) {
+                console.log("Error: Current prompter not found in player list");
+                return { success: false, message: "Current prompter not found" };
             }
+            
+            // Find the next player in turn order
+            const nextPrompterIndex = (prompterIndex + 1) % totalPlayers;
+            const nextPrompter = players[nextPrompterIndex];
+            
+            if (!nextPrompter) {
+                console.log("Error determining the next prompter");
+                return { success: false, message: "Unable to determine the next prompter" };
+            }
+            
+            roundPrompterID = nextPrompter.id;
+        }
 
-            console.log("Preparing to insert into rounds with values:", {
-                game_id,
-                prompter_id: players[prompterIndex],
+        console.log("Creating new round with values:", {
+            game_id,
+            prompter_id: roundPrompterID,
+            round: nextRound,
+            total_players: totalPlayers,
+        });
+
+        // Create the new round entry
+        const { data: roundData, error: roundError } = await supabase
+            .from("round")
+            .insert({
+                game_id: game_id,
+                prompter_id: roundPrompterID,
                 round: nextRound,
                 total_players: totalPlayers,
+            })
+            .select();
+
+        if (roundError) {
+            console.log("Error creating a new round:", roundError.message);
+            return { success: false, message: roundError.message };
+        }
+
+        // Update the current round in the games table
+        const { error: roundUpdateError } = await supabase
+            .from("games")
+            .update({ current_round: nextRound })
+            .eq("id", game_id);
+
+        if (roundUpdateError) {
+            console.log("Error updating the game current round:", roundUpdateError.message);
+            return { success: false, message: roundUpdateError.message };
+        }
+
+        // Delete any existing submissions for the previous round (if applicable)
+        if (gameData.status !== "lobby") {
+            console.log("Cleaning up previous round submissions...");
+            
+            const { data: previousRound, error: prevRoundError } = await supabase
+                .from("round")
+                .select("id")
+                .eq("game_id", game_id)
+                .eq("round", nextRound - 1)
+                .single();
+                
+            if (!prevRoundError && previousRound) {
+                // Delete previous round submissions
+                const { error: deleteError } = await supabase
+                    .from("submissions")
+                    .delete()
+                    .eq("round_id", previousRound.id);
+                    
+                if (deleteError) {
+                    console.log("Warning: Failed to clean up previous submissions:", deleteError.message);
+                    // Continue anyway - this is not critical
+                } else {
+                    console.log("Previous submissions cleaned up successfully");
+                }
+            }
+        }
+
+        // Create new submissions for all players except the prompter
+        console.log("Creating submissions for new round...");
+        const submissionPromises = players
+            .filter(player => player.id !== roundPrompterID) // Exclude the prompter
+            .map(player => {
+                return supabase
+                    .from("submissions")
+                    .insert({
+                        round_id: roundData[0].id,
+                        player_id: player.id,
+                        photo_uri: null,
+                        game_id: game_id,
+                    });
             });
 
-            const { error: roundError} = await supabase
-                .from("round")
-                .insert({
-                    game_id: game_id,
-                    prompter_id: players[prompterIndex].id,
-                    round: nextRound,
-                    total_players: totalPlayers,
-                });
-
-            if (roundError) {
-                console.log("Error creating a new round.", roundError.message);
-                return {success: false, message: roundError.message};
-            }
-
-            // UPdate the games current round
-            const { error: roundUpdateError } = await supabase
-                .from("games")
-                .update({ current_round: nextRound })
-                .eq("id", game_id);
-
-            if (roundUpdateError) {
-                console.log("Error updating the game current round ", roundUpdateError.message);
-                return {success: false, message: roundUpdateError.message};
-            }
-
-            console.log("New record created succesffuly with next prompter: ", nextPrompterId);
-            return { success: true,  data: nextPrompterId, round: nextRound};
+        const submissionResults = await Promise.all(submissionPromises);
+        
+        // Check if any submission inserts failed
+        const failedSubmissions = submissionResults.filter(result => result.error);
+        if (failedSubmissions.length > 0) {
+            console.log(`Warning: ${failedSubmissions.length} submission inserts failed`);
+            // Continue anyway - partial failure is better than total failure
         }
+
+        console.log("New round created successfully with prompter ID:", roundPrompterID);
+        return { 
+            success: true, 
+            data: roundPrompterID, 
+            round: nextRound,
+            roundID: roundData[0].id
+        };
     } catch (error) {
         console.log("Error in handleRoundtable: ", error.message);
         return { success: false, message: error.message};
@@ -241,7 +311,6 @@ const handleRoundTable = async (game_id, prompter_id) => {
 
 
 export const checkDuplicateGameId = async (userId) => {
-
     /*
      * Check if the user has already created a game with the same game_id
      * 
@@ -253,17 +322,73 @@ export const checkDuplicateGameId = async (userId) => {
         const { data, error } = await supabase
             .from("games")
             .select("id")
-            .eq("user_id", userId)
-
+            .eq("user_id", userId);
 
         if (error) {
             console.log("Error checking for duplicate game ID: ", error.message);
             return false;
         }
 
-       
+        return data && data.length > 0;
     } catch (error) {
         console.log("Error in checkDuplicateGameId: ", error.message);
         return false;
     }
-}
+};
+
+export const startNextRound = async (gameId) => {
+    /*
+     * Starts a new round for an existing game
+     * - Finds the player with the next turn_order
+     * - Updates the round table with the new prompter
+     * - Creates new submissions for players
+     * 
+     * @param {string} gameId - ID of the game to start a new round for
+     * @returns {Object} Result of the execution, including success and error if any
+     */
+    try {
+        // Get current game data
+        const { data: gameData, error: gameError } = await supabase
+            .from("games")
+            .select("current_round")
+            .eq("id", gameId)
+            .single();
+
+        if (gameError) {
+            console.log("Error fetching game data:", gameError.message);
+            return { success: false, message: gameError.message };
+        }
+
+        // Get the current round data to find the current prompter
+        const { data: currentRound, error: roundError } = await supabase
+            .from("round")
+            .select("prompter_id")
+            .eq("game_id", gameId)
+            .eq("round", gameData.current_round)
+            .single();
+
+        if (roundError) {
+            console.log("Error fetching current round:", roundError.message);
+            return { success: false, message: roundError.message };
+        }
+
+        // Start the next round with the current prompter
+        const result = await handleRoundTable(gameId, currentRound.prompter_id);
+        
+        if (!result.success) {
+            return { success: false, message: result.message };
+        }
+
+        console.log("New round started successfully", result);
+        return { 
+            success: true, 
+            data: {
+                newPrompter: result.data,
+                round: result.round
+            }
+        };
+    } catch (error) {
+        console.log("Error starting next round:", error.message);
+        return { success: false, message: error.message };
+    }
+};

@@ -325,6 +325,7 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                     image_url: selectedWinner.playergame?.users?.image_url || null
                 }}
                 currentPrompt={currentPrompt}
+                gameId={gameId}
             />
         );
     }

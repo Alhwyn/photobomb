@@ -40,7 +40,6 @@ const Lobby = () => {
 
             console.log("this is the user_id", userId);
 
-
             // start with here try to fix the realtime issue in the lobby
             const { data, error } = await supabase
                 .from('playergame')
@@ -48,9 +47,11 @@ const Lobby = () => {
                         games (game_pin, id, game_creator, created_at)
                 `)
                 .eq('player_id', userId)
+                .order('created_at', { ascending: false }) 
+                .limit(1) 
                 .single();
 
-            console.log('Fetched user data:', data);
+            console.log('Fetched most recent user game:', data);
 
             setGameId(data.game_id);
             setGamePin(data.games.game_pin);

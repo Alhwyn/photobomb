@@ -59,7 +59,11 @@ const Main = () => {
         } else if (currentStage === 'GalleryTime') {
             return <Gallery gameId={gameID} currentPrompt={selectedPrompt?.text} prompter={isPrompter}/>;
         } else if (currentStage === 'Winner') {
-            return <Winner winnerData={winnerData} currentPrompt={selectedPrompt?.text} />;
+            return <Winner 
+                winnerData={winnerData} 
+                currentPrompt={selectedPrompt?.text}
+                gameId={gameID}
+            />;
             
         }
     };
@@ -196,9 +200,10 @@ const Main = () => {
 
     const mainRoundUpdateHandler = async (payload) => {
         try {
+            console.log("Round update received:", payload);
 
-            if (payload?.eventType === 'UPDATE') {
-
+            // Handle updates when a prompter selects a prompt
+            if (payload?.eventType === 'UPDATE' && payload?.new?.prompt_id) {
                 const {data: promptDataTable, error: promptDataError} = await supabase
                     .from('prompts')
                     .select(`*`)
@@ -211,13 +216,41 @@ const Main = () => {
                 }
 
                 setSelectedPrompt(promptDataTable);
-
                 setPromptSubmitted(true);
                 setCurrentStage('ImageGallery');
+            } 
+            // Handle new round creation after winner timer completes
+            else if (payload?.eventType === 'INSERT') {
+                console.log("New round detected:", payload);
+                
+                // Get the new round data
+                const {data: roundData, error: roundError} = await getRoundData(gameID);
+                if (roundError) {
+                    console.error('Error fetching new round data:', roundError.message);
+                    return;
+                }
+                
+                // Reset all the states for a new round
+                setSelectedPrompt(null);
+                setPromptSubmitted(false);
+                setImagesSelected(false);
+                setWinnerData(null);
+                
+                // Get new prompter info
+                const retrievePrompterPayload = await viewPlayerGameTable(roundData?.data?.prompter_id);
+                setShowPrompterPayload(retrievePrompterPayload);
+                
+                // Check if the current user is the new prompter
+                const getRolePlayerBool = await checkUserRole();
+                setIsPrompter(getRolePlayerBool?.data?.is_creator);
+                
+                // Set stage back to Prompt for the new round
+                setCurrentStage('Prompt');
+                
+                console.log("Transitioned to new round:", roundData?.data?.round);
             }
-
         } catch(error) {
-            console.error('Error in the mainGameUpdateHandler: ', error.message);
+            console.error('Error in mainRoundUpdateHandler:', error.message);
         }
     };
 
@@ -332,10 +365,8 @@ const Main = () => {
 
     const PrompterButtonSubmit = async () => {
         try {
-
             console.log('This is the selected prompt: ', selectedPrompt);
             console.log('This is the game id: ', gameID);
-
 
             const {data: PromptSubmitData, error: PromptSumbitDataError} = await supabase
                 .from('round')
@@ -346,20 +377,16 @@ const Main = () => {
                 .select();
 
             if (!PromptSumbitDataError) {
-                await createSubmissionsForPlayers();
+                // Note: Submissions are now created directly in the handleRoundTable function
+                // when a new round is started, so we don't need to create them here
                 setCurrentStage('ImageGallery');
-                
-
             } else {
                 console.log('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
                 return {success: false, message: PromptSumbitDataError.message};
             }
-            
-
         } catch(error) {
             console.error('Error in PrompterButtonSubmit: ', error.message);
         }
-
     };
 
     const handleSelectImage = async () => {
@@ -531,10 +558,13 @@ const Main = () => {
         };
         initiallizeGameData();
 
+        // Listen for both round updates and new round insertions
         const roundSubscription = supabase
             .channel('roundUpdates')
             .on('postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
+            .on('postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
             .subscribe();
 
         const submissionSubscription = supabase

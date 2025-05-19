@@ -1,17 +1,23 @@
-import { StyleSheet, Text, View, Image, Animated, Easing } from 'react-native'
+import { StyleSheet, Text, View, Image, Animated, Easing, ActivityIndicator } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { getSupabaseUrl } from '../../service/imageService'
 import ConfettiCannon from 'react-native-confetti-cannon'
 import Profile from '../Profile'
+import { startNextRound } from '../../service/gameStartService'
+import { supabase } from '../../lib/supabase'
 
-const Winner = ({ winnerData, currentPrompt }) => {
+const Winner = ({ winnerData, currentPrompt, gameId }) => {
   const scaleAnim = useRef(new Animated.Value(0.2)).current;
   const positionAnim = useRef(new Animated.Value(200)).current;
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showNextRoundTimer, setShowNextRoundTimer] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(10); // 10 second countdown
+  const [nextPrompterInfo, setNextPrompterInfo] = useState(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const timerRef = useRef(null);
 
   useEffect(() => {
-
     const timer = setTimeout(() => {
       setShowConfetti(true);
     }, 300);
@@ -30,9 +36,116 @@ const Winner = ({ winnerData, currentPrompt }) => {
         useNativeDriver: true,
       })
     ]).start();
+    
+    // Start next round timer after celebration (5 seconds)
+    const startTimerTimeout = setTimeout(() => {
+      setShowNextRoundTimer(true);
+      findNextPrompter();
+      startCountdown();
+    }, 5000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(startTimerTimeout);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
+  
+  const findNextPrompter = async () => {
+    try {
+      if (!gameId) return;
+      
+      // Get the current game data to find out the current round
+      const { data: gameData, error: gameError } = await supabase
+        .from("games")
+        .select("current_round")
+        .eq("id", gameId)
+        .single();
+        
+      if (gameError) {
+        console.error("Error fetching game data:", gameError.message);
+        return;
+      }
+      
+      // Get players to find who's next based on turn_order
+      const { data: players, error: playersError } = await supabase
+        .from("playergame")
+        .select("id, turn_order, users (username, image_url)")
+        .eq("game_id", gameId)
+        .order("turn_order", { ascending: true });
+        
+      if (playersError) {
+        console.error("Error fetching players for next round:", playersError.message);
+        return;
+      }
+
+      // Get the current prompter
+      const { data: roundData, error: roundError } = await supabase
+        .from("round")
+        .select("prompter_id")
+        .eq("game_id", gameId)
+        .eq("round", gameData.current_round)
+        .single();
+        
+      if (roundError) {
+        console.error("Error fetching current round data:", roundError.message);
+        return;
+      }
+      
+      // Find current prompter index
+      const prompterIndex = players.findIndex(player => player.id === roundData.prompter_id);
+      
+      // Calculate next prompter (wrap around if at end of array)
+      const nextPrompterIndex = (prompterIndex + 1) % players.length;
+      const nextPrompter = players[nextPrompterIndex];
+      
+      if (nextPrompter) {
+        setNextPrompterInfo({
+          id: nextPrompter.id,
+          username: nextPrompter.users.username,
+          image_url: nextPrompter.users.image_url
+        });
+      }
+    } catch (error) {
+      console.error("Error finding next prompter:", error.message);
+    }
+  };
+  
+  const startCountdown = () => {
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(timerRef.current);
+          handleNextRound();
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+  };
+  
+  const handleNextRound = async () => {
+    try {
+      setIsTransitioning(true);
+      
+      if (!gameId) {
+        console.error("Missing gameId for next round");
+        return;
+      }
+      
+      // Call our new startNextRound function to advance to the next round
+      // This handles finding the next prompter, updating the round table, and creating new submissions
+      const result = await startNextRound(gameId);
+      
+      if (!result.success) {
+        console.error("Error advancing to next round:", result.message);
+      } else {
+        console.log("Advanced to next round successfully:", result);
+      }
+    } catch (error) {
+      console.error("Error in handleNextRound:", error.message);
+    }
+  };
 
   if (!winnerData) {
     return (
@@ -84,6 +197,38 @@ const Winner = ({ winnerData, currentPrompt }) => {
           fallSpeed={3000}
           fadeOut={true}
         />
+      )}
+      
+      {showNextRoundTimer && nextPrompterInfo && (
+        <View style={styles.timerContainer}>
+          <Text style={styles.timerTitle}>Next Round Starting Soon</Text>
+          
+          <View style={styles.nextPrompterContainer}>
+            <Profile 
+              image_url={getSupabaseUrl(nextPrompterInfo.image_url)}
+              profileSize={40} 
+            />
+            <Text style={styles.prompterText}>
+              {nextPrompterInfo.username} will be the next prompter
+            </Text>
+          </View>
+          
+          <Text style={styles.timerText}>Next round in: {timeRemaining}s</Text>
+          
+          <LinearGradient
+            colors={['#8A2BE2', '#DA70D6']}
+            style={styles.timerBar}
+          >
+            <View style={[styles.timerProgress, { width: `${(timeRemaining / 10) * 100}%` }]} />
+          </LinearGradient>
+        </View>
+      )}
+      
+      {isTransitioning && (
+        <View style={styles.transitionOverlay}>
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text style={styles.transitionText}>Starting next round...</Text>
+        </View>
       )}
     </View>
   )
@@ -156,4 +301,65 @@ const styles = StyleSheet.create({
     height: 300,
     width: 300,
   },
+  // Timer styles
+  timerContainer: {
+    position: 'absolute',
+    bottom: 30,
+    width: '90%',
+    backgroundColor: 'rgba(18, 18, 18, 0.8)',
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
+  },
+  timerTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  timerText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  timerBar: {
+    height: 10,
+    width: '100%',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  timerProgress: {
+    height: '100%',
+    backgroundColor: 'white',
+  },
+  nextPrompterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  prompterText: {
+    color: 'white',
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  transitionOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  transitionText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+  }
 })
