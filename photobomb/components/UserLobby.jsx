@@ -30,7 +30,7 @@ const UserLobby = ({ lobbyData }) => {
     <FlatList
       data={lobbyData} 
       renderItem={renderItem}
-      keyExtractor={(item) => item.player_id} 
+      keyExtractor={(item, index) => `${item.player_id}-${index}`} 
     />
   );
 };

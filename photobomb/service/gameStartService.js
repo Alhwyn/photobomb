@@ -309,7 +309,6 @@ export const handleRoundTable = async (game_id, prompter_id) => {
     }
 };
 
-
 export const checkDuplicateGameId = async (userId) => {
     /*
      * Check if the user has already created a game with the same game_id
