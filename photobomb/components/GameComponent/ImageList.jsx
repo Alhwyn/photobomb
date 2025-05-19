@@ -30,7 +30,7 @@ const ImageList = ({ lobbyData }) => {
     <FlatList
       data={lobbyData} 
       renderItem={renderItem}
-      keyExtractor={(item) => item.player_id} 
+x      keyExtractor={(item, index) => `image-list-${index}`} 
     />
   );
 };

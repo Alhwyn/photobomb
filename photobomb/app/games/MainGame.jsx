@@ -521,12 +521,28 @@ const Main = () => {
         const photoUri = `gamesubmissions/${fileName}`;
         const playerGameId = playergameData.id;
 
+        // Get the current round to find the player's submission
+        const {data: roundData, error: roundError} = await supabase
+            .from('round')
+            .select(`*`)
+            .eq('game_id', gameID)
+            .order('round', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (roundError) {
+            console.log('Error in confirmImageSelection fetching round: ', roundError.message);
+            return {success: false, message: roundError.message};
+        }
+
+        // Now find the submission for this player in the current round
+        // In the submissions table, player_id should reference the playergame.id (not the user.id)
         const {data, error} = await supabase
             .from('submissions')
             .update({
                 photo_uri: photoUri,
             })
-            .eq('game_id', gameID)
+            .eq('round_id', roundData.id)
             .eq('player_id', playerGameId)
 
 

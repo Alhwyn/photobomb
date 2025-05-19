@@ -42,7 +42,7 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
     <FlatList
       data={filteredLobbyData}
       renderItem={renderItem}
-      keyExtractor={(item) => item.player_id}
+      keyExtractor={(item, index) => `player-submission-${index}`}
     />
   );
 };
