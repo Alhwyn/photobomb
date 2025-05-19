@@ -15,7 +15,6 @@ import ImageSubmission from '../../components/GameComponent/ImageSubmission';
 import { getSubmissionData } from '../../service/gameService'
 import { getSupabaseUrl } from '../../service/imageService';
 import Winner from '../../components/GameComponent/Winner';
-
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 
@@ -186,19 +185,23 @@ const Main = () => {
                     .eq('id', Userpayload?.id)
                     .single();
     
-                setGameId(data.playergame[0].game_id);
-
                 if (error) {
-                    console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
+                    console.log('Something went wrong with fetching user data MainGame.jsx', error.message);
+                    return;
                 }
-
+                
+                if (data && data.playergame && data.playergame.length > 0) {
+                    const gameId = data.playergame[0].game_id;
+                    console.log('Setting game ID to:', gameId);
+                    setGameId(gameId);
+                } else {
+                    console.log('No player game data found for this user');
+                }
             }
         } catch(error) {
-            console.log('Somehting went wrong with fetching user data MainGame.jsx', error.message);
+            console.log('Something went wrong with fetching user data MainGame.jsx', error.message);
         }
-    };
-
-    const mainRoundUpdateHandler = async (payload) => {
+    };    const mainRoundUpdateHandler = async (payload) => {
         try {
             console.log("Round update received:", payload);
 
@@ -215,9 +218,34 @@ const Main = () => {
                     return {success: false, message: promptDataError.message};
                 }
 
+                // Get the round data to ensure we have the prompter info
+                const {data: roundData, error: roundError} = await getRoundData(gameID);
+                if (roundError) {
+                    console.error('Error fetching round data:', roundError.message);
+                    return {success: false, message: roundError.message};
+                }
+                
+                
+                // Get prompter info to ensure UI renders correctly for all users
+                const prompterPayload = await viewPlayerGameTable(roundData?.data?.prompter_id);
+                setShowPrompterPayload(prompterPayload);
+                
+                // Check if current user is the prompter
+                const rolePayload = await checkUserRole();
+                setIsPrompter(rolePayload?.data?.is_prompter);
+
+                // Only the prompter should trigger submission creation to avoid duplicates
+                if (rolePayload?.data?.is_prompter) {
+                    // Create submissions for non-prompter players
+                    await createSubmissionsForPlayers();
+                }
+                
+                // Update state for all players (prompter and non-prompters)
                 setSelectedPrompt(promptDataTable);
                 setPromptSubmitted(true);
                 setCurrentStage('ImageGallery');
+                
+                console.log("All players should now be in ImageGallery stage");
             } 
             // Handle new round creation after winner timer completes
             else if (payload?.eventType === 'INSERT') {
@@ -297,7 +325,7 @@ const Main = () => {
                 // First get the current round ID to filter submissions
                 const {data: roundDataArray, error: roundError} = await supabase
                     .from('round')
-                    .select('id')
+                    .select('id, round')
                     .eq('game_id', gameID)
                     .order('round', { ascending: false })
                     .order('created_at', { ascending: false })
@@ -314,6 +342,7 @@ const Main = () => {
                 }
                 
                 const currentRoundId = roundDataArray[0].id;
+                console.log('Current round data in mainPlayerGameUpdateHandler:', roundDataArray[0]);
                 
                 // Get the player's data with submissions filtered by current round
                 const { data: data, error } = await supabase
@@ -393,11 +422,13 @@ const Main = () => {
             // Get the current round data to check if this player is the prompter
             const {data: roundDataArray, error: roundError} = await supabase
                 .from('round')
-                .select('prompter_id')
+                .select('prompter_id, round')
                 .eq('game_id', gameID)
                 .order('round', { ascending: false })
                 .order('created_at', { ascending: false })
                 .limit(1);
+                
+            console.log('Current round data in checkUserRole:', roundDataArray);
                 
             if (roundError) {
                 console.log('Error fetching round data in checkUserRole:', roundError.message);
@@ -457,14 +488,15 @@ const Main = () => {
                 .eq('game_id', gameID)
                 .select();
 
-            if (!PromptSumbitDataError) {
-                // Note: Submissions are now created directly in the handleRoundTable function
-                // when a new round is started, so we don't need to create them here
-                setCurrentStage('ImageGallery');
-            } else {
+            if (PromptSumbitDataError) {
                 console.log('Error in PrompterButtonSubmit: ', PromptSumbitDataError.message);
                 return {success: false, message: PromptSumbitDataError.message};
             }
+            
+            // Note: We no longer need to modify state here since the real-time subscription
+            // will update all clients (including the prompter) when the round update is detected
+            console.log('Prompt submitted successfully. Waiting for real-time update.');
+            
         } catch(error) {
             console.error('Error in PrompterButtonSubmit: ', error.message);
         }
@@ -530,23 +562,15 @@ const Main = () => {
 
       const createSubmissionsForPlayers = async () => {
         try {
-            const {data: players, error: playersError} = await supabase
-                .from('playergame')
-                .select(`*,
-                         users (username, image_url)`)
-                .eq('game_id', gameID);
-
-            if (playersError) {
-                console.error('Error in createSubmissionsForPlayers: ', playersError.message);
-                return {success: false, message: playersError.message};
-            }
+            // First check if submissions already exist for this round
             const {data: roundDataArray, error: roundError} = await supabase
                 .from('round')
-                .select(`*`)
+                .select(`*, 
+                         prompts (id, text)`)
                 .eq('game_id', gameID)
                 .order('round', { ascending: false })
+                .order('created_at', { ascending: false })
                 .limit(1);
-
 
             if (roundError) {  
                 console.log('Error in createSubmissionsForPlayers: ', roundError.message);
@@ -559,6 +583,35 @@ const Main = () => {
             }
             
             const roundData = roundDataArray[0];
+            console.log('Round data in createSubmissionsForPlayers:', roundData);
+
+            // Check if submissions already exist for this round
+            const {data: existingSubmissions, error: submissionsError} = await supabase
+                .from('submissions')
+                .select('player_id')
+                .eq('round_id', roundData.id);
+                
+            if (submissionsError) {
+                console.error('Error checking existing submissions: ', submissionsError.message);
+                return {success: false, message: submissionsError.message};
+            }
+            
+            if (existingSubmissions && existingSubmissions.length > 0) {
+                console.log(`Found ${existingSubmissions.length} existing submissions for this round. Skipping creation.`);
+                return {success: true, message: 'Submissions already exist'};
+            }
+
+            // Get players that need submissions
+            const {data: players, error: playersError} = await supabase
+                .from('playergame')
+                .select(`*,
+                         users (username, image_url)`)
+                .eq('game_id', gameID);
+
+            if (playersError) {
+                console.error('Error in createSubmissionsForPlayers: ', playersError.message);
+                return {success: false, message: playersError.message};
+            }
 
             // Get the current prompter ID to exclude them from submissions
             const prompterId = roundData.prompter_id;
@@ -586,8 +639,6 @@ const Main = () => {
             console.log('Error in createSubmissionsForPlayers: ', error.message);
             return {success: false, message: error.message};
         }
-
-
       };
 
     const cancelImageSelection = () => {
@@ -599,7 +650,7 @@ const Main = () => {
         // First, check if this user is the prompter - prompters should not submit photos
         const {data: roundDataArray, error: roundError} = await supabase
             .from('round')
-            .select(`*`)
+            .select(`id, round, prompter_id`)
             .eq('game_id', gameID)
             .order('round', { ascending: false })
             .order('created_at', { ascending: false })
@@ -616,7 +667,7 @@ const Main = () => {
         }
         
         const roundData = roundDataArray[0];
-        console.log('Current active round data:', roundData);
+        console.log('Current active round data in confirmImageSelection:', roundData);
 
         const { data: playergameData, error: playergameError} = await supabase
             .from('playergame')
@@ -706,48 +757,67 @@ const Main = () => {
     useEffect(() => {
         const initiallizeGameData = async () => {
             try {
-
                 await fetchUserData();
+                
+                // Ensure we have a valid gameID before proceeding with dependent operations
+                if (!gameID) {
+                    console.log('GameID not available yet, waiting...');
+                    return;
+                }
+                
                 const RoundDataPayload = await getRoundData(gameID);
                 const RetreivePrompterPayload = await viewPlayerGameTable(RoundDataPayload?.data?.prompter_id);
 
                 setShowPrompterPayload(RetreivePrompterPayload);
                 const GetRolePlayerBool = await checkUserRole();
                 setIsPrompter(GetRolePlayerBool?.data?.is_prompter); // Use is_prompter instead of is_creator
+                
+                // Only set up subscriptions once we have confirmed gameID is valid
+                // This ensures all devices have proper subscriptions
+                console.log('Setting up Supabase subscriptions for game ID:', gameID);
+                
+                // Listen for both round updates and new round insertions
+                const roundSubscription = supabase
+                    .channel('roundUpdates')
+                    .on('postgres_changes',
+                        { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
+                    .on('postgres_changes',
+                        { event: 'INSERT', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
+                    .subscribe();
 
+                const submissionSubscription = supabase
+                    .channel('submissionsUpdates')
+                    .on('postgres_changes', 
+                        {event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}`}, mainSubmissionUpdateHandler)
+                    .subscribe();
+
+                const playerGameSubscription = supabase
+                    .channel('playerGameUpdates')
+                    .on('postgres_changes',
+                        { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` }, mainPlayerGameUpdateHandler)
+                    .subscribe();
+                
+                // Store the subscription references for cleanup
+                return () => {
+                    console.log('Cleaning up Supabase subscriptions');
+                    supabase.removeChannel(roundSubscription);
+                    supabase.removeChannel(submissionSubscription);
+                    supabase.removeChannel(playerGameSubscription);
+                };
             } catch(error) {
-                console.log('Error in Use Effect: '. error.message);
+                console.log('Error in Use Effect: ' + error.message);
             };
-            
         };
-        initiallizeGameData();
-
-        // Listen for both round updates and new round insertions
-        const roundSubscription = supabase
-            .channel('roundUpdates')
-            .on('postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
-            .on('postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
-            .subscribe();
-
-        const submissionSubscription = supabase
-            .channel('submissionsUpdates')
-            .on('postgres_changes', 
-                {event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}`}, mainSubmissionUpdateHandler)
-            .subscribe();
-
-        const playerGameSubscription = supabase
-        .channel('playerGameUpdates')
-        .on('postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` }, mainPlayerGameUpdateHandler)
-        .subscribe();
-
+        
+        // Start initialization
+        const cleanup = initiallizeGameData();
+        
+        // Return cleanup function if available
         return () => {
-            supabase.removeChannel(roundSubscription);
-            supabase.removeChannel(submissionSubscription);
-            supabase.removeChannel(playerGameSubscription)
-        }
+            if (cleanup && typeof cleanup === 'function') {
+                cleanup();
+            }
+        };
     }, [gameID]);
 
 
