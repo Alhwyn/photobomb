@@ -173,6 +173,34 @@ export const handleRoundTable = async (game_id, prompter_id) => {
         const nextRound = Math.floor(gameData.current_round ? gameData.current_round + 1 : 1);
         let roundPrompterID;
 
+        // Check for and delete any existing rounds with this number
+        const { data: existingRounds, error: existingRoundsError } = await supabase
+            .from("round")
+            .select("id")
+            .eq("game_id", game_id)
+            .eq("round", nextRound);
+
+        if (!existingRoundsError && existingRounds && existingRounds.length > 0) {
+            console.log(`Found ${existingRounds.length} existing entries for round ${nextRound}. Cleaning up...`);
+            
+            // Delete these rounds before creating a new one
+            for (const round of existingRounds) {
+                // First delete any submissions associated with this round
+                await supabase
+                    .from("submissions")
+                    .delete()
+                    .eq("round_id", round.id);
+                
+                // Then delete the round itself
+                await supabase
+                    .from("round")
+                    .delete()
+                    .eq("id", round.id);
+            }
+            
+            console.log(`Cleaned up ${existingRounds.length} existing round entries`);
+        }
+
         // Get all players in this game, ordered by turn_order
         const { data: players, error: playerError } = await supabase
             .from("playergame")
@@ -286,6 +314,29 @@ export const handleRoundTable = async (game_id, prompter_id) => {
             console.log("Warning: No non-prompter players found to create submissions for");
         }
         
+        // First check for and clean up any existing submissions for this round to avoid duplicates
+        const newRoundId = roundData[0].id;
+        const { data: existingSubmissions, error: existingSubmError } = await supabase
+            .from("submissions")
+            .select("id, player_id")
+            .eq("round_id", newRoundId);
+            
+        if (!existingSubmError && existingSubmissions && existingSubmissions.length > 0) {
+            console.log(`Found ${existingSubmissions.length} existing submissions for this round. Cleaning up...`);
+            
+            const { error: deleteSubmError } = await supabase
+                .from("submissions")
+                .delete()
+                .eq("round_id", newRoundId);
+                
+            if (deleteSubmError) {
+                console.log("Warning: Error cleaning up existing submissions:", deleteSubmError.message);
+            } else {
+                console.log(`Cleaned up ${existingSubmissions.length} existing submissions`);
+            }
+        }
+        
+        // Now create fresh submissions for all non-prompter players
         const submissionPromises = nonPrompterPlayers.map(player => {
             console.log(`Creating submission for player ID: ${player.id}, round ID: ${roundData[0].id}`);
             return supabase
@@ -382,9 +433,58 @@ export const startNextRound = async (gameId) => {
             console.log("Error fetching game data:", gameError.message);
             return { success: false, message: gameError.message };
         }
+        
+        // First, check for and clean up any duplicate rounds for the current round
+        const { data: currentRounds, error: currentRoundsError } = await supabase
+            .from("round")
+            .select("id")
+            .eq("game_id", gameId)
+            .eq("round", gameData.current_round);
+            
+        if (currentRoundsError) {
+            console.log("Error checking for duplicate current rounds:", currentRoundsError.message);
+            // Continue anyway, we'll try to handle it below
+        } else if (currentRounds && currentRounds.length > 1) {
+            // Keep only the most recent round entry and delete others
+            console.log(`Found ${currentRounds.length} entries for current round ${gameData.current_round}. Cleaning up...`);
+            
+            // Sort by creation time, most recent first
+            const { data: sortedRounds, error: sortError } = await supabase
+                .from("round")
+                .select("id, created_at")
+                .eq("game_id", gameId)
+                .eq("round", gameData.current_round)
+                .order("created_at", { ascending: false });
+                
+            if (!sortError && sortedRounds && sortedRounds.length > 1) {
+                // Keep the first (most recent) one, delete the rest
+                for (let i = 1; i < sortedRounds.length; i++) {
+                    // First delete any submissions associated with this round
+                    const { error: subDeleteError } = await supabase
+                        .from("submissions")
+                        .delete()
+                        .eq("round_id", sortedRounds[i].id);
+                        
+                    if (subDeleteError) {
+                        console.log(`Warning: Error deleting submissions for round ${sortedRounds[i].id}:`, subDeleteError.message);
+                    }
+                    
+                    // Then delete the round itself
+                    const { error: roundDeleteError } = await supabase
+                        .from("round")
+                        .delete()
+                        .eq("id", sortedRounds[i].id);
+                        
+                    if (roundDeleteError) {
+                        console.log(`Warning: Error deleting duplicate round ${sortedRounds[i].id}:`, roundDeleteError.message);
+                    }
+                }
+                console.log(`Cleaned up ${sortedRounds.length-1} duplicate round entries`);
+            }
+        }
 
         // Get the current round data to find the current prompter
-        // Use limit(1) instead of single() to handle potential duplicate rounds
+        // Now there should be only one record, but use limit(1) just to be safe
         const { data: roundDataArray, error: roundError } = await supabase
             .from("round")
             .select("prompter_id")
@@ -408,8 +508,10 @@ export const startNextRound = async (gameId) => {
         console.log("Current round data:", currentRound);
         console.log("Current prompter ID:", currentRound.prompter_id);
         
-        // Check for and clean up duplicate rounds for the next round number before creating a new one
+        // Thoroughly check for and clean up duplicates or orphaned submissions for the next round
         const nextRoundNumber = gameData.current_round + 1;
+        
+        // 1. First check for and delete any existing next round entries
         const { data: existingNextRounds, error: existingError } = await supabase
             .from("round")
             .select("id")
@@ -443,6 +545,31 @@ export const startNextRound = async (gameId) => {
             }
             
             console.log(`Cleaned up ${existingNextRounds.length} duplicate round entries`);
+        }
+        
+        // 2. Also check for orphaned submissions that might be associated with the game
+        // but have incorrect round data
+        const { data: orphanedSubmissions, error: orphanError } = await supabase
+            .from("submissions")
+            .select("id, round_id")
+            .eq("game_id", gameId)
+            .is("round_id", null);
+            
+        if (!orphanError && orphanedSubmissions && orphanedSubmissions.length > 0) {
+            console.log(`Found ${orphanedSubmissions.length} orphaned submissions. Cleaning up...`);
+            
+            // Delete orphaned submissions
+            const { error: orphanDeleteError } = await supabase
+                .from("submissions")
+                .delete()
+                .eq("game_id", gameId)
+                .is("round_id", null);
+                
+            if (orphanDeleteError) {
+                console.log("Warning: Error deleting orphaned submissions:", orphanDeleteError.message);
+            } else {
+                console.log(`Cleaned up ${orphanedSubmissions.length} orphaned submissions`);
+            }
         }
         
         // Start the next round with the current prompter

@@ -84,7 +84,9 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
         .from("round")
         .select("prompter_id")
         .eq("game_id", gameId)
-        .eq("round", gameData.current_round);
+        .eq("round", gameData.current_round)
+        .order('created_at', { ascending: false })
+        .limit(1);
         
       if (roundError) {
         console.error("Error fetching current round data:", roundError.message);

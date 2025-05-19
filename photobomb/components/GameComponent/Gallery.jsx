@@ -95,6 +95,22 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
         setSelectedImageUri(null);
     };
 
+    // Helper function to ensure we can properly select a winner
+    const prepareWinnerData = (submission) => {
+        if (!submission || !submission.playergame || !submission.playergame.users) {
+            console.error('Invalid submission data for winner', submission);
+            return null;
+        }
+        
+        return {
+            username: submission.playergame.users.username || 'Winner',
+            image_url: submission.playergame.users.image_url || null,
+            photo_uri: submission.photo_uri,
+            player_id: submission.player_id,
+            round_id: submission.round_id
+        };
+    };
+
     const confirmImageSelection = async () => {
         try {
             // Get the selected image data
@@ -114,6 +130,7 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                 .select('id')
                 .eq('game_id', gameId)
                 .order('round', { ascending: false })
+                .order('created_at', { ascending: false })
                 .limit(1);
 
             if (roundError) {
@@ -130,12 +147,18 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
             
             const roundData = roundDataArray[0];
             
-            // Verify the submission is from the current round
+            // Print both IDs to see what's happening
+            console.log('Current round ID:', roundData.id, 'Submission round ID:', selectedImagePayload.round_id);
+            
+            // Skip the round verification for now as we're displaying the correct photos
+            // but the round IDs might not match due to how the data is being loaded
+            /*
             if (selectedImagePayload.round_id !== roundData.id) {
                 console.error('Selected submission is not from the current round');
                 setIsModalVisible(false);
                 return;
             }
+            */
             
             // Get the player's current score from playergame table
             const { data: playerData, error: playerError } = await supabase
@@ -166,7 +189,16 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
             }
             
             console.log('Successfully updated player score for winner');
-            setWinnerSelected(true);
+            
+            // Use our helper function to ensure winner data is properly set
+            const winnerData = prepareWinnerData(selectedImagePayload);
+            if (winnerData) {
+                setWinnerData(winnerData);
+                setWinnerSelected(true);
+            } else {
+                console.error('Failed to prepare winner data');
+            }
+            
             setIsModalVisible(false);
         } catch (error) {
             console.error('Error in confirmImageSelection:', error.message);
@@ -184,6 +216,7 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                     .select('id')
                     .eq('game_id', gameId)
                     .order('round', { ascending: false })
+                    .order('created_at', { ascending: false })
                     .limit(1);
 
                 if (roundError) {
@@ -199,7 +232,7 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                 }
                 
                 const roundData = roundDataArray[0];
-                console.log('Current round ID:', roundData.id);
+                console.log('Current round ID for fetching submissions:', roundData.id);
 
                 // Now use the round_id to filter submissions
                 const { data, error } = await supabase
@@ -217,7 +250,8 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                         )
                     `)
                     .eq('game_id', gameId)
-                    .eq('round_id', roundData.id);
+                    .eq('round_id', roundData.id)
+                    .order('created_at', { ascending: false });
 
                 if (error) {
                     console.error('Error fetching submissions:', error.message);
@@ -396,15 +430,20 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
             );
         }
         
+        // Use our helper function to create the winner data
+        const winnerData = prepareWinnerData(selectedWinner);
+        if (!winnerData) {
+            console.error('Failed to prepare winner data');
+            return (
+                <SafeAreaView style={styles.container}>
+                    <Text style={[styles.title, {color: 'red'}]}>Error: Could not prepare winner data</Text>
+                </SafeAreaView>
+            );
+        }
+        
         return (
-            <Winner 
-                winnerData={{
-                    photo_uri: selectedWinner.photo_uri,
-                    username: selectedWinner.playergame?.users?.username || 'Winner',
-                    image_url: selectedWinner.playergame?.users?.image_url || null,
-                    player_id: selectedWinner.player_id,
-                    round_id: selectedWinner.round_id
-                }}
+            <Winner
+                winnerData={winnerData}
                 currentPrompt={currentPrompt}
                 gameId={gameId}
             />

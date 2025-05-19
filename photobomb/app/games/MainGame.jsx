@@ -294,20 +294,51 @@ const Main = () => {
             console.log('Submission update received:', payload);
             if (payload?.eventType === 'UPDATE') {
                 
+                // First get the current round ID to filter submissions
+                const {data: roundDataArray, error: roundError} = await supabase
+                    .from('round')
+                    .select('id')
+                    .eq('game_id', gameID)
+                    .order('round', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (roundError) {
+                    console.error('Error fetching current round:', roundError.message);
+                    return {success: false, message: roundError.message};
+                }
+                
+                if (!roundDataArray || roundDataArray.length === 0) {
+                    console.error('No round data found for this game');
+                    return {success: false, message: 'No round data found'};
+                }
+                
+                const currentRoundId = roundDataArray[0].id;
+                
+                // Get the player's data with submissions filtered by current round
                 const { data: data, error } = await supabase
                     .from('playergame')
                     .select(`*,
-                             submissions (photo_uri),
+                             submissions!inner(id, photo_uri, round_id),
                              users (username, image_url)`)
                     .eq('id', payload?.new?.id)
+                    .filter('submissions.round_id', 'eq', currentRoundId)
+                    .filter('submissions.photo_uri', 'not.is', null)
                     .single();
 
                 if (error) {
                     console.log('Error checking submissions:', error.message);
-                    return {success: false, message: error.message};;
+                    return {success: false, message: error.message};
                 }
 
                 console.log('Submission data this is the winner data:', data);
+                
+                // Make sure we have valid submission data
+                if (!data.submissions || data.submissions.length === 0) {
+                    console.error('No valid submission found for the winner');
+                    return {success: false, message: 'No valid submission found'};
+                }
+                
                 setWinnerData({
                     username: data.users.username,
                     image_url: data.users.image_url,
@@ -365,6 +396,7 @@ const Main = () => {
                 .select('prompter_id')
                 .eq('game_id', gameID)
                 .order('round', { ascending: false })
+                .order('created_at', { ascending: false })
                 .limit(1);
                 
             if (roundError) {
@@ -570,6 +602,7 @@ const Main = () => {
             .select(`*`)
             .eq('game_id', gameID)
             .order('round', { ascending: false })
+            .order('created_at', { ascending: false })
             .limit(1);
 
         if (roundError) {
@@ -583,6 +616,7 @@ const Main = () => {
         }
         
         const roundData = roundDataArray[0];
+        console.log('Current active round data:', roundData);
 
         const { data: playergameData, error: playergameError} = await supabase
             .from('playergame')
@@ -615,9 +649,11 @@ const Main = () => {
         // The player_id in submissions actually stores the playergame.id
         console.log('Looking for submission with round_id:', roundData.id, 'and player_id:', playerGameId);
         
+        // Improved query to find submission for the current round
         const { data: submissionData, error: submissionError } = await supabase
             .from('submissions')
             .select('*')
+            .eq('game_id', gameID)
             .eq('round_id', roundData.id)
             .eq('player_id', playerGameId);
         

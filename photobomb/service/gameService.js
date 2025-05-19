@@ -319,9 +319,10 @@ export const getSubmissionData = async (game_id) => {
         // First get the current round for this game
         const { data: roundDataArray, error: roundError } = await supabase
             .from('round')
-            .select('id')
+            .select('id, round')
             .eq('game_id', game_id)
             .order('round', { ascending: false })
+            .order('created_at', { ascending: false })
             .limit(1);
 
         if (roundError) {
@@ -335,21 +336,77 @@ export const getSubmissionData = async (game_id) => {
         }
         
         const roundData = roundDataArray[0];
+        console.log(`Getting submissions for game ${game_id}, round ${roundData.round}, round ID: ${roundData.id}`);
+
+        // First check if there are duplicate submissions for the same player in this round
+        const { data: allSubmissions, error: checkError } = await supabase
+          .from('submissions')
+          .select(`id, player_id, photo_uri, created_at`)
+          .eq('round_id', roundData.id)
+          .order('created_at', { ascending: false });
+          
+        if (checkError) {
+            console.error('Error checking submissions:', checkError.message);
+        } else if (allSubmissions && allSubmissions.length > 0) {
+            // Group submissions by player_id to find duplicates
+            const submissionsByPlayer = {};
+            allSubmissions.forEach(sub => {
+                if (!submissionsByPlayer[sub.player_id]) {
+                    submissionsByPlayer[sub.player_id] = [];
+                }
+                submissionsByPlayer[sub.player_id].push(sub);
+            });
+            
+            // Check for players with multiple submissions
+            const playersWithDuplicates = Object.keys(submissionsByPlayer).filter(
+                playerId => submissionsByPlayer[playerId].length > 1
+            );
+            
+            if (playersWithDuplicates.length > 0) {
+                console.log(`Found ${playersWithDuplicates.length} players with duplicate submissions. Cleaning up...`);
+                
+                // For each player with duplicates, keep only the most recent submission
+                for (const playerId of playersWithDuplicates) {
+                    const playerSubs = submissionsByPlayer[playerId];
+                    console.log(`Player ${playerId} has ${playerSubs.length} submissions`);
+                    
+                    // Sort by created_at, most recent first
+                    playerSubs.sort((a, b) => 
+                        new Date(b.created_at) - new Date(a.created_at)
+                    );
+                    
+                    // Keep the first (most recent), delete the rest
+                    for (let i = 1; i < playerSubs.length; i++) {
+                        console.log(`Deleting duplicate submission id: ${playerSubs[i].id}`);
+                        const { error: deleteError } = await supabase
+                            .from('submissions')
+                            .delete()
+                            .eq('id', playerSubs[i].id);
+                            
+                        if (deleteError) {
+                            console.log(`Warning: Error deleting duplicate submission ${playerSubs[i].id}:`, deleteError.message);
+                        }
+                    }
+                }
+            }
+        }
 
         // Now get submissions for the current round with detailed information
-        const {data, error } = await supabase
+        // After cleaning up duplicates
+        const { data, error } = await supabase
           .from('submissions')
           .select(`*,
                    playergame (id, score, player_id, is_creator, users(username, image_url))
                 `)
           .eq('round_id', roundData.id)
+          .order('created_at', { ascending: false });
 
         if (error) {
             console.error('Error on fetching the data on the submission table gameService.js', error.message);
             return {success: false, message: error.message};
         }
 
-        console.log('successfully fetch the data fron the submission table');
+        console.log(`Successfully fetched ${data ? data.length : 0} submissions for round ID: ${roundData.id}`);
 
         return {success: true, data: data};
 
