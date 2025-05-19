@@ -1,9 +1,14 @@
-import { AppState } from 'react-native'
+import { AppState, Platform } from 'react-native'
 import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
 import { supabaseKey, supabaseUrl } from '../constants'
 
+// --- PATCH: Use custom WebSocket for React Native ---
+// This allows Supabase Realtime to work in React Native/Expo
+if (typeof global !== 'undefined' && typeof global.WebSocket === 'undefined') {
+  global.WebSocket = require('isomorphic-ws');
+}
 
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
