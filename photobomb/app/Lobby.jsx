@@ -181,7 +181,7 @@ const Lobby = () => {
                     const users = Object.values(state).flat();
                     // Map to objects with username, image_url, and is_creator
                     const onlineUserObjects = users.map(u => ({
-                        player_id: u.user_id?.toString() ?? u.username, // fallback to username if no id
+                        player_id: u.user_id, // Using user_id directly as this corresponds to player_id in the DB
                         users: {
                             username: u.username || '',
                             image_url: u.image_url || '',
@@ -294,8 +294,25 @@ const Lobby = () => {
          * this function handles the the game creator created the function
          * 
          */
-        // Use onlineUsers from Presence for the most up-to-date list of active players
-        const result = await startGame(gameId, onlineUsers);
+        try {
+            if (onlineUsers.length < 2) {
+                alert('You need at least 2 players to start the game');
+                return;
+            }
+            
+            console.log('Starting game with players:', onlineUsers);
+            
+            // Use onlineUsers from Presence for the most up-to-date list of active players
+            const result = await startGame(gameId, onlineUsers);
+            
+            if (!result.success) {
+                console.error('Error starting game:', result.message);
+                alert('Failed to start the game. Please try again.');
+            }
+        } catch (error) {
+            console.error('Unexpected error starting game:', error.message);
+            alert('An error occurred while starting the game.');
+        }
     };
   return (
     <SafeAreaView style={styles.container}>

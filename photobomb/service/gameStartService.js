@@ -36,16 +36,44 @@ export const startGame = async (gameId, players) => {
 
         console.log("Game status updated to 'in_progress'")
 
+        // Get the actual database record IDs for each player
+        // We need to fetch the actual playergame record IDs since presence data doesn't have them
+        const { data: playerGameRecords, error: recordError } = await supabase
+            .from('playergame')
+            .select('id, player_id, turn_order')
+            .eq('game_id', gameId);
+            
+        if (recordError) {
+            console.error('Error fetching playergame records:', recordError.message);
+            return { success: false, message: recordError.message };
+        }
+        
+        // Create a map of player_id to actual database record id
+        const playerIdToRecordMap = {};
+        playerGameRecords.forEach(record => {
+            playerIdToRecordMap[record.player_id] = record.id;
+        });
+        
+        console.log("Player ID to Record Map:", playerIdToRecordMap);
+        
+        // Now map presence data to actual database records with proper IDs
         const shuffledPlayers = players
             .map((player) => ({...player, sortKey: Math.random() }))
-            .sort((a, b) =>  a.sortKey - b.sortKey)
-            .map((player, index) => ({
-                id: player.id, 
-                turn_order: index + 1, // Assign new turn order
-            }));
+            .sort((a, b) => a.sortKey - b.sortKey)
+            .map((player, index) => {
+                const recordId = playerIdToRecordMap[player.player_id];
+                if (!recordId) {
+                    console.warn(`No database record found for player_id: ${player.player_id}`);
+                }
+                return {
+                    id: recordId, // Use the actual record ID from the database
+                    game_id: gameId,
+                    turn_order: index + 1, // Assign new turn order
+                };
+            })
+            .filter(player => player.id); // Filter out any records without valid IDs
 
-
-        console.log("SHuffeld Players: ", shuffledPlayers);
+        console.log("Shuffled Players:", shuffledPlayers);
 
         // Update only the turn_order in the playergame table
         const { error: turnOrderError } = await supabase
@@ -59,15 +87,27 @@ export const startGame = async (gameId, players) => {
 
         console.log('Random turn order successfully assigned.');
 
-
-
-        const firstPropmpter = shuffledPlayers?.[0]?.id;
-        if (!firstPropmpter) {
+        // Get the first prompter based on the turn order we just assigned
+        const { data: orderedPlayers, error: fetchOrderError } = await supabase
+            .from('playergame')
+            .select('id, player_id')
+            .eq('game_id', gameId)
+            .order('turn_order', { ascending: true })
+            .limit(1);
+            
+        if (fetchOrderError) {
+            console.error('Error fetching first prompter:', fetchOrderError.message);
+            return { success: false, message: fetchOrderError.message };
+        }
+        
+        const firstPrompterId = orderedPlayers?.[0]?.id;
+        
+        if (!firstPrompterId) {
             console.error("Error determining the first prompter.");
             return {success: false, message: "No players available to start the game."};
         }
 
-        const roundTableResult = await handleRoundTable(gameId, firstPropmpter);
+        const roundTableResult = await handleRoundTable(gameId, firstPrompterId);
         if (!roundTableResult.success) {
             console.log("Error creating the round table: ", roundTableResult.message);
             return { success: false, message: roundTableResult};
@@ -91,7 +131,7 @@ export const startGame = async (gameId, players) => {
         return {success: true};
     } catch(error) {
         console.log('Error on Starting Game: ', error.message);
-        return {success: false, message: turnOrderError.message};
+        return {success: false, message: error.message};
     }
 };
 
@@ -112,7 +152,8 @@ const handleRoundTable = async (game_id, prompter_id) => {
 
     if (!game_id || !prompter_id) {
         console.log("Invalid input: game_id and prompter_id are required.");
-        return { success: false, message: "Invalid input." };
+        console.log("Received game_id:", game_id, "prompter_id:", prompter_id);
+        return { success: false, message: "Invalid input for round table creation." };
     }
 
     try {

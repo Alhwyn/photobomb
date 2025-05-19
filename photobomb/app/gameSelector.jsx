@@ -5,7 +5,7 @@ import { theme } from '../constants/theme';
 import BackButton from '../components/BackButton';
 import { useRouter } from 'expo-router';
 import { getUserPayloadFromStorage } from '../service/userService';
-import { checkGamePin, CreateGameID, addUserToLobby, getGameId } from '../service/gameService';
+import { checkGamePin, CreateGameID, addUserToLobby, getGameId, checkAndDeleteExistingGames } from '../service/gameService';
 
 
 
@@ -30,28 +30,51 @@ const GameSelector = () => {
     console.log("Running createGame function...");
     try {
       const data = await getUserPayloadFromStorage();
-
       
       if (!data) throw new Error('User ID not found in AsyncStorage.');
 
+      // Generate a unique game PIN
       const pin = await generateUniquePin();
-
+      
+      // Create a new game (this will also clean up any existing games by this user)
       const result = await CreateGameID(pin, data);
-      const getGamePayload = await getGameId(data?.id)
+      
+      if (!result || !result.success) {
+        console.error('Failed to create game:', result?.msg || 'Unknown error');
+        alert('Failed to create game. Please try again.');
+        return;
+      }
+      
+      // Get the newly created game data
+      const getGamePayload = await getGameId(data?.id);
+      
+      if (!getGamePayload || !getGamePayload.success) {
+        console.error('Failed to retrieve game data:', getGamePayload?.msg || 'Unknown error');
+        alert('Game was created but failed to load. Please try again.');
+        return;
+      }
 
-      console.log('result in gameselector: ', result);
-      console.log('result in getGamePayload', getGamePayload);
-
+      console.log('Game created with ID:', getGamePayload?.data?.id);
+      
+      // Add the user to the lobby as the creator
       const createPlayerGame = await addUserToLobby(data?.id, getGamePayload?.data?.id, true);
+      
+      if (!createPlayerGame || !createPlayerGame.success) {
+        console.error('Failed to add user to lobby:', createPlayerGame?.msg || 'Unknown error');
+        alert('Failed to join your own game. Please try again.');
+        return;
+      }
 
-      console.log("Game created:", result);
-
+      console.log("Game created and joined successfully");
+      
+      // Navigate to the lobby
       router.push({
         pathname: 'Lobby'
-    });
+      });
 
     } catch(error) {
       console.error('Game Creation has Failed', error.message);
+      alert('An error occurred while creating the game. Please try again.');
     }
 }
 

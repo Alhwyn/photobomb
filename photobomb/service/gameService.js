@@ -68,8 +68,18 @@ export const CreateGameID = async (pin, payload) => {
 
     try {
         console.log('Game PIN: ', pin);
-        console.log(' the data user: ', payload);
+        console.log('User data: ', payload);
 
+        if (!payload?.id) {
+            console.error('CreateGameID: No valid user ID in payload');
+            return { success: false, msg: 'Invalid user data' };
+        }
+
+        // Check and delete any existing games created by this user
+        const cleanupResult = await checkAndDeleteExistingGames(payload.id);
+        console.log('Cleanup result:', cleanupResult);
+
+        // Proceed with creating the new game
         const { error } = await supabase
         .from('games')
         .insert([
@@ -350,6 +360,81 @@ export const updateUserScore = async (player_id, game_id, current_score) => {
     } catch (error) {
         console.log('Error incrementing user score: ', error.message);
         return { success: false, msg: error.message };
+    }
+};
+
+export const checkAndDeleteExistingGames = async (userId) => {
+    /**
+     * Checks if a user has any existing games as a creator and deletes them
+     * @param {string} userId - The ID of the user to check for existing games
+     * @returns {Promise<Object>} - An object indicating the success of the operation or an error message
+     */
+    try {
+        if (!userId) {
+            console.error('gameService.js: No user ID provided to checkAndDeleteExistingGames');
+            return {success: false, message: 'No user ID provided'};
+        }
+
+        console.log('Checking for existing games created by user:', userId);
+        
+        // First, query for existing games created by this user
+        const { data, error } = await supabase
+            .from('games')
+            .select('id, status, game_pin')
+            .eq('game_creator', userId);
+
+        if (error) {
+            console.error('Error checking for existing games:', error.message);
+            return {success: false, message: error.message};
+        }
+        
+        if (!data || data.length === 0) {
+            console.log('No existing games found for user:', userId);
+            return {success: true, message: 'No existing games found'};
+        }
+        
+        console.log(`Found ${data.length} existing games for user:`, data);
+        
+        // Delete each game found
+        let deletedGames = 0;
+        for (const game of data) {
+            console.log(`Deleting existing game with ID: ${game.id}, PIN: ${game.pin}, Status: ${game.status}`);
+            
+            // First update status to terminated to notify any connected players
+            const { error: updateError } = await supabase
+                .from('games')
+                .update({ status: 'terminated' })
+                .eq('id', game.id);
+                
+            if (updateError) {
+                console.error(`Error setting game ${game.id} status to terminated:`, updateError.message);
+            }
+            
+            // Small delay to ensure status update is processed by any listeners
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Delete the game
+            const { error: deleteError } = await supabase
+                .from('games')
+                .delete()
+                .eq('id', game.id);
+                
+            if (deleteError) {
+                console.error(`Error deleting game ${game.id}:`, deleteError.message);
+            } else {
+                deletedGames++;
+            }
+        }
+        
+        return {
+            success: true, 
+            message: `Successfully deleted ${deletedGames} of ${data.length} existing games`,
+            deletedCount: deletedGames,
+            totalFound: data.length
+        };
+    } catch (error) {
+        console.error('Unexpected error in checkAndDeleteExistingGames:', error.message);
+        return {success: false, message: error.message};
     }
 };
 
