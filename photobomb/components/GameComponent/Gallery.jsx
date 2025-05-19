@@ -6,6 +6,8 @@ import Button from '../Button';
 import { LinearGradient } from 'expo-linear-gradient'
 import { getSubmissionData, getPlayerGame, updateUserScore } from '../../service/gameService';
 import * as FileSystem from 'expo-file-system';
+import { supabase } from '../../lib/supabase';
+import Winner from './Winner';
 
 
 const imageCache = {};
@@ -40,6 +42,7 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
+    const [winnerSelected, setWinnerSelected] = useState(false);
     
     const preloadImages = async (images) => {
       if (!images) return;
@@ -93,28 +96,94 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
     };
 
     const confirmImageSelection = async () => {
-        const selectedImagePayload = imageUrlList[currentImageIndex];
-        //const currentPlayerSore = await getPlayerGame(selectedImagePayload.player_id);
-        //const checkScoreUpdate = await updateUserScore(selectedImagePayload.player_id, selectedImagePayload.game_id, currentPlayerSore.data.score);
-        setIsModalVisible(false);
-        setImagesSelected(true);
+        try {
+            // Get the selected image data
+            const selectedImagePayload = imageUrlList[currentImageIndex];
+            
+            if (!selectedImagePayload) {
+                console.error('No image selected or index is invalid');
+                setIsModalVisible(false);
+                return;
+            }
+            
+            console.log('Selected image payload:', selectedImagePayload);
+            
+            // Get the player's current score from playergame table
+            const { data: playerData, error: playerError } = await supabase
+                .from('playergame')
+                .select('*')
+                .eq('id', selectedImagePayload.player_id)
+                .single();
+                
+            if (playerError) {
+                console.error('Error fetching player data:', playerError.message);
+                setIsModalVisible(false);
+                return;
+            }
+            
+            console.log('Player data for winner:', playerData);
+            
+            // Increment the player's score
+            const currentScore = playerData.score || 0;
+            const { error: updateError } = await supabase
+                .from('playergame')
+                .update({ score: currentScore + 1 })
+                .eq('id', selectedImagePayload.player_id);
+                
+            if (updateError) {
+                console.error('Error updating player score:', updateError.message);
+                setIsModalVisible(false);
+                return;
+            }
+            
+            console.log('Successfully updated player score for winner');
+            setWinnerSelected(true);
+            setIsModalVisible(false);
+        } catch (error) {
+            console.error('Error in confirmImageSelection:', error.message);
+            setIsModalVisible(false);
+        }
     };
 
     useEffect(() => {
         const fetchImageList = async () => {
             setLoading(true);  
-            const getImageListPayload = await getSubmissionData(gameId);
-            
-            if (!getImageListPayload.success) {
-                console.log('Error fetching image list');
+            try {
+                // Use supabase query directly to get more detailed data
+                const { data, error } = await supabase
+                    .from('submissions')
+                    .select(`
+                        *,
+                        playergame (
+                            id,
+                            player_id,
+                            score,
+                            users (
+                                username,
+                                image_url
+                            )
+                        )
+                    `)
+                    .eq('game_id', gameId);
+
+                if (error) {
+                    console.error('Error fetching submissions:', error.message);
+                    setLoading(false);
+                    return;
+                }
+
+                console.log('Fetched submissions with user data:', data);
+                
+                // Filter out submissions without photos
+                const validSubmissions = data.filter(submission => submission.photo_uri);
+                
+                setImageUrlList(validSubmissions);
+                await preloadImages(validSubmissions);
                 setLoading(false);
-                return;
+            } catch (error) {
+                console.error('Error in fetchImageList:', error.message);
+                setLoading(false);
             }
-            
-            setImageUrlList(getImageListPayload.data);
-            
-            await preloadImages(getImageListPayload.data);
-            setLoading(false); 
         };
     
         fetchImageList();
@@ -145,6 +214,11 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
     }, [imageUrlList, showAllImages]);
 
     const getIMageUrlFromIndex = (index) => {
+        if (!imageUrlList || !imageUrlList[index]) {
+            console.error('Invalid image index or no images available');
+            return;
+        }
+        setCurrentImageIndex(index);  // Set the current index for use in confirmImageSelection
         const currentImagePayload = imageUrlList[index];
         setSelectedImageUri(getSupabaseUrl(currentImagePayload.photo_uri));
         setIsModalVisible(true);
@@ -194,8 +268,13 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
 
     // Render grid of images with loading indicators
     const renderGridImage = (image, index) => {
+        if (!image || !image.photo_uri) {
+            return null;
+        }
+        
         const imageUri = getSupabaseUrl(image.photo_uri);
         const isLoading = loadingStates[imageUri];
+        const playerName = image.playergame?.users?.username || 'Player';
         
         return (
             <TouchableOpacity
@@ -222,7 +301,7 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                         onLoad={() => handleImageLoaded(imageUri)}
                     />
                 </View>
-                <Text style={styles.description}>{image.description}</Text>
+                <Text style={styles.description}>{image.description || `Photo by ${playerName}`}</Text>
             </TouchableOpacity>
         );
     };
@@ -232,6 +311,21 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
             <SafeAreaView style={styles.container}>
                 <Loading />
             </SafeAreaView>
+        );
+    }
+
+    if (winnerSelected) {
+        // Display winner component with the selected winner
+        const selectedWinner = imageUrlList[currentImageIndex];
+        return (
+            <Winner 
+                winnerData={{
+                    photo_uri: selectedWinner.photo_uri,
+                    username: selectedWinner.playergame?.users?.username || 'Winner',
+                    image_url: selectedWinner.playergame?.users?.image_url || null
+                }}
+                currentPrompt={currentPrompt}
+            />
         );
     }
 
