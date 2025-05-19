@@ -56,7 +56,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
     
     const roundData = roundDataArray[0];
     
-    const prompterId = roundData.prompter_id;
+    const prompterId = roundData?.prompter_id;
     console.log('Current round prompter ID:', prompterId);
     
     const {data: gamesPayload, error: gamesPayloadError} = await supabase
@@ -92,7 +92,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
     })));
 
     // Only include players who are not the prompter
-    const filteredPlayers = gamesPayload.filter(player => player.id !== prompterId);
+    const filteredPlayers = gamesPayload.filter(player => prompterId && player.id !== prompterId);
     
     setPlayersubmissionsList(submissionsPayload.data);
     setPlayerGamesList(filteredPlayers);

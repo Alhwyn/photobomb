@@ -54,7 +54,7 @@ const Main = () => {
                 return <GameLoading />;
             }
         } else if (currentStage === 'ImageGallery') {
-            return <ImageSubmission currentPrompt={selectedPrompt?.text} gameId={gameID}/>;
+            return <ImageSubmission currentPrompt={selectedPrompt.text} gameId={gameID}/>;
         } else if (currentStage === 'GalleryTime') {
             return <Gallery gameId={gameID} currentPrompt={selectedPrompt?.text} prompter={isPrompter}/>;
         } else if (currentStage === 'Winner') {
@@ -182,7 +182,7 @@ const Main = () => {
                                 games (game_pin, id, game_creator),
                                 playergame (is_creator, player_id, game_id)
                     `)
-                    .eq('id', Userpayload?.id)
+                    .eq('id', Userpayload.id)
                     .single();
     
                 if (error) {
@@ -227,8 +227,14 @@ const Main = () => {
                 
                 
                 // Get prompter info to ensure UI renders correctly for all users
-                const prompterPayload = await viewPlayerGameTable(roundData?.data?.prompter_id);
-                setShowPrompterPayload(prompterPayload);
+                if (roundData?.data?.prompter_id) {
+                    const prompterPayload = await viewPlayerGameTable(roundData.data.prompter_id);
+                    setShowPrompterPayload(prompterPayload);
+                } else {
+                    console.log('No valid prompter_id found in round data');
+                    // Set a default empty payload to avoid UI errors
+                    setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
+                }
                 
                 // Check if current user is the prompter
                 const rolePayload = await checkUserRole();
@@ -265,8 +271,14 @@ const Main = () => {
                 setWinnerData(null);
                 
                 // Get new prompter info
-                const retrievePrompterPayload = await viewPlayerGameTable(roundData?.data?.prompter_id);
-                setShowPrompterPayload(retrievePrompterPayload);
+                if (roundData?.data?.prompter_id) {
+                    const retrievePrompterPayload = await viewPlayerGameTable(roundData.data.prompter_id);
+                    setShowPrompterPayload(retrievePrompterPayload);
+                } else {
+                    console.log('No valid prompter_id found in new round data');
+                    // Set a default empty payload to avoid UI errors
+                    setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
+                }
                 
                 // Check if the current user is the new prompter
                 const getRolePlayerBool = await checkUserRole();
@@ -350,7 +362,7 @@ const Main = () => {
                     .select(`*,
                              submissions!inner(id, photo_uri, round_id),
                              users (username, image_url)`)
-                    .eq('id', payload?.new?.id)
+                    .eq('id', payload.new.id)
                     .filter('submissions.round_id', 'eq', currentRoundId)
                     .filter('submissions.photo_uri', 'not.is', null)
                     .single();
@@ -392,7 +404,7 @@ const Main = () => {
             // Make sure we have both the user ID and game ID before proceeding
             if (!userPayload?.id || !gameID) {
                 console.log('Missing required data for checkUserRole. UserID:', userPayload?.id, 'GameID:', gameID);
-                return {success: false, message: "Missing user ID or game ID"};
+                return {success: false, message: "Missing user ID or game ID", data: { is_prompter: false }};
             }
 
             console.log('Checking role for user ID:', userPayload.id, 'in game ID:', gameID);
@@ -407,12 +419,12 @@ const Main = () => {
 
             if (playerGameError) {
                 console.log('Error in the checkUserRole:', playerGameError.message);
-                return {success: false, message: playerGameError.message};
+                return {success: false, message: playerGameError.message, data: { is_prompter: false }};
             }
             
             if (!playerGameData || playerGameData.length === 0) {
                 console.log('No player game entry found for this user in this game');
-                return {success: false, message: "Player not found in this game"};
+                return {success: false, message: "Player not found in this game", data: { is_prompter: false }};
             }
             
             // Take the first record (there should only be one per player per game)
@@ -432,12 +444,12 @@ const Main = () => {
                 
             if (roundError) {
                 console.log('Error fetching round data in checkUserRole:', roundError.message);
-                return {success: false, message: roundError.message};
+                return {success: false, message: roundError.message, data: { is_prompter: false }};
             }
             
             if (!roundDataArray || roundDataArray.length === 0) {
                 console.log('No round data found for this game');
-                return {success: false, message: 'No round data found'};
+                return {success: false, message: 'No round data found', data: { is_prompter: false }};
             }
             
             const roundData = roundDataArray[0];
@@ -450,12 +462,18 @@ const Main = () => {
 
         } catch(error) {
             console.log('Error in the checkUserRole:', error.message);
-            return {success: false, message: error.message};
+            return {success: false, message: error.message, data: { is_prompter: false }};
         }
     }
 
     const viewPlayerGameTable = async (playerGameId) => {
         try {
+            // Check if playerGameId is undefined or null
+            if (!playerGameId || playerGameId === "undefined") {
+                console.log('Error on View PlayerGameTable: playerGameId is undefined or null');
+                return {success: false, message: 'invalid input syntax for type uuid: undefined', data: { users: {}, score: 0 }};
+            }
+            
             const { data: dataPlayerGame, error: errorPLayerGame} = await supabase
                 .from('playergame')
                 .select(`*,
@@ -465,13 +483,13 @@ const Main = () => {
 
             if (errorPLayerGame) {
                 console.log('Error on View PlayerGameTable: ', errorPLayerGame.message);
-                return {success: false, message: errorPLayerGame.message};
+                return {success: false, message: errorPLayerGame.message, data: { users: {}, score: 0 }};
             }
 
             return {success: true, data: dataPlayerGame};
         } catch(error) {
             console.log('Error on View PlayerGameTable: ', error.message);
-            return {success: false, message: error.message};
+            return {success: false, message: error.message, data: { users: {}, score: 0 }};
         }
     };
 
@@ -766,9 +784,15 @@ const Main = () => {
                 }
                 
                 const RoundDataPayload = await getRoundData(gameID);
-                const RetreivePrompterPayload = await viewPlayerGameTable(RoundDataPayload?.data?.prompter_id);
-
-                setShowPrompterPayload(RetreivePrompterPayload);
+                // Only continue if we successfully retrieved round data
+                if (RoundDataPayload?.success && RoundDataPayload?.data?.prompter_id) {
+                    const RetreivePrompterPayload = await viewPlayerGameTable(RoundDataPayload.data.prompter_id);
+                    setShowPrompterPayload(RetreivePrompterPayload);
+                } else {
+                    console.log('Unable to retrieve valid round data or prompter_id is missing');
+                    // Set a default empty payload to avoid UI errors
+                    setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
+                }
                 const GetRolePlayerBool = await checkUserRole();
                 setIsPrompter(GetRolePlayerBool?.data?.is_prompter); // Use is_prompter instead of is_creator
                 
@@ -835,7 +859,7 @@ const Main = () => {
         <View style={styles.touchContainer}>
             <View style={styles.scoreContainer}>
                 <Text style={styles.score}>Score: </Text>
-                <Text style={styles.score}>{showPrompterPayload?.data?.score}</Text>
+                <Text style={styles.score}>{showPrompterPayload?.data?.score || 0}</Text>
             </View>
             {
                 renderButtons()

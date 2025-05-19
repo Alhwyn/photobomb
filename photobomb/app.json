@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "photobomb",
+    "name": "Photobomb",
     "slug": "photobomb",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "photobomb.online",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
