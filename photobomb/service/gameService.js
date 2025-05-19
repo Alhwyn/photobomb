@@ -101,23 +101,25 @@ export const deleteGame = async (gameId) => {
     try {
         if (!gameId) {
             console.log('gameService.jsx: No game available to delete');
-            return {success: true, message: 'gameService.jsx: No game available to delete'};
+            return {success: false, message: 'gameService.jsx: No game available to delete'};
         }
 
-        console.log('deleting the game id this is the id: ', gameId);
-        const { error } = await supabase
+        console.log('Deleting game with ID:', gameId);
+        const { data, error } = await supabase
         .from('games')
         .delete()
         .eq('id', gameId);
 
         if (error) {
-            console.log('Error deleting game: ', error.message);
-            return {success: true, message: 'Succesfully deleted the game from the game tables'};
-            
+            console.error('Error deleting game:', error.message);
+            return {success: false, message: error.message};
         }
-        return {success: true, message: 'Succesfully deleted the game from the game tables'};
+        
+        console.log('Game successfully deleted');
+        return {success: true, message: 'Successfully deleted the game from the database'};
     } catch(error) {
-        console.log('gameService.js unexpected error while deteting the game: ', error.message);
+        console.error('gameService.js unexpected error while deleting the game:', error.message);
+        return {success: false, message: error.message};
     }
 }
 
@@ -237,25 +239,28 @@ export const deletePlayerGame = async (playerId, gameId) => {
      * @returns {Promise<Object>} - An object indicating the success of the operationor an error message
      */
     try {
-
-        console.log('playergame deleting here is the player_id: ', playerId);
-        console.log('playergame deleting here is the user_id: ', gameId);
-        const {data, error} = await supabase
-        .from('playergame')
-        .delete()
-        .eq('player_id', playerId)
-        .eq('game_id', gameId)
-
-
-        if (error) {
-            console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
-            return {success: false, msg: error.message}
+        if (!playerId || !gameId) {
+            console.error('Missing required parameters: playerId or gameId');
+            return { success: false, message: 'Missing required parameters' };
         }
 
-        return {success: true, message: 'Succesfully deleted the game from the playerGames tables'};
-    } catch(error) {
-        console.log('gameService.jsx Error on deleting player from PlayerGame: ', error.message);
-        return {success: false, msg: error.message}
+        console.log('Removing player from game - Player ID:', playerId, 'Game ID:', gameId);
+        const { data, error } = await supabase
+            .from('playergame')
+            .delete()
+            .eq('player_id', playerId)
+            .eq('game_id', gameId);
+
+        if (error) {
+            console.error('Error removing player from game:', error.message);
+            return { success: false, message: error.message };
+        }
+
+        console.log('Player successfully removed from game');
+        return { success: true, message: 'Successfully removed player from game' };
+    } catch (error) {
+        console.error('Unexpected error removing player from game:', error.message);
+        return { success: false, message: error.message };
     }
 };
 

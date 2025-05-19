@@ -65,51 +65,28 @@ const Lobby = () => {
         }
     }
 
-    const handleRemoveUser = async (payload) => {
-        /*
-         * Handles the removal of the user from the lobyy and updates the user list of the lobby
-         * when a user leaves in the supabase tables
-         * 
-         */
-        console.log('Remove user received:', payload);
-
-        try {
-            // fetch the latest list of players in the current game
-            const { data: updatedPlayers, error } = await supabase
-                .from('playergame')
-                .select(`
-                    *,
-                    users (username, image_url)
-                `)
-                .eq('game_id', gameId);
-    
-            if (error) {
-                console.error('Error fetching updated players:', error.message);
-                return;
-            }
-    
-            console.log('Updated players list from server:', updatedPlayers);
-
-            setPlayers(updatedPlayers);
-        } catch (error) {
-            console.error('Error during handleRemoveUser:', error.message);
-        }
-    };
-
     const startGameListener = async (payload) => {
         /*
-         * when the game creator press start game the it will init a loading screen when
-         * the 
-         * 
+         * Listen for game status changes:
+         * - "in_progress": Show loading screen
+         * - "active": Navigate to MainGame
+         * - "terminated": Navigate back (kicked out) with message
          */
         if (payload.new.status === 'in_progress') {
             console.log('Game status changed to in_progress:', payload.new);
             setIsLoading(true);
         } else if (payload.new.status === 'active') {
-            console.log('Game status change to in active', payload.new);
+            console.log('Game status changed to active:', payload.new);
             console.log("Game started successfully");
-            router.push('/games/MainGame')
+            router.push('/games/MainGame');
             setIsLoading(false);
+        } else if (payload.new.status === 'terminated') {
+            console.log('Game has been terminated by the creator:', payload.new);
+            // Only show alert if we're not the one who terminated it
+            if (UserIsCreator !== localPlayerData?.id) {
+                alert('The game has been ended by the creator');
+            }
+            router.back();
         } else {
             setIsLoading(false);
         }
@@ -246,12 +223,15 @@ const Lobby = () => {
 
     const handleExitLobby = async () => {
         /*
-        this function gets the user_id from local storage and the game_id
+        This function handles a player exiting the lobby:
         
-        if the user is the creator it will remove the game then removing the playergame rows
-        with the foriegn key of the games table
+        If the user is the creator:
+        - Updates game status to "terminated" to notify other players
+        - Removes the game entirely from the database, which will cascade to player records
+        - All players will be kicked out
         
-        else it removes the player from the game
+        If the user is not the creator:
+        - Simply removes their player record from the game
         */
 
         try {
@@ -268,12 +248,30 @@ const Lobby = () => {
             console.log('Is Creator:', UserIsCreator);
 
             if (UserIsCreator === localPlayerData?.id) {
+                console.log('Creator is leaving the game - will terminate the game for all players');
+                
+                // First update game status to "terminated" to trigger notifications for other players
+                const { error: updateError } = await supabase
+                    .from('games')
+                    .update({ status: 'terminated' })
+                    .eq('id', gameId);
+                
+                if (updateError) {
+                    console.error('Error setting game status to terminated:', updateError.message);
+                } else {
+                    console.log('Game status updated to terminated');
+                }
+
+                // Small delay to ensure status update is processed
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Delete the game row, which should cascade delete all player records
                 const checkGameDelete = await deleteGame(gameId);
 
-                if (!checkGameDelete.success) {
+                if (!checkGameDelete || !checkGameDelete.success) {
                     console.error('Error: Game deletion was unsuccessful');
                 } else {
-                    console.log('Successfully deleted the game');
+                    console.log('Successfully deleted the game row and all related player records');
                 }
             } else {
                 const deleteResult = await deletePlayerGame(localPlayerData?.id, gameId);
