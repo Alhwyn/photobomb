@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'
@@ -22,6 +22,8 @@ const Lobby = () => {
     const [localPlayerData, getLocalPLayerData] = useState(null);
     const [UserIsCreator, setUserIsCreator] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [onlineUsers, setOnlineUsers] = useState([]);
+    const presenceChannelRef = useRef(null);
 
     const setStateLobby = async () => {
 
@@ -41,38 +43,19 @@ const Lobby = () => {
 
             // start with here try to fix the realtime issue in the lobby
             const { data, error } = await supabase
-                .from('users')
+                .from('playergame')
                 .select(`*,
-                        games (game_pin, id, game_creator, created_at),
-                        playergame (is_creator, player_id, game_id, created_at)
+                        games (game_pin, id, game_creator, created_at)
                 `)
-                .eq('id', userId)
-                .order('created_at', { referencedTable: 'games', ascending: false })
+                .eq('player_id', userId)
                 .single();
 
+            console.log('Fetched user data:', data);
 
-            setGameId(data.games[0].id);
-
-
-        
-            if (!data?.playergame[0]?.is_creator) {
-
-                const { data: fetchPlayerGamePayload, error: fetchError } = await supabase
-                    .from('playergame')
-                    .select(`*, 
-                             games (game_pin)`)
-                    .eq('game_id', gameId);
-
-                setGamePin(fetchPlayerGamePayload?.[0]?.games?.game_pin);
-                
-            } else {
-
-                setGamePin(data?.games?.[0]?.game_pin);
-
-            }
-
+            setGameId(data.game_id);
+            setGamePin(data.games.game_pin);
             getLocalPLayerData(getUserPayload);
-            setUserIsCreator(data?.playergame?.[0]?.is_creator);
+            setUserIsCreator(data.is_creator);
 
             return {success: true, message: 'data success'};
 
@@ -80,65 +63,6 @@ const Lobby = () => {
             console.error('There is an error on setStateLobbyFunction: ', error.message);
             return {success: false, message: 'data success'};
         }
-    }
-
-    const handlePLayerLobby = async (payload) => {
-        /*
-         * Given the parameter paylaod it takes the payload of the realtime
-         * supabase action from an INSERT event and updates the player list of the 
-         * user lobby.
-         */
-
-        console.log('Real-time update received: ', payload);
-
-        if (payload.eventType === 'DELETE') {
-            console.log('Player exited:', payload.old);
-            setPlayers((prevPlayers) =>
-                prevPlayers.filter((player) => player.player_id !== payload.old.player_id)
-            );
-            return;
-        }
-
-        if (payload.eventType === 'INSERT') {
-            try {
-
-                console.log('Player Joined: ', payload.new);
-
-                const { data: userData, error } = await supabase
-                    .from('users')
-                    .select('username, image_url')
-                    .eq('id', payload.new.player_id)
-                    .single();
-
-                if (error || !userData) {
-                    console.error('Error fetching username:', error.message);
-                    return;
-                }
-
-                console.log(`Fetched username for player ID ${payload.new.player_id}:`, userData.username);
-
-                const newPlayer = { ...payload.new, users: { username: userData.username, image_url: userData.image_url  } };
-
-                console.log('New player object:', newPlayer);
-
-                setPlayers((prevPlayers) => {
-                    const playerExists = prevPlayers.some(player => player.player_id === newPlayer.player_id);
-                    if (playerExists) {
-                        console.warn(`Player with ID ${newPlayer.player_id} already exists in the lobby.`);
-                        return prevPlayers;
-                    }
-                    console.log('Adding new player to the list:', newPlayer);
-
-
-                return [...prevPlayers, newPlayer];
-                });
-    
-            } catch(error) {
-                console.error('Error fetching username:', error.message);
-                    return;
-
-            }
-        } 
     }
 
     const handleRemoveUser = async (payload) => {
@@ -249,23 +173,6 @@ const Lobby = () => {
             }
         }
     
-        let channelLobby = supabase
-        .channel('lobby_updates') 
-        .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handlePLayerLobby)
-        .subscribe();
-
-        if (!channelLobby) {
-            console.error('Failed to subscribe to lobby updates');
-        }
-
-        let removeUser = supabase.channel('custom-delete-channel')
-        .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameId}` }, handleRemoveUser)
-        .subscribe()
-
         let gameStatusListener = supabase
             .channel('game_status_updates')
             .on(
@@ -273,9 +180,65 @@ const Lobby = () => {
                 { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` }, startGameListener)
             .subscribe()
 
+        // --- Presence Feature ---
+        let isMounted = true;
+        let userPayload = null;
+
+        const setupPresence = async () => {
+            userPayload = await getUserPayloadFromStorage();
+            if (!gameId || !userPayload) return;
+
+            // Clean up previous channel if any
+            if (presenceChannelRef.current) {
+                supabase.removeChannel(presenceChannelRef.current);
+            }
+
+            const channel = supabase.channel(`lobby-presence-${gameId}`, {
+                config: { presence: { key: userPayload.id.toString() } }
+            });
+
+            channel
+                .on('presence', { event: 'sync' }, async () => {
+                    const state = channel.presenceState();
+                    // Flatten the state to get all online users with their info
+                    const users = Object.values(state).flat();
+                    // Map to objects with username, image_url, and is_creator
+                    const onlineUserObjects = users.map(u => ({
+                        player_id: u.user_id?.toString() ?? u.username, // fallback to username if no id
+                        users: {
+                            username: u.username || '',
+                            image_url: u.image_url || '',
+                        },
+                        is_creator: !!u.is_creator,
+                    }));
+                    console.log('Online users (presence sync):', onlineUserObjects);
+                    if (isMounted) setOnlineUsers(onlineUserObjects);
+                })
+                .on('presence', { event: 'leave' }, ({ key, newPresences }) => {
+                    console.log(`User ${key} has left the lobby`);
+                    // The sync event will automatically update the list, but we could update manually here if needed
+                })
+                .subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await channel.track({
+                            user_id: userPayload.id,
+                            username: userPayload.username,
+                            image_url: userPayload.image_url,
+                            is_creator: UserIsCreator,
+                        });
+                    }
+                });
+            presenceChannelRef.current = channel;
+        };
+
+        setupPresence();
+
         return () => {
-            supabase.removeChannel(channelLobby);
-            supabase.removeChannel(removeUser);
+            isMounted = false;
+            if (presenceChannelRef.current) {
+                supabase.removeChannel(presenceChannelRef.current);
+                presenceChannelRef.current = null;
+            }
             supabase.removeChannel(gameStatusListener);
         };
     
@@ -284,54 +247,57 @@ const Lobby = () => {
     const handleExitLobby = async () => {
         /*
         this function gets the user_id from local storage and the game_id
-
+        
         if the user is the creator it will remove the game then removing the playergame rows
         with the foriegn key of the games table
-
-        else false it it remove the the player game row
+        
+        else it removes the player from the game
         */
 
         try {
-            console.log('this is the player data: ', localPlayerData);
+            console.log('Player exiting lobby...');
+            
+            // First, leave the presence channel to update online users immediately
+            if (presenceChannelRef.current) {
+                await presenceChannelRef.current.untrack();
+                console.log('Successfully untracked user from presence');
+            }
 
-            console.log('this is the player_id: ', localPlayerData?.id);
-            console.log('this is the is_Creator', UserIsCreator);
+            console.log('Player data:', localPlayerData);
+            console.log('Player ID:', localPlayerData?.id);
+            console.log('Is Creator:', UserIsCreator);
 
             if (UserIsCreator === localPlayerData?.id) {
                 const checkGameDelete = await deleteGame(gameId);
 
                 if (!checkGameDelete.success) {
-                    console.error('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
+                    console.error('Error: Game deletion was unsuccessful');
                 } else {
-                    console.log('Succesfully deleted the game.')
+                    console.log('Successfully deleted the game');
                 }
+            } else {
+                const deleteResult = await deletePlayerGame(localPlayerData?.id, gameId);
 
-            }  else {
-                deletePlayerGame(localPlayerData?.id, gameId);
-
-                if (!checkGameDelete.success) {
-                    console.log('Error', 'Game Deletion went unsuccesfull Lobby.jsx');
+                if (!deleteResult || !deleteResult.success) {
+                    console.error('Error: Player removal was unsuccessful');
                 } else {
-                    console.log('Succesfully deleted the game.')
+                    console.log('Successfully removed player from game');
                 }
             }
 
             router.back();
-
         } catch(error) {
-            console.error('Error in handleExitLobby: ', error.message);
+            console.error('Error in handleExitLobby:', error.message);
             router.back();
         }
-        
-
     };
     const handleStartGame = async () => {
         /*
          * this function handles the the game creator created the function
          * 
          */
-        const result = await startGame(gameId, players);
-
+        // Use onlineUsers from Presence for the most up-to-date list of active players
+        const result = await startGame(gameId, onlineUsers);
     };
   return (
     <SafeAreaView style={styles.container}>
@@ -348,7 +314,7 @@ const Lobby = () => {
             </LinearGradient>
         </View>
         <UserLobby
-            lobbyData={players}
+            lobbyData={onlineUsers}
         />
         <View style={styles.bottomContainer}>
             {isLoading ? (
