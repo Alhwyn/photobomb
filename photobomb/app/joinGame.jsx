@@ -10,8 +10,6 @@ import { getUserPayloadFromStorage } from '../service/userService';
 import { checkDuplicateGameId } from '../service/gameStartService';
 
 
-
-
 const joinGame = () => {
   const router = useRouter();
   const [gamePin, setGamePin] = useState('');
@@ -30,8 +28,6 @@ const joinGame = () => {
 
       console.log('joinGame: data success; ', isValidPin);
 
-      
-
       if (!isValidPin.success) {
         Alert.alert('Invalid game Pin: ', 'The game entered does not exist,')
         setisLoading(false);
@@ -39,8 +35,6 @@ const joinGame = () => {
       }
 
       const userPayload = await getUserPayloadFromStorage();
-
-
       console.log(isValidPin?.data?.[0]?.id);
 
 

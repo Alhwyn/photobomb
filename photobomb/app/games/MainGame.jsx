@@ -7,7 +7,6 @@ import Profile from '../../components/Profile';
 import { theme } from '../../constants/theme';
 import { getUserPayloadFromStorage } from '../../service/userService';
 import Gallery from '../../components/GameComponent/Gallery';
-import ProgressBar from '../../components/GameComponent/ProgressBar';
 import { supabase } from '../../lib/supabase';
 import { getRoundData } from '../../service/gameService';
 import Prompter from '../../components/GameComponent/Prompter';
