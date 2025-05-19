@@ -384,20 +384,66 @@ export const startNextRound = async (gameId) => {
         }
 
         // Get the current round data to find the current prompter
-        const { data: currentRound, error: roundError } = await supabase
+        // Use limit(1) instead of single() to handle potential duplicate rounds
+        const { data: roundDataArray, error: roundError } = await supabase
             .from("round")
             .select("prompter_id")
             .eq("game_id", gameId)
             .eq("round", gameData.current_round)
-            .single();
+            .order('created_at', { ascending: false })
+            .limit(1);
 
         if (roundError) {
             console.log("Error fetching current round:", roundError.message);
             return { success: false, message: roundError.message };
         }
+        
+        if (!roundDataArray || roundDataArray.length === 0) {
+            console.log("No round data found for this game and round");
+            return { success: false, message: "No round data found" };
+        }
+        
+        const currentRound = roundDataArray[0];
 
         console.log("Current round data:", currentRound);
         console.log("Current prompter ID:", currentRound.prompter_id);
+        
+        // Check for and clean up duplicate rounds for the next round number before creating a new one
+        const nextRoundNumber = gameData.current_round + 1;
+        const { data: existingNextRounds, error: existingError } = await supabase
+            .from("round")
+            .select("id")
+            .eq("game_id", gameId)
+            .eq("round", nextRoundNumber);
+            
+        if (!existingError && existingNextRounds && existingNextRounds.length > 0) {
+            console.log(`Found ${existingNextRounds.length} existing entries for round ${nextRoundNumber}. Cleaning up...`);
+            
+            // Delete these duplicate rounds before creating a new one
+            for (const round of existingNextRounds) {
+                // First delete any submissions associated with this round
+                const { error: subDeleteError } = await supabase
+                    .from("submissions")
+                    .delete()
+                    .eq("round_id", round.id);
+                    
+                if (subDeleteError) {
+                    console.log(`Warning: Error deleting submissions for round ${round.id}:`, subDeleteError.message);
+                }
+                
+                // Then delete the round itself
+                const { error: roundDeleteError } = await supabase
+                    .from("round")
+                    .delete()
+                    .eq("id", round.id);
+                    
+                if (roundDeleteError) {
+                    console.log(`Warning: Error deleting round ${round.id}:`, roundDeleteError.message);
+                }
+            }
+            
+            console.log(`Cleaned up ${existingNextRounds.length} duplicate round entries`);
+        }
         
         // Start the next round with the current prompter
         const result = await handleRoundTable(gameId, currentRound.prompter_id);

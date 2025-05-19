@@ -37,18 +37,24 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
 
   const handleSumbissionTables = async () => {
     // Get the current round data to identify the prompter
-    const {data: roundData, error: roundError} = await supabase
+    const {data: roundDataArray, error: roundError} = await supabase
       .from('round')
       .select('*')
       .eq('game_id', gameId)
       .order('round', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
       
     if (roundError) {
       console.error('Error fetching current round data: ', roundError.message);
       return {success: false, error: roundError.message};
     }
+    
+    if (!roundDataArray || roundDataArray.length === 0) {
+      console.error('No round data found for this game');
+      return {success: false, error: 'No round data found'};
+    }
+    
+    const roundData = roundDataArray[0];
     
     const prompterId = roundData.prompter_id;
     console.log('Current round prompter ID:', prompterId);
