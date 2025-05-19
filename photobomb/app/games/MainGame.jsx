@@ -126,7 +126,7 @@ const Main = () => {
             return (
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
-                    <Profile image_url={getSupabaseUrl(userPayload?.image_url)}/>
+                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
                     
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picking the prompt...</Text>
@@ -137,7 +137,7 @@ const Main = () => {
             return (
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
-                    <Profile image_url={getSupabaseUrl(userPayload?.image_url)}/>
+                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
                     
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picked the prompt...</Text>
@@ -148,7 +148,7 @@ const Main = () => {
             return (
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
-                    <Profile image_url={getSupabaseUrl(userPayload?.image_url)}/>
+                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
                     
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picking the winner...</Text>
@@ -160,7 +160,7 @@ const Main = () => {
             return (
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
-                    <Profile image_url={getSupabaseUrl(winnerData?.image_url)}/>
+                    <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
                     
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>got the best photo for</Text>
@@ -242,7 +242,7 @@ const Main = () => {
                 
                 // Check if the current user is the new prompter
                 const getRolePlayerBool = await checkUserRole();
-                setIsPrompter(getRolePlayerBool?.data?.is_creator);
+                setIsPrompter(getRolePlayerBool?.data?.is_prompter); // Use is_prompter instead of is_creator
                 
                 // Set stage back to Prompt for the new round
                 setCurrentStage('Prompt');
@@ -256,27 +256,35 @@ const Main = () => {
 
     const mainSubmissionUpdateHandler = async (payload) => {
         try {
+            console.log('Submission update received:', payload);
 
             if (payload?.eventType === 'UPDATE') {
                 const submissionPayload = await getSubmissionData(gameID);
     
-                if (submissionPayload.error) {
-                    console.log('Error checking submissions:', submissionPayload.error.message);
+                if (!submissionPayload.success) {
+                    console.log('Error checking submissions:', submissionPayload.message);
                     return;
                 }
-                console.log('Submission data:', submissionPayload.data);
+                
+                console.log('Submission data count:', submissionPayload.data.length);
+                
+                // Check each submission individually and log its status
+                submissionPayload.data.forEach(sub => {
+                    console.log(`Submission ID: ${sub.id}, Player ID: ${sub.player_id}, Photo: ${sub.photo_uri ? 'Has photo' : 'No photo'}`);
+                });
     
                 const allSubmitted = submissionPayload.data.every(submission => submission.photo_uri !== null);
     
                 if (allSubmitted) {
-                    console.log('All players have submitted their photos.');
+                    console.log('All players have submitted their photos. Moving to GalleryTime stage.');
                     setCurrentStage('GalleryTime');
                 } else {
-                    console.log('Waiting for more submissions.');
+                    const pendingCount = submissionPayload.data.filter(sub => !sub.photo_uri).length;
+                    console.log(`Waiting for ${pendingCount} more submissions.`);
                 }
             }
         } catch (error) {
-            console.log('Error in mainSubmissionUpdateHandler:', error.message);
+            console.error('Error in mainSubmissionUpdateHandler:', error.message);
         }
     };
 
@@ -321,29 +329,64 @@ const Main = () => {
          * instruction
          */
         try {
-            const {data: fetchPlayerGameData, error: playerGameError} = await supabase
+            // Make sure we have both the user ID and game ID before proceeding
+            if (!userPayload?.id || !gameID) {
+                console.log('Missing required data for checkUserRole. UserID:', userPayload?.id, 'GameID:', gameID);
+                return {success: false, message: "Missing user ID or game ID"};
+            }
+
+            console.log('Checking role for user ID:', userPayload.id, 'in game ID:', gameID);
+            
+            // Get all player game entries for this player in this game
+            const {data: playerGameData, error: playerGameError} = await supabase
                 .from('playergame')
                 .select(`*,
                          users (username)`)
-                .eq('player_id', userPayload?.id)
-                .single();
+                .eq('player_id', userPayload.id)
+                .eq('game_id', gameID);
 
             if (playerGameError) {
-                console.log('Error in the checkUserRole:  ', playerGameError.message);
+                console.log('Error in the checkUserRole:', playerGameError.message);
                 return {success: false, message: playerGameError.message};
-
             }
+            
+            if (!playerGameData || playerGameData.length === 0) {
+                console.log('No player game entry found for this user in this game');
+                return {success: false, message: "Player not found in this game"};
+            }
+            
+            // Take the first record (there should only be one per player per game)
+            const fetchPlayerGameData = playerGameData[0];
+            console.log('Found player game data:', fetchPlayerGameData);
+
+            // Get the current round data to check if this player is the prompter
+            const {data: roundData, error: roundError} = await supabase
+                .from('round')
+                .select('prompter_id')
+                .eq('game_id', gameID)
+                .order('round', { ascending: false })
+                .limit(1)
+                .single();
+                
+            if (roundError) {
+                console.log('Error fetching round data in checkUserRole:', roundError.message);
+                return {success: false, message: roundError.message};
+            }
+            
+            // Add a flag to indicate if this player is the prompter in the current round
+            fetchPlayerGameData.is_prompter = (fetchPlayerGameData.id === roundData.prompter_id);
+            console.log(`Player ${fetchPlayerGameData.id} is prompter: ${fetchPlayerGameData.is_prompter}`);
+            
             return {success: true, data: fetchPlayerGameData};
 
         } catch(error) {
-            console.log('Error in the checkUserRole: ', playerGameError.message)
-            return {success: false, message: playerGameError.message};
+            console.log('Error in the checkUserRole:', error.message);
+            return {success: false, message: error.message};
         }
     }
 
     const viewPlayerGameTable = async (playerGameId) => {
         try {
-
             const { data: dataPlayerGame, error: errorPLayerGame} = await supabase
                 .from('playergame')
                 .select(`*,
@@ -352,14 +395,14 @@ const Main = () => {
                 .single();
 
             if (errorPLayerGame) {
-                console.log('Error on View PlayerGameTable: ', error.message)
-                return {success: false, message: error.message}
+                console.log('Error on View PlayerGameTable: ', errorPLayerGame.message);
+                return {success: false, message: errorPLayerGame.message};
             }
 
-            return {success: true, data: dataPlayerGame}
+            return {success: true, data: dataPlayerGame};
         } catch(error) {
-            console.log('Error on View PlayerGameTable: ', error.message)
-            return {success: false, message: error.message}
+            console.log('Error on View PlayerGameTable: ', error.message);
+            return {success: false, message: error.message};
         }
     };
 
@@ -471,9 +514,14 @@ const Main = () => {
                 return {success: false, message: roundError.message};
             }
 
+            // Get the current prompter ID to exclude them from submissions
+            const prompterId = roundData.prompter_id;
+            console.log("Current prompter ID (excluded from submissions):", prompterId);
+
             const submissionPromises = players
-                .filter(player => !player.is_creator)
+                .filter(player => player.id !== prompterId) // Filter out the prompter, not just the creator
                 .map(player => {
+                    console.log(`Creating submission for player ${player.id}`);
                     return supabase
                         .from('submissions')
                         .insert({
@@ -502,8 +550,19 @@ const Main = () => {
     };
 
     const confirmImageSelection = async () => {
+        // First, check if this user is the prompter - prompters should not submit photos
+        const {data: roundData, error: roundError} = await supabase
+            .from('round')
+            .select(`*`)
+            .eq('game_id', gameID)
+            .order('round', { ascending: false })
+            .limit(1)
+            .single();
 
-        await uploadImageToSupabase(selectedImageUri);
+        if (roundError) {
+            console.log('Error fetching round data: ', roundError.message);
+            return {success: false, message: roundError.message};
+        }
 
         const { data: playergameData, error: playergameError} = await supabase
             .from('playergame')
@@ -517,38 +576,71 @@ const Main = () => {
             return {success: false, message: playergameError.message};
         }
 
-        const fileName = selectedImageUri.split('/').pop();
-        const photoUri = `gamesubmissions/${fileName}`;
         const playerGameId = playergameData.id;
-
-        // Get the current round to find the player's submission
-        const {data: roundData, error: roundError} = await supabase
-            .from('round')
-            .select(`*`)
-            .eq('game_id', gameID)
-            .order('round', { ascending: false })
-            .limit(1)
-            .single();
-
-        if (roundError) {
-            console.log('Error in confirmImageSelection fetching round: ', roundError.message);
-            return {success: false, message: roundError.message};
+        
+        // Check if this player is the prompter - if so, don't submit
+        if (playerGameId === roundData.prompter_id) {
+            console.log('This player is the prompter and should not submit photos');
+            setIsModalVisible(false);
+            return {success: false, message: "Prompters don't submit photos"};
         }
 
+        // Upload image
+        await uploadImageToSupabase(selectedImageUri);
+
+        const fileName = selectedImageUri.split('/').pop();
+        const photoUri = `gamesubmissions/${fileName}`;
+        
         // Now find the submission for this player in the current round
-        // In the submissions table, player_id should reference the playergame.id (not the user.id)
-        const {data, error} = await supabase
+        // The player_id in submissions actually stores the playergame.id
+        console.log('Looking for submission with round_id:', roundData.id, 'and player_id:', playerGameId);
+        
+        const { data: submissionData, error: submissionError } = await supabase
             .from('submissions')
-            .update({
-                photo_uri: photoUri,
-            })
+            .select('*')
             .eq('round_id', roundData.id)
-            .eq('player_id', playerGameId)
-
-
-        if (error) {
-            console.log('Error in confirmImageSelection: ', error.message);
-            return {success: false, message: error.message};
+            .eq('player_id', playerGameId);
+        
+        if (submissionError) {
+            console.log('Error finding submission: ', submissionError.message);
+            return {success: false, message: submissionError.message};
+        }
+        
+        console.log('Found submission(s):', submissionData);
+        
+        // If no submission exists, create one
+        if (!submissionData || submissionData.length === 0) {
+            console.log('No submission found, creating a new one...');
+            const { data: newSubmission, error: insertError } = await supabase
+                .from('submissions')
+                .insert({
+                    round_id: roundData.id,
+                    player_id: playerGameId,
+                    photo_uri: photoUri,
+                    game_id: gameID,
+                })
+                .select();
+                
+            if (insertError) {
+                console.log('Error creating new submission: ', insertError.message);
+                return {success: false, message: insertError.message};
+            }
+            
+            console.log('Created new submission:', newSubmission);
+        } else {
+            // Update existing submission
+            const {data, error} = await supabase
+                .from('submissions')
+                .update({
+                    photo_uri: photoUri,
+                })
+                .eq('round_id', roundData.id)
+                .eq('player_id', playerGameId);
+                
+            if (error) {
+                console.log('Error updating submission: ', error.message);
+                return {success: false, message: error.message};
+            }
         }
 
         setIsModalVisible(false);
@@ -565,7 +657,7 @@ const Main = () => {
 
                 setShowPrompterPayload(RetreivePrompterPayload);
                 const GetRolePlayerBool = await checkUserRole();
-                setIsPrompter(GetRolePlayerBool?.data?.is_creator); 
+                setIsPrompter(GetRolePlayerBool?.data?.is_prompter); // Use is_prompter instead of is_creator
 
             } catch(error) {
                 console.log('Error in Use Effect: '. error.message);

@@ -274,26 +274,49 @@ export const handleRoundTable = async (game_id, prompter_id) => {
 
         // Create new submissions for all players except the prompter
         console.log("Creating submissions for new round...");
-        const submissionPromises = players
-            .filter(player => player.id !== roundPrompterID) // Exclude the prompter
-            .map(player => {
-                return supabase
-                    .from("submissions")
-                    .insert({
-                        round_id: roundData[0].id,
-                        player_id: player.id,
-                        photo_uri: null,
-                        game_id: game_id,
-                    });
-            });
+        
+        // Log detailed information about players
+        console.log("All players:", players.map(p => ({ id: p.id, turn_order: p.turn_order })));
+        console.log("Prompter ID:", roundPrompterID);
+        
+        const nonPrompterPlayers = players.filter(player => player.id !== roundPrompterID);
+        console.log("Players who need submissions:", nonPrompterPlayers.map(p => ({ id: p.id, turn_order: p.turn_order })));
+        
+        if (nonPrompterPlayers.length === 0) {
+            console.log("Warning: No non-prompter players found to create submissions for");
+        }
+        
+        const submissionPromises = nonPrompterPlayers.map(player => {
+            console.log(`Creating submission for player ID: ${player.id}, round ID: ${roundData[0].id}`);
+            return supabase
+                .from("submissions")
+                .insert({
+                    round_id: roundData[0].id,
+                    player_id: player.id,
+                    photo_uri: null,
+                    game_id: game_id,
+                })
+                .select();
+        });
 
         const submissionResults = await Promise.all(submissionPromises);
         
-        // Check if any submission inserts failed
+        // Check if any submission inserts failed and log details
         const failedSubmissions = submissionResults.filter(result => result.error);
         if (failedSubmissions.length > 0) {
             console.log(`Warning: ${failedSubmissions.length} submission inserts failed`);
+            failedSubmissions.forEach((result, index) => {
+                console.log(`Failed submission ${index + 1}:`, result.error.message);
+            });
             // Continue anyway - partial failure is better than total failure
+        }
+        
+        // Log the successfully created submissions
+        const successfulSubmissions = submissionResults.filter(result => !result.error && result.data);
+        console.log(`Successfully created ${successfulSubmissions.length} submissions`);
+        
+        if (successfulSubmissions.length > 0) {
+            console.log("Sample submission:", successfulSubmissions[0].data);
         }
 
         console.log("New round created successfully with prompter ID:", roundPrompterID);
@@ -346,6 +369,8 @@ export const startNextRound = async (gameId) => {
      * @returns {Object} Result of the execution, including success and error if any
      */
     try {
+        console.log("Starting next round for game:", gameId);
+        
         // Get current game data
         const { data: gameData, error: gameError } = await supabase
             .from("games")
@@ -371,6 +396,9 @@ export const startNextRound = async (gameId) => {
             return { success: false, message: roundError.message };
         }
 
+        console.log("Current round data:", currentRound);
+        console.log("Current prompter ID:", currentRound.prompter_id);
+        
         // Start the next round with the current prompter
         const result = await handleRoundTable(gameId, currentRound.prompter_id);
         

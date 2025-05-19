@@ -311,12 +311,27 @@ export const getSubmissionData = async (game_id) => {
 
     try {
 
+        // First get the current round for this game
+        const { data: roundData, error: roundError } = await supabase
+            .from('round')
+            .select('id')
+            .eq('game_id', game_id)
+            .order('round', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (roundError) {
+            console.error('Error fetching current round:', roundError.message);
+            return { success: false, message: roundError.message };
+        }
+
+        // Now get submissions for the current round with detailed information
         const {data, error } = await supabase
           .from('submissions')
           .select(`*,
-                   playergame (score, player_id, is_creator)
+                   playergame (id, score, player_id, is_creator, users(username, image_url))
                 `)
-          .eq('game_id', game_id)
+          .eq('round_id', roundData.id)
 
         if (error) {
             console.error('Error on fetching the data on the submission table gameService.js', error.message);

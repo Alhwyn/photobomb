@@ -36,17 +36,34 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
   }, [gameId]);
 
   const handleSumbissionTables = async () => {
+    // Get the current round data to identify the prompter
+    const {data: roundData, error: roundError} = await supabase
+      .from('round')
+      .select('*')
+      .eq('game_id', gameId)
+      .order('round', { ascending: false })
+      .limit(1)
+      .single();
+      
+    if (roundError) {
+      console.error('Error fetching current round data: ', roundError.message);
+      return {success: false, error: roundError.message};
+    }
+    
+    const prompterId = roundData.prompter_id;
+    console.log('Current round prompter ID:', prompterId);
+    
     const {data: gamesPayload, error: gamesPayloadError} = await supabase
     .from('playergame')
     .select(`*,
              users (username, image_url, id) `)
     .eq('game_id', gameId);
 
-  const submissionsPayload = await getSubmissionData(gameId);
+    const submissionsPayload = await getSubmissionData(gameId);
 
     if (!submissionsPayload.success) {
-      console.error('Error fetching submission data: ', submissionsPayloadError.message);
-      return {success: false, error: submissionsPayloadError.message};
+      console.error('Error fetching submission data: ', submissionsPayload.message);
+      return {success: false, error: submissionsPayload.message};
     }
 
     if (gamesPayloadError) {
@@ -54,8 +71,25 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
       return {success: false, error: gamesPayloadError.message};
     }
 
+    // Log the data being set to verify
+    console.log('Players in game:', gamesPayload.map(player => ({
+      id: player.id,
+      username: player.users.username,
+      isCreator: player.is_creator,
+      isPrompter: player.id === prompterId
+    })));
+    
+    console.log('Submissions data:', submissionsPayload.data.map(sub => ({
+      id: sub.id,
+      player_id: sub.player_id,
+      photo_uri: sub.photo_uri ? 'Has photo' : 'No photo'
+    })));
+
+    // Only include players who are not the prompter
+    const filteredPlayers = gamesPayload.filter(player => player.id !== prompterId);
+    
     setPlayersubmissionsList(submissionsPayload.data);
-    setPlayerGamesList(gamesPayload);
+    setPlayerGamesList(filteredPlayers);
   }
   
   return (

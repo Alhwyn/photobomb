@@ -6,8 +6,8 @@ import { getSupabaseUrl } from '../../service/imageService';
 
 
 const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
-
-  const filteredLobbyData = lobbyData.filter(player => !player.is_creator);
+  // No need to filter here as we're already filtering in the parent component
+  // The lobbyData already excludes the prompter
 
 
   const renderItem = ({ item }) => {
@@ -15,14 +15,26 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
     const { username, image_url } = users;
     const getImageUri = getSupabaseUrl(image_url);
 
-    const playerSubmission = submissionData.find(
-
-      submission => (
-        submission.player_id === item?.id
-      )
-    ); 
-
-    const hasSubmitted = playerSubmission?.photo_uri !== null
+    // Convert item?.id to string for safe comparison
+    const playerId = item?.id ? String(item.id) : null;
+    
+    // Find the submission entry for this player
+    const playerSubmission = submissionData.find(submission => 
+      String(submission.player_id) === playerId
+    );
+    
+    // Debug output to see what's going on with more details
+    console.log(`Player ${username} (ID: ${playerId}):`, 
+      playerSubmission ? 
+        `Submission found, photo_uri = ${playerSubmission.photo_uri}, submission ID: ${playerSubmission.id}` : 
+        'No submission found'
+    );
+    
+    // A player has submitted if they have a submission with a non-null photo_uri
+    const hasSubmitted = playerSubmission && 
+                       playerSubmission.photo_uri !== null && 
+                       playerSubmission.photo_uri !== undefined && 
+                       playerSubmission.photo_uri !== '';
 
     return (
       <View style={styles.itemContainer}>
@@ -40,7 +52,7 @@ const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
 
   return (
     <FlatList
-      data={filteredLobbyData}
+      data={lobbyData}
       renderItem={renderItem}
       keyExtractor={(item, index) => `player-submission-${index}`}
     />
