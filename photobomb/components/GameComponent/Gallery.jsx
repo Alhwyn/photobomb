@@ -108,6 +108,35 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
             
             console.log('Selected image payload:', selectedImagePayload);
             
+            // First get the current round to make sure we're updating the right data
+            const { data: roundDataArray, error: roundError } = await supabase
+                .from('round')
+                .select('id')
+                .eq('game_id', gameId)
+                .order('round', { ascending: false })
+                .limit(1);
+
+            if (roundError) {
+                console.error('Error fetching current round:', roundError.message);
+                setIsModalVisible(false);
+                return;
+            }
+            
+            if (!roundDataArray || roundDataArray.length === 0) {
+                console.error('No round data found for this game');
+                setIsModalVisible(false);
+                return;
+            }
+            
+            const roundData = roundDataArray[0];
+            
+            // Verify the submission is from the current round
+            if (selectedImagePayload.round_id !== roundData.id) {
+                console.error('Selected submission is not from the current round');
+                setIsModalVisible(false);
+                return;
+            }
+            
             // Get the player's current score from playergame table
             const { data: playerData, error: playerError } = await supabase
                 .from('playergame')
@@ -149,7 +178,30 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
         const fetchImageList = async () => {
             setLoading(true);  
             try {
-                // Use supabase query directly to get more detailed data
+                // First, get the current round for this game
+                const { data: roundDataArray, error: roundError } = await supabase
+                    .from('round')
+                    .select('id')
+                    .eq('game_id', gameId)
+                    .order('round', { ascending: false })
+                    .limit(1);
+
+                if (roundError) {
+                    console.error('Error fetching current round:', roundError.message);
+                    setLoading(false);
+                    return;
+                }
+                
+                if (!roundDataArray || roundDataArray.length === 0) {
+                    console.error('No round data found for this game');
+                    setLoading(false);
+                    return;
+                }
+                
+                const roundData = roundDataArray[0];
+                console.log('Current round ID:', roundData.id);
+
+                // Now use the round_id to filter submissions
                 const { data, error } = await supabase
                     .from('submissions')
                     .select(`
@@ -164,7 +216,8 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                             )
                         )
                     `)
-                    .eq('game_id', gameId);
+                    .eq('game_id', gameId)
+                    .eq('round_id', roundData.id);
 
                 if (error) {
                     console.error('Error fetching submissions:', error.message);
@@ -172,10 +225,18 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                     return;
                 }
 
-                console.log('Fetched submissions with user data:', data);
+                console.log('Fetched submissions with user data for round', roundData.id, ':', data);
                 
-                // Filter out submissions without photos
-                const validSubmissions = data.filter(submission => submission.photo_uri);
+                // Filter out submissions without photos and validate data integrity
+                const validSubmissions = data.filter(submission => {
+                    // Must have a photo and player data
+                    return submission.photo_uri && 
+                           submission.player_id && 
+                           submission.playergame &&
+                           submission.playergame.users;
+                });
+                
+                console.log('Valid submissions for display:', validSubmissions.length);
                 
                 setImageUrlList(validSubmissions);
                 await preloadImages(validSubmissions);
@@ -214,12 +275,19 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
     }, [imageUrlList, showAllImages]);
 
     const getIMageUrlFromIndex = (index) => {
-        if (!imageUrlList || !imageUrlList[index]) {
+        if (!imageUrlList || !imageUrlList[index] || !imageUrlList[index].photo_uri) {
             console.error('Invalid image index or no images available');
             return;
         }
         setCurrentImageIndex(index);  // Set the current index for use in confirmImageSelection
         const currentImagePayload = imageUrlList[index];
+        
+        // Verify we have all required data
+        if (!currentImagePayload.player_id) {
+            console.error('Selected image has no player_id');
+            return;
+        }
+        
         setSelectedImageUri(getSupabaseUrl(currentImagePayload.photo_uri));
         setIsModalVisible(true);
     }
@@ -317,12 +385,25 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
     if (winnerSelected) {
         // Display winner component with the selected winner
         const selectedWinner = imageUrlList[currentImageIndex];
+        
+        // Check that we have valid data for the winner
+        if (!selectedWinner || !selectedWinner.playergame) {
+            console.error('Invalid winner data', selectedWinner);
+            return (
+                <SafeAreaView style={styles.container}>
+                    <Text style={[styles.title, {color: 'red'}]}>Error: Invalid winner data</Text>
+                </SafeAreaView>
+            );
+        }
+        
         return (
             <Winner 
                 winnerData={{
                     photo_uri: selectedWinner.photo_uri,
                     username: selectedWinner.playergame?.users?.username || 'Winner',
-                    image_url: selectedWinner.playergame?.users?.image_url || null
+                    image_url: selectedWinner.playergame?.users?.image_url || null,
+                    player_id: selectedWinner.player_id,
+                    round_id: selectedWinner.round_id
                 }}
                 currentPrompt={currentPrompt}
                 gameId={gameId}

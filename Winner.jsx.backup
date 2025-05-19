@@ -97,6 +97,8 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
       }
       
       const roundData = roundDataArray[0];
+        return;
+      }
       
       // Find current prompter index
       const prompterIndex = players.findIndex(player => player.id === roundData.prompter_id);

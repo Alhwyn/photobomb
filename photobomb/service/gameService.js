@@ -285,16 +285,22 @@ export const getRoundData = async (gameId) => {
           .from('round')
           .select('*')
           .eq('game_id', gameId)
-          .single();
+          .order('round', { ascending: false })
+          .limit(1);
 
         if (error) {
             console.log('Error on fetching the data on the round table gameService.js', error.message);
             return {success: false, message: error.message};
         }
+        
+        if (!data || data.length === 0) {
+            console.log('No round data found for this game');
+            return {success: false, message: 'No round data found'};
+        }
 
-        console.log('successfully fetch the data fron the rounds table');
+        console.log('Successfully fetched the data from the rounds table');
 
-        return {success: true, data: data};
+        return {success: true, data: data[0]};
     } catch (error) {
         console.log('Error on fetching the data on the round table gameService.js', error.message);
         return {success: false, message: error.message};
@@ -310,20 +316,25 @@ export const getSubmissionData = async (game_id) => {
      */
 
     try {
-
         // First get the current round for this game
-        const { data: roundData, error: roundError } = await supabase
+        const { data: roundDataArray, error: roundError } = await supabase
             .from('round')
             .select('id')
             .eq('game_id', game_id)
             .order('round', { ascending: false })
-            .limit(1)
-            .single();
+            .limit(1);
 
         if (roundError) {
             console.error('Error fetching current round:', roundError.message);
             return { success: false, message: roundError.message };
         }
+        
+        if (!roundDataArray || roundDataArray.length === 0) {
+            console.error('No round data found for this game');
+            return { success: false, message: 'No round data found' };
+        }
+        
+        const roundData = roundDataArray[0];
 
         // Now get submissions for the current round with detailed information
         const {data, error } = await supabase

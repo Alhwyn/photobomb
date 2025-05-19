@@ -360,18 +360,24 @@ const Main = () => {
             console.log('Found player game data:', fetchPlayerGameData);
 
             // Get the current round data to check if this player is the prompter
-            const {data: roundData, error: roundError} = await supabase
+            const {data: roundDataArray, error: roundError} = await supabase
                 .from('round')
                 .select('prompter_id')
                 .eq('game_id', gameID)
                 .order('round', { ascending: false })
-                .limit(1)
-                .single();
+                .limit(1);
                 
             if (roundError) {
                 console.log('Error fetching round data in checkUserRole:', roundError.message);
                 return {success: false, message: roundError.message};
             }
+            
+            if (!roundDataArray || roundDataArray.length === 0) {
+                console.log('No round data found for this game');
+                return {success: false, message: 'No round data found'};
+            }
+            
+            const roundData = roundDataArray[0];
             
             // Add a flag to indicate if this player is the prompter in the current round
             fetchPlayerGameData.is_prompter = (fetchPlayerGameData.id === roundData.prompter_id);
@@ -502,17 +508,25 @@ const Main = () => {
                 console.error('Error in createSubmissionsForPlayers: ', playersError.message);
                 return {success: false, message: playersError.message};
             }
-            const {data: roundData, error: roundError} = await supabase
+            const {data: roundDataArray, error: roundError} = await supabase
                 .from('round')
                 .select(`*`)
                 .eq('game_id', gameID)
-                .single();
+                .order('round', { ascending: false })
+                .limit(1);
 
 
             if (roundError) {  
                 console.log('Error in createSubmissionsForPlayers: ', roundError.message);
                 return {success: false, message: roundError.message};
             }
+            
+            if (!roundDataArray || roundDataArray.length === 0) {
+                console.log('No round data found for this game');
+                return {success: false, message: 'No round data found'};
+            }
+            
+            const roundData = roundDataArray[0];
 
             // Get the current prompter ID to exclude them from submissions
             const prompterId = roundData.prompter_id;
@@ -551,18 +565,24 @@ const Main = () => {
 
     const confirmImageSelection = async () => {
         // First, check if this user is the prompter - prompters should not submit photos
-        const {data: roundData, error: roundError} = await supabase
+        const {data: roundDataArray, error: roundError} = await supabase
             .from('round')
             .select(`*`)
             .eq('game_id', gameID)
             .order('round', { ascending: false })
-            .limit(1)
-            .single();
+            .limit(1);
 
         if (roundError) {
             console.log('Error fetching round data: ', roundError.message);
             return {success: false, message: roundError.message};
         }
+        
+        if (!roundDataArray || roundDataArray.length === 0) {
+            console.log('No round data found for this game');
+            return {success: false, message: 'No round data found'};
+        }
+        
+        const roundData = roundDataArray[0];
 
         const { data: playergameData, error: playergameError} = await supabase
             .from('playergame')
