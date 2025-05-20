@@ -4,8 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { getSupabaseUrl } from '../../service/imageService'
 import ConfettiCannon from 'react-native-confetti-cannon'
 import Profile from '../Profile'
-import { startNextRound } from '../../service/gameStartService'
+import { startNextRound, endGame } from '../../service/gameStartService'
 import { supabase } from '../../lib/supabase'
+import FinalLeaderboard from './FinalLeaderboard'
 
 const Winner = ({ winnerData, currentPrompt, gameId }) => {
   const scaleAnim = useRef(new Animated.Value(0.2)).current;
@@ -15,6 +16,8 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
   const [timeRemaining, setTimeRemaining] = useState(10); // 10 second countdown
   const [nextPrompterInfo, setNextPrompterInfo] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
+  const [allPlayerData, setAllPlayerData] = useState([]);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -39,9 +42,7 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
     
     // Start next round timer after celebration (5 seconds)
     const startTimerTimeout = setTimeout(() => {
-      setShowNextRoundTimer(true);
-      findNextPrompter();
-      startCountdown();
+      checkIfGameShouldEnd();
     }, 5000);
 
     return () => {
@@ -51,6 +52,71 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
     };
   }, []);
   
+  const checkIfGameShouldEnd = async () => {
+    try {
+      if (!gameId) return;
+      
+      // Get the current game data to find out the current round
+      const { data: gameData, error: gameError } = await supabase
+        .from("games")
+        .select("current_round")
+        .eq("id", gameId)
+        .single();
+        
+      if (gameError) {
+        console.error("Error fetching game data:", gameError.message);
+        return;
+      }
+      
+      // Get players to check if everyone has been a prompter
+      const { data: players, error: playersError } = await supabase
+        .from("playergame")
+        .select("id, turn_order, score, users (username, image_url)")
+        .eq("game_id", gameId)
+        .order("score", { ascending: false });
+        
+      if (playersError) {
+        console.error("Error fetching players for game end check:", playersError.message);
+        return;
+      }
+      
+      // Store player data for the leaderboard if we need it
+      setAllPlayerData(players);
+      
+      // If current round equals total players, game should end
+      // This means every player has had a turn as the prompter
+      if (gameData.current_round >= players.length) {
+        console.log("Game should end - all players have been prompters!");
+        
+        // End the game using our new function
+        const result = await endGame(gameId);
+        
+        if (result.success) {
+          console.log("Game ended successfully");
+          setAllPlayerData(result.data.allPlayers);
+          setGameEnded(true);
+        } else {
+          console.error("Error ending game:", result.message);
+          // Default to continuing to next round on error
+          setShowNextRoundTimer(true);
+          findNextPrompter();
+          startCountdown();
+        }
+      } else {
+        // Continue to next round
+        setShowNextRoundTimer(true);
+        findNextPrompter();
+        startCountdown();
+      }
+    } catch (error) {
+      console.error("Error in checkIfGameShouldEnd:", error.message);
+      // Default to continuing to next round on error
+      setShowNextRoundTimer(true);
+      findNextPrompter();
+      startCountdown();
+    }
+  };
+
   const findNextPrompter = async () => {
     try {
       if (!gameId) return;
@@ -78,7 +144,7 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
         console.error("Error fetching players for next round:", playersError.message);
         return;
       }
-
+      
       // Get the current prompter
       const { data: roundDataArray, error: roundError } = await supabase
         .from("round")
@@ -99,7 +165,6 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
       }
       
       const roundData = roundDataArray[0];
-      
       // Find current prompter index
       const prompterIndex = players.findIndex(player => player.id === roundData.prompter_id);
       
@@ -161,6 +226,10 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
         <Text style={styles.loadingText}>Loading winner information...</Text>
       </View>
     );
+  }
+  
+  if (gameEnded) {
+    return <FinalLeaderboard gameId={gameId} playerData={allPlayerData} />;
   }
 
   return (

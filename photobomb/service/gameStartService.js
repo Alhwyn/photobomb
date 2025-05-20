@@ -592,3 +592,55 @@ export const startNextRound = async (gameId) => {
         return { success: false, message: error.message };
     }
 };
+
+export const endGame = async (gameId) => {
+    /*
+     * Ends the game and updates the game status to 'completed'
+     * 
+     * @param {string} gameId - ID of the game to end
+     * @returns {Object} Result of the execution, including success and error if any
+     */
+    try {
+        console.log("Ending game:", gameId);
+        
+        // Update game status to completed
+        const { error: updateError } = await supabase
+            .from("games")
+            .update({ status: "completed" })
+            .eq("id", gameId);
+            
+        if (updateError) {
+            console.log("Error updating game status to completed:", updateError.message);
+            return { success: false, message: updateError.message };
+        }
+        
+        // Get final player scores
+        const { data: playerData, error: playerError } = await supabase
+            .from("playergame")
+            .select("id, player_id, score, users (username, image_url)")
+            .eq("game_id", gameId)
+            .order("score", { ascending: false });
+            
+        if (playerError) {
+            console.log("Error fetching final player scores:", playerError.message);
+            return { success: false, message: playerError.message };
+        }
+        
+        // Determine winner(s) - players with the highest score
+        const winners = playerData.length > 0 ? 
+            playerData.filter(player => player.score === playerData[0].score) : [];
+        
+        console.log("Game ended successfully. Winners:", winners.map(w => w.users?.username));
+        
+        return { 
+            success: true, 
+            data: {
+                winners: winners,
+                allPlayers: playerData
+            }
+        };
+    } catch (error) {
+        console.log("Error ending game:", error.message);
+        return { success: false, message: error.message };
+    }
+};
