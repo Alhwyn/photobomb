@@ -36,6 +36,11 @@ const Main = () => {
     const [selectedImageUri, setSelectedImageUri] = useState(null);
 
     const [winnerData, setWinnerData] = useState(null);
+    
+    // Cache for frequently accessed data to reduce database queries
+    const [currentRoundData, setCurrentRoundData] = useState(null);
+    const [allPlayersData, setAllPlayersData] = useState(null);
+    const [submissionsData, setSubmissionsData] = useState(null);
 
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
@@ -173,30 +178,34 @@ const Main = () => {
     const fetchUserData = async () => {
         try {
             const Userpayload = await getUserPayloadFromStorage();
-            if (Userpayload) {
-                setUserPayload(Userpayload);
+            if (!Userpayload) {
+                console.log('No user payload found in storage');
+                return;
+            }
+            
+            setUserPayload(Userpayload);
 
-                const { data, error } = await supabase
-                    .from('users')
-                    .select(`*,
-                                games (game_pin, id, game_creator),
-                                playergame (is_creator, player_id, game_id)
-                    `)
-                    .eq('id', Userpayload.id)
-                    .single();
+            // Combine multiple selects into a single query with specific fields
+            const { data, error } = await supabase
+                .from('users')
+                .select(`
+                    id, username, image_url,
+                    playergame(id, game_id, is_creator, player_id)
+                `)
+                .eq('id', Userpayload.id)
+                .single();
     
-                if (error) {
-                    console.log('Something went wrong with fetching user data MainGame.jsx', error.message);
-                    return;
-                }
+            if (error) {
+                console.log('Something went wrong with fetching user data MainGame.jsx', error.message);
+                return;
+            }
                 
-                if (data && data.playergame && data.playergame.length > 0) {
-                    const gameId = data.playergame[0].game_id;
-                    console.log('Setting game ID to:', gameId);
-                    setGameId(gameId);
-                } else {
-                    console.log('No player game data found for this user');
-                }
+            if (data?.playergame && data.playergame.length > 0) {
+                const gameId = data.playergame[0].game_id;
+                console.log('Setting game ID to:', gameId);
+                setGameId(gameId);
+            } else {
+                console.log('No player game data found for this user');
             }
         } catch(error) {
             console.log('Something went wrong with fetching user data MainGame.jsx', error.message);
@@ -240,10 +249,14 @@ const Main = () => {
                 const rolePayload = await checkUserRole();
                 setIsPrompter(rolePayload?.data?.is_prompter);
 
-                // Only the prompter should trigger submission creation to avoid duplicates
+                // Only create submissions for non-prompters, and only if the current user is the prompter
+                // This ensures submission creation only happens once, from the prompter's device
                 if (rolePayload?.data?.is_prompter) {
+                    console.log("Current user is the prompter - will create submissions for other players");
                     // Create submissions for non-prompter players
                     await createSubmissionsForPlayers();
+                } else {
+                    console.log("Current user is not the prompter - will not create submissions");
                 }
                 
                 // Update state for all players (prompter and non-prompters)
@@ -299,12 +312,45 @@ const Main = () => {
             console.log('Submission update received:', payload);
 
             if (payload?.eventType === 'UPDATE') {
+                // If the payload contains a photo_uri that's not null, we can optimize
+                // by checking if this specific update means all submissions are complete
+                const updatedSubmission = payload.new;
+                
+                // If the updated submission has a photo, check if we need to update all submissions
+                if (updatedSubmission && updatedSubmission.photo_uri) {
+                    // If we have cached submissions data, use it instead of fetching again
+                    if (submissionsData) {
+                        // Update our cached copy with the new data
+                        const updatedCache = submissionsData.map(sub => 
+                            sub.id === updatedSubmission.id ? {...sub, photo_uri: updatedSubmission.photo_uri} : sub
+                        );
+                        setSubmissionsData(updatedCache);
+                        
+                        // Check if all submissions now have photos
+                        const allSubmitted = updatedCache.every(submission => submission.photo_uri !== null);
+                        
+                        if (allSubmitted) {
+                            console.log('All players have submitted their photos. Moving to GalleryTime stage.');
+                            setCurrentStage('GalleryTime');
+                            return;
+                        } else {
+                            const pendingCount = updatedCache.filter(sub => !sub.photo_uri).length;
+                            console.log(`Waiting for ${pendingCount} more submissions.`);
+                            return;
+                        }
+                    }
+                }
+                
+                // Fall back to fetching all submissions if we can't optimize with the cache
                 const submissionPayload = await getSubmissionData(gameID);
     
                 if (!submissionPayload.success) {
                     console.log('Error checking submissions:', submissionPayload.message);
                     return;
                 }
+                
+                // Cache the submissions for future use
+                setSubmissionsData(submissionPayload.data);
                 
                 console.log('Submission data count:', submissionPayload.data.length);
                 
@@ -409,50 +455,75 @@ const Main = () => {
 
             console.log('Checking role for user ID:', userPayload.id, 'in game ID:', gameID);
             
-            // Get all player game entries for this player in this game
-            const {data: playerGameData, error: playerGameError} = await supabase
-                .from('playergame')
-                .select(`*,
-                         users (username)`)
-                .eq('player_id', userPayload.id)
-                .eq('game_id', gameID);
-
-            if (playerGameError) {
-                console.log('Error in the checkUserRole:', playerGameError.message);
-                return {success: false, message: playerGameError.message, data: { is_prompter: false }};
-            }
-            
-            if (!playerGameData || playerGameData.length === 0) {
-                console.log('No player game entry found for this user in this game');
-                return {success: false, message: "Player not found in this game", data: { is_prompter: false }};
-            }
-            
-            // Take the first record (there should only be one per player per game)
-            const fetchPlayerGameData = playerGameData[0];
-            console.log('Found player game data:', fetchPlayerGameData);
-
-            // Get the current round data to check if this player is the prompter
-            const {data: roundDataArray, error: roundError} = await supabase
-                .from('round')
-                .select('prompter_id, round')
-                .eq('game_id', gameID)
-                .order('round', { ascending: false })
-                .order('created_at', { ascending: false })
-                .limit(1);
+            // Use cached player data if available
+            let fetchPlayerGameData;
+            if (allPlayersData) {
+                const cachedPlayerData = allPlayersData.find(player => 
+                    player.player_id === userPayload.id && player.game_id === gameID
+                );
                 
-            console.log('Current round data in checkUserRole:', roundDataArray);
+                if (cachedPlayerData) {
+                    fetchPlayerGameData = cachedPlayerData;
+                    console.log('Using cached player data:', fetchPlayerGameData);
+                }
+            }
+            
+            // If no cached data, query the database
+            if (!fetchPlayerGameData) {
+                // Get all player game entries for this player in this game
+                const {data: playerGameData, error: playerGameError} = await supabase
+                    .from('playergame')
+                    .select(`*,
+                             users (username)`)
+                    .eq('player_id', userPayload.id)
+                    .eq('game_id', gameID);
+
+                if (playerGameError) {
+                    console.log('Error in the checkUserRole:', playerGameError.message);
+                    return {success: false, message: playerGameError.message, data: { is_prompter: false }};
+                }
                 
-            if (roundError) {
-                console.log('Error fetching round data in checkUserRole:', roundError.message);
-                return {success: false, message: roundError.message, data: { is_prompter: false }};
+                if (!playerGameData || playerGameData.length === 0) {
+                    console.log('No player game entry found for this user in this game');
+                    return {success: false, message: "Player not found in this game", data: { is_prompter: false }};
+                }
+                
+                // Take the first record (there should only be one per player per game)
+                fetchPlayerGameData = playerGameData[0];
+                console.log('Found player game data:', fetchPlayerGameData);
             }
-            
-            if (!roundDataArray || roundDataArray.length === 0) {
-                console.log('No round data found for this game');
-                return {success: false, message: 'No round data found', data: { is_prompter: false }};
+
+            // Use cached round data if available
+            let roundData;
+            if (currentRoundData) {
+                roundData = currentRoundData;
+                console.log('Using cached round data');
+            } else {
+                // Get the current round data to check if this player is the prompter
+                const {data: roundDataArray, error: roundError} = await supabase
+                    .from('round')
+                    .select('prompter_id, round, id')
+                    .eq('game_id', gameID)
+                    .order('round', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                    
+                console.log('Current round data in checkUserRole:', roundDataArray);
+                    
+                if (roundError) {
+                    console.log('Error fetching round data in checkUserRole:', roundError.message);
+                    return {success: false, message: roundError.message, data: { is_prompter: false }};
+                }
+                
+                if (!roundDataArray || roundDataArray.length === 0) {
+                    console.log('No round data found for this game');
+                    return {success: false, message: 'No round data found', data: { is_prompter: false }};
+                }
+                
+                roundData = roundDataArray[0];
+                // Cache the round data for future use
+                setCurrentRoundData(roundData);
             }
-            
-            const roundData = roundDataArray[0];
             
             // Add a flag to indicate if this player is the prompter in the current round
             fetchPlayerGameData.is_prompter = (fetchPlayerGameData.id === roundData.prompter_id);
@@ -522,6 +593,12 @@ const Main = () => {
 
     const handleSelectImage = async () => {
         try {
+            // First check if user is the prompter - prompters should not submit images
+            const checkRolePayload = await checkUserRole();
+            if (checkRolePayload?.data?.is_prompter) {
+                Alert.alert('You are the prompter', 'As the prompter for this round, you choose the winner instead of submitting a photo.');
+                return;
+            }
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaType,
@@ -603,7 +680,7 @@ const Main = () => {
             const roundData = roundDataArray[0];
             console.log('Round data in createSubmissionsForPlayers:', roundData);
 
-            // Check if submissions already exist for this round
+            // Check for existing submissions for this round
             const {data: existingSubmissions, error: submissionsError} = await supabase
                 .from('submissions')
                 .select('player_id')
@@ -614,12 +691,11 @@ const Main = () => {
                 return {success: false, message: submissionsError.message};
             }
             
-            if (existingSubmissions && existingSubmissions.length > 0) {
-                console.log(`Found ${existingSubmissions.length} existing submissions for this round. Skipping creation.`);
-                return {success: true, message: 'Submissions already exist'};
-            }
+            // Get the list of player IDs who already have submissions
+            const existingPlayerIds = existingSubmissions ? existingSubmissions.map(sub => sub.player_id) : [];
+            console.log('Players with existing submissions:', existingPlayerIds);
 
-            // Get players that need submissions
+            // Get all players in the game
             const {data: players, error: playersError} = await supabase
                 .from('playergame')
                 .select(`*,
@@ -635,8 +711,19 @@ const Main = () => {
             const prompterId = roundData.prompter_id;
             console.log("Current prompter ID (excluded from submissions):", prompterId);
 
+            // Find players who don't have submissions yet and are not the prompter
             const submissionPromises = players
-                .filter(player => player.id !== prompterId) // Filter out the prompter, not just the creator
+                // Filter out the prompter and players who already have submissions
+                .filter(player => {
+                    // Double check that this player is not the prompter
+                    const isPrompter = player.id === prompterId;
+                    const hasSubmission = existingPlayerIds.includes(player.id);
+                    
+                    console.log(`Player ${player.id}: isPrompter=${isPrompter}, hasSubmission=${hasSubmission}`);
+                    
+                    // Only include non-prompters who don't have submissions yet
+                    return !isPrompter && !hasSubmission;
+                })
                 .map(player => {
                     console.log(`Creating submission for player ${player.id}`);
                     return supabase
@@ -649,7 +736,12 @@ const Main = () => {
                         });
                 });
 
-            await Promise.all(submissionPromises);
+            if (submissionPromises.length > 0) {
+                await Promise.all(submissionPromises);
+                console.log(`Created ${submissionPromises.length} new submissions for players`);
+            } else {
+                console.log('No new submissions needed - all players already have submissions');
+            }
 
             return {success: true, message: 'Created submissions for all players'};
 
@@ -665,111 +757,164 @@ const Main = () => {
     };
 
     const confirmImageSelection = async () => {
-        // First, check if this user is the prompter - prompters should not submit photos
-        const {data: roundDataArray, error: roundError} = await supabase
-            .from('round')
-            .select(`id, round, prompter_id`)
-            .eq('game_id', gameID)
-            .order('round', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(1);
+        try {
+            // Use cached round data if available to avoid redundant database query
+            let roundData;
+            if (currentRoundData) {
+                roundData = currentRoundData;
+                console.log('Using cached round data for image submission');
+            } else {
+                // First, check if this user is the prompter - prompters should not submit photos
+                const {data: roundDataArray, error: roundError} = await supabase
+                    .from('round')
+                    .select(`id, round, prompter_id`)
+                    .eq('game_id', gameID)
+                    .order('round', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(1);
 
-        if (roundError) {
-            console.log('Error fetching round data: ', roundError.message);
-            return {success: false, message: roundError.message};
-        }
-        
-        if (!roundDataArray || roundDataArray.length === 0) {
-            console.log('No round data found for this game');
-            return {success: false, message: 'No round data found'};
-        }
-        
-        const roundData = roundDataArray[0];
-        console.log('Current active round data in confirmImageSelection:', roundData);
-
-        const { data: playergameData, error: playergameError} = await supabase
-            .from('playergame')
-            .select(`*`)
-            .eq('game_id', gameID)
-            .eq('player_id', userPayload.id)
-            .single();
-
-        if (playergameError) {
-            console.log('Error in confirmImageSelection: ', playergameError.message);
-            return {success: false, message: playergameError.message};
-        }
-
-        const playerGameId = playergameData.id;
-        
-        // Check if this player is the prompter - if so, don't submit
-        if (playerGameId === roundData.prompter_id) {
-            console.log('This player is the prompter and should not submit photos');
-            setIsModalVisible(false);
-            return {success: false, message: "Prompters don't submit photos"};
-        }
-
-        // Upload image
-        await uploadImageToSupabase(selectedImageUri);
-
-        const fileName = selectedImageUri.split('/').pop();
-        const photoUri = `gamesubmissions/${fileName}`;
-        
-        // Now find the submission for this player in the current round
-        // The player_id in submissions actually stores the playergame.id
-        console.log('Looking for submission with round_id:', roundData.id, 'and player_id:', playerGameId);
-        
-        // Improved query to find submission for the current round
-        const { data: submissionData, error: submissionError } = await supabase
-            .from('submissions')
-            .select('*')
-            .eq('game_id', gameID)
-            .eq('round_id', roundData.id)
-            .eq('player_id', playerGameId);
-        
-        if (submissionError) {
-            console.log('Error finding submission: ', submissionError.message);
-            return {success: false, message: submissionError.message};
-        }
-        
-        console.log('Found submission(s):', submissionData);
-        
-        // If no submission exists, create one
-        if (!submissionData || submissionData.length === 0) {
-            console.log('No submission found, creating a new one...');
-            const { data: newSubmission, error: insertError } = await supabase
-                .from('submissions')
-                .insert({
-                    round_id: roundData.id,
-                    player_id: playerGameId,
-                    photo_uri: photoUri,
-                    game_id: gameID,
-                })
-                .select();
+                if (roundError) {
+                    console.log('Error fetching round data: ', roundError.message);
+                    return {success: false, message: roundError.message};
+                }
                 
-            if (insertError) {
-                console.log('Error creating new submission: ', insertError.message);
-                return {success: false, message: insertError.message};
+                if (!roundDataArray || roundDataArray.length === 0) {
+                    console.log('No round data found for this game');
+                    return {success: false, message: 'No round data found'};
+                }
+                
+                roundData = roundDataArray[0];
+                // Cache the round data for future use
+                setCurrentRoundData(roundData);
             }
             
-            console.log('Created new submission:', newSubmission);
-        } else {
-            // Update existing submission
-            const {data, error} = await supabase
+            console.log('Current active round data in confirmImageSelection:', roundData);
+
+            const { data: playergameData, error: playergameError} = await supabase
+                .from('playergame')
+                .select(`*`)
+                .eq('game_id', gameID)
+                .eq('player_id', userPayload.id)
+                .single();
+
+            if (playergameError) {
+                console.log('Error in confirmImageSelection: ', playergameError.message);
+                return {success: false, message: playergameError.message};
+            }
+
+            const playerGameId = playergameData.id;
+            
+            // Check if this player is the prompter - if so, don't submit
+            if (playerGameId === roundData.prompter_id) {
+                console.log('This player is the prompter and should not submit photos');
+                Alert.alert('You are the prompter', 'Prompters cannot submit photos in this round.');
+                setIsModalVisible(false);
+                return {success: false, message: "Prompters don't submit photos"};
+            }
+
+            // Optimistically update UI before waiting for network operations
+            setIsModalVisible(false);
+            setImagesSelected(true);
+            
+            // Generate filename for the image
+            const fileName = selectedImageUri.split('/').pop();
+            const photoUri = `gamesubmissions/${fileName}`;
+            
+            // Start upload in background
+            const uploadResult = uploadImageToSupabase(selectedImageUri);
+            
+            // In parallel, find the submission record
+            const { data: submissionData, error: submissionError } = await supabase
                 .from('submissions')
-                .update({
-                    photo_uri: photoUri,
-                })
+                .select('*')
+                .eq('game_id', gameID)
                 .eq('round_id', roundData.id)
                 .eq('player_id', playerGameId);
-                
-            if (error) {
-                console.log('Error updating submission: ', error.message);
+            
+            if (submissionError) {
+                console.log('Error finding submission: ', submissionError.message);
+                setImagesSelected(false); // Revert optimistic update
+                return {success: false, message: submissionError.message};
+            }
+            
+            console.log('Found submission(s):', submissionData);
+            
+            // Wait for upload to complete
+            const uploadResponse = await uploadResult;
+            if (!uploadResponse.success) {
+                console.log('Upload failed:', uploadResponse.message);
+                setImagesSelected(false); // Revert optimistic update
+                Alert.alert('Upload Failed', 'Failed to upload image. Please try again.');
+                return uploadResponse;
+            }
+            
+            // Now update or create the submission record
+            try {
+                // If no submission exists, create one
+                if (!submissionData || submissionData.length === 0) {
+                    console.log('No submission found, creating a new one...');
+                    const { data: newSubmission, error: insertError } = await supabase
+                        .from('submissions')
+                        .insert({
+                            round_id: roundData.id,
+                            player_id: playerGameId,
+                            photo_uri: photoUri,
+                            game_id: gameID,
+                        })
+                        .select();
+                        
+                    if (insertError) {
+                        console.log('Error creating new submission: ', insertError.message);
+                        setImagesSelected(false); // Revert optimistic update
+                        return {success: false, message: insertError.message};
+                    }
+                    
+                    console.log('Created new submission successfully:', newSubmission);
+                    
+                    // Update our cached submissions data
+                    if (submissionsData) {
+                        setSubmissionsData([...submissionsData, newSubmission[0]]);
+                    }
+                } else {
+                    // Update existing submission
+                    const {data, error} = await supabase
+                        .from('submissions')
+                        .update({
+                            photo_uri: photoUri,
+                        })
+                        .eq('id', submissionData[0].id)
+                        .select();
+                        
+                    if (error) {
+                        console.log('Error updating submission: ', error.message);
+                        setImagesSelected(false); // Revert optimistic update
+                        return {success: false, message: error.message};
+                    }
+                    
+                    console.log('Updated submission successfully:', data);
+                    
+                    // Update our cached submissions data
+                    if (submissionsData) {
+                        const updatedSubmissions = submissionsData.map(sub => 
+                            sub.id === submissionData[0].id ? {...sub, photo_uri: photoUri} : sub
+                        );
+                        setSubmissionsData(updatedSubmissions);
+                    }
+                }
+
+                return {success: true};
+            } catch (error) {
+                console.log('Error in confirmImageSelection: ', error.message);
+                setImagesSelected(false); // Revert optimistic update
+                Alert.alert('Error', 'Failed to save your submission. Please try again.');
                 return {success: false, message: error.message};
             }
+        } catch (error) {
+            console.log('Error in confirmImageSelection: ', error.message);
+            setIsModalVisible(false);
+            setImagesSelected(false); // Revert optimistic update
+            return {success: false, message: error.message};
         }
-
-        setIsModalVisible(false);
-        setImagesSelected(true);
     };
 
     useEffect(() => {
@@ -783,50 +928,74 @@ const Main = () => {
                     return;
                 }
                 
-                const RoundDataPayload = await getRoundData(gameID);
-                // Only continue if we successfully retrieved round data
-                if (RoundDataPayload?.success && RoundDataPayload?.data?.prompter_id) {
-                    const RetreivePrompterPayload = await viewPlayerGameTable(RoundDataPayload.data.prompter_id);
-                    setShowPrompterPayload(RetreivePrompterPayload);
+                console.log('Initializing game data for game ID:', gameID);
+                
+                // Load all important game data in parallel for better performance
+                const [roundResult, playersResult, submissionsResult] = await Promise.all([
+                    // Get current round data
+                    getRoundData(gameID),
+                    
+                    // Get all players in this game
+                    supabase
+                        .from('playergame')
+                        .select(`*, users(username, image_url)`)
+                        .eq('game_id', gameID),
+                        
+                    // Get all submissions for the current game
+                    getSubmissionData(gameID)
+                ]);
+                
+                // Process round data
+                if (roundResult?.success && roundResult?.data?.prompter_id) {
+                    // Cache the round data
+                    setCurrentRoundData(roundResult.data);
+                    
+                    // Get prompter details
+                    const prompterPayload = await viewPlayerGameTable(roundResult.data.prompter_id);
+                    setShowPrompterPayload(prompterPayload);
+                    
+                    // Check if current user is the prompter
+                    const rolePayload = await checkUserRole();
+                    setIsPrompter(rolePayload?.data?.is_prompter);
                 } else {
                     console.log('Unable to retrieve valid round data or prompter_id is missing');
-                    // Set a default empty payload to avoid UI errors
                     setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
                 }
-                const GetRolePlayerBool = await checkUserRole();
-                setIsPrompter(GetRolePlayerBool?.data?.is_prompter); // Use is_prompter instead of is_creator
                 
-                // Only set up subscriptions once we have confirmed gameID is valid
-                // This ensures all devices have proper subscriptions
+                // Cache players data if available
+                if (playersResult?.data && !playersResult.error) {
+                    setAllPlayersData(playersResult.data);
+                }
+                
+                // Cache submissions data if available
+                if (submissionsResult?.success && submissionsResult?.data) {
+                    setSubmissionsData(submissionsResult.data);
+                }
+                
+                // Set up real-time subscriptions
                 console.log('Setting up Supabase subscriptions for game ID:', gameID);
                 
-                // Listen for both round updates and new round insertions
-                const roundSubscription = supabase
-                    .channel('roundUpdates')
+                // Combine subscriptions into a single channel when possible to reduce overhead
+                const gameChannel = supabase
+                    .channel(`game-${gameID}`)
                     .on('postgres_changes',
-                        { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
+                        { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, 
+                        mainRoundUpdateHandler)
                     .on('postgres_changes',
-                        { event: 'INSERT', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, mainRoundUpdateHandler)
-                    .subscribe();
-
-                const submissionSubscription = supabase
-                    .channel('submissionsUpdates')
+                        { event: 'INSERT', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, 
+                        mainRoundUpdateHandler)
                     .on('postgres_changes', 
-                        {event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}`}, mainSubmissionUpdateHandler)
-                    .subscribe();
-
-                const playerGameSubscription = supabase
-                    .channel('playerGameUpdates')
+                        { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}`}, 
+                        mainSubmissionUpdateHandler)
                     .on('postgres_changes',
-                        { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` }, mainPlayerGameUpdateHandler)
+                        { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` }, 
+                        mainPlayerGameUpdateHandler)
                     .subscribe();
                 
-                // Store the subscription references for cleanup
+                // Store the subscription reference for cleanup
                 return () => {
-                    console.log('Cleaning up Supabase subscriptions');
-                    supabase.removeChannel(roundSubscription);
-                    supabase.removeChannel(submissionSubscription);
-                    supabase.removeChannel(playerGameSubscription);
+                    console.log('Cleaning up Supabase subscription');
+                    supabase.removeChannel(gameChannel);
                 };
             } catch(error) {
                 console.log('Error in Use Effect: ' + error.message);

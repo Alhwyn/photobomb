@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    //"newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "photobomb.online",
