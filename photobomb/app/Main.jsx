@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity, Image } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Button from '../components/Button'
 import { LinearGradient } from 'expo-linear-gradient';
@@ -117,17 +117,7 @@ const Main = () => {
                 {/* Animated Title */}
                 <Animated.View style={[styles.titleContainer, titleAnimatedStyle]}>
                     <Text style={[styles.titleText, { color: 'white' }]}>Photo</Text>
-                    
-                    <View style={styles.bombTextContainer}>
-                        <LinearGradient 
-                            colors={['#FF69B4', '#DA70D6', '#8A2BE2']}  // Hot pink to purple gradient
-                            style={styles.bombTextGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        >
-                            <Text style={[styles.titleText, {color: 'white'}]}>Bomb</Text>
-                        </LinearGradient>
-                    </View>
+                    <Text style={[styles.titleText, { color: 'white' }]}>Bomb</Text>
                 </Animated.View>
                 
                 {/* Animated Button Container */}
