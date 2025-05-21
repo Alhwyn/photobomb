@@ -17,6 +17,7 @@ import { getSupabaseUrl } from '../../service/imageService';
 import Winner from '../../components/GameComponent/Winner';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import LoadingPhotobomb from '../../components/GameComponent/PhotobombLoading';
 
 const Main = () => {
     const router = useRouter()
@@ -54,7 +55,7 @@ const Main = () => {
             if (isPrompter) {
                 return <Prompter onPromptSelect={handlePromptSelect} />;
             } else {
-                return <GameLoading />;
+                return <LoadingPhotobomb />;
             }
         } else if (currentStage === 'ImageGallery') {
             return <ImageSubmission currentPrompt={selectedPrompt.text} gameId={gameID}/>;

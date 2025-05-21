@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    //"newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "photobomb.online",
@@ -34,7 +33,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

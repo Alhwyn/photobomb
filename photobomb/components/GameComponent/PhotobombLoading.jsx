@@ -1,21 +1,51 @@
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
-import React from 'react'
-import { theme } from '../constants/theme'
-import LottieView from 'lottie-react-native';
+import { StyleSheet, Text, View } from 'react-native'
+import { theme } from '../../constants/theme'
+import { Video } from 'expo-av';
 
-const Loading = ({size="large", color=theme.colors.primary}) => {
+const LoadingPhotobomb = ({
+  message = "Loading...",
+  size = "large", 
+  color = 'white',
+  showMessage = true
+}) => {
   return (
-    <View style={{justifyContent: 'center', alignItems: 'center'}}>
-        <LottieView
-            source={require('../assets/json/Wake_up.json')}
-            autoPlay
-            loop={false}
-            style={styles.lottieAnimation}
-        />
+    <View style={styles.container}>
+      <Video
+        style={styles.video}
+        source={require('../../assets/video/loading.mov')}
+        useNativeControls={false}
+        resizeMode="contain"
+        isLooping={true}
+        shouldPlay={true}
+      />
+      
+      {showMessage && (
+        <Text style={[styles.loadingText, {color}]}>{message}</Text>
+      )}
     </View>
   )
 }
 
-export default Loading
 
-const styles = StyleSheet.create({})
+export default LoadingPhotobomb
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  video: {
+    width: 200,
+    height: 200,
+    borderRadius:190,
+    overflow: 'hidden',
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  }
+})
