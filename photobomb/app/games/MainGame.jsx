@@ -29,7 +29,6 @@ const Main = () => {
 
     const [gameID, setGameId] = useState(null);
     const [selectedPrompt, setSelectedPrompt] = useState(null);
-    const [promptSubmitted, setPromptSubmitted] = useState(false);
     const [imagesSelected, setImagesSelected] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -45,9 +44,8 @@ const Main = () => {
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
         setIsPrompterSubmit(true);
-        }
+     }
     
-
     const renderComponent = () => {
         console.log('this is the game stage: ', currentStage);
 
@@ -72,7 +70,6 @@ const Main = () => {
         }
     };
 
-    
     const renderButtons = () => {
         if (currentStage === 'Prompt') {
             if (isPrompter) {
@@ -121,7 +118,20 @@ const Main = () => {
             return;
 
         } else if (currentStage === 'Winner') {
-            return;
+                
+            if (winnerData?.status === 'completed') {
+
+                
+                return (
+                    <Button
+                        title='Back to Home'
+                        colors={theme.buttonGradient.primary}
+                        onPress={() => router.push('/Main')}
+                    />
+                );
+            } else {
+                return ;
+            }
         };
     };
 
@@ -210,7 +220,9 @@ const Main = () => {
         } catch(error) {
             console.log('Something went wrong with fetching user data MainGame.jsx', error.message);
         }
-    };    const mainRoundUpdateHandler = async (payload) => {
+    };    
+    
+    const mainRoundUpdateHandler = async (payload) => {
         try {
             console.log("Round update received:", payload);
 
@@ -261,7 +273,6 @@ const Main = () => {
                 
                 // Update state for all players (prompter and non-prompters)
                 setSelectedPrompt(promptDataTable);
-                setPromptSubmitted(true);
                 setCurrentStage('ImageGallery');
                 
                 console.log("All players should now be in ImageGallery stage");
