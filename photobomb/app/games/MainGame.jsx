@@ -10,7 +10,6 @@ import Gallery from '../../components/GameComponent/Gallery';
 import { supabase } from '../../lib/supabase';
 import { getRoundData } from '../../service/gameService';
 import Prompter from '../../components/GameComponent/Prompter';
-import GameLoading from '../../components/GameComponent/GameLoading';
 import ImageSubmission from '../../components/GameComponent/ImageSubmission';
 import { getSubmissionData } from '../../service/gameService'
 import { getSupabaseUrl } from '../../service/imageService';
@@ -18,6 +17,7 @@ import Winner from '../../components/GameComponent/Winner';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import LoadingPhotobomb from '../../components/GameComponent/PhotobombLoading';
+
 
 const Main = () => {
     const router = useRouter()
