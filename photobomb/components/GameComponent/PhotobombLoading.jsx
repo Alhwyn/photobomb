@@ -3,7 +3,7 @@ import { theme } from '../../constants/theme'
 import { Video } from 'expo-av';
 
 const LoadingPhotobomb = ({
-  message = "Loading...",
+  message = "Prompter is picking a prompt...",
   size = "large", 
   color = 'white',
   showMessage = true
@@ -37,9 +37,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   video: {
-    width: 200,
-    height: 200,
-    borderRadius:190,
+    padding: 20,
+    width: 190,
+    height: 150,
+    borderRadius:200,
     overflow: 'hidden',
   },
   loadingText: {
