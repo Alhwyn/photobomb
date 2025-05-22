@@ -1,0 +1,26 @@
+[
+  {
+    "is_creator": true,
+    "player_id": "3d5b7f38-0fd0-4877-b9bc-2cb1989e6d56",
+    "users": {
+      "image_url": "profiles/E331CEFF-DF2E-485F-96F9-A9F354510C3F.jpg",
+      "username": "Test"
+    }
+  },
+  {
+    "is_creator": false,
+    "player_id": "09c6c692-f6dc-41a8-a459-d7f6429311be",
+    "users": {
+      "image_url": "profiles/7E59EE78-230E-47C7-A310-CBBCCEA70954.jpg",
+      "username": "Hello world"
+    }
+  },
+  {
+    "is_creator": false,
+    "player_id": "bd92bb99-4bf9-4b69-a79b-93b3897363d2",
+    "users": {
+      "image_url": "profiles/BD901691-E324-4FB4-B531-165BFA72F56B.jpg",
+      "username": "Alhwyn"
+    }
+  }
+]

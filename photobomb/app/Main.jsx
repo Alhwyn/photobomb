@@ -120,6 +120,10 @@ const Main = () => {
         logoScale.value = withSpring(1, { damping: 7, stiffness: 120 });
         logoOpacity.value = withTiming(1, { duration: 600 });
 
+        shake.value = withTiming(0);
+        setIsMainPage('Start');
+        setCurrentComponent('Buttons');
+
         // Title: pop in after logo
         setTimeout(() => {
           titleOpacity.value = withTiming(1, { duration: 400 });
@@ -223,14 +227,12 @@ const Main = () => {
                   ) : currentComponent === 'JoinGame' ? (
                     <JoinGameComponent 
                       onBack={() => {
-                        // stop shaking when going back
                         shake.value = withTiming(0);
                         handleComponentTransition('Start', 'Buttons');
                       }}
                       onSuccessfulJoin={() => {
                         handleComponentTransition('Start', 'Lobby')
-                        setIsMainPage('Start');
-                        setCurrentComponent('Buttons');
+                   
                         router.push('Lobby');
                       }}
                     />
@@ -239,12 +241,12 @@ const Main = () => {
                       onBack={() => {
                         // stop shaking when going back
                         shake.value = withTiming(0);
+         
                         handleComponentTransition('Start', 'Buttons');
                       }}
                       onSuccessfulCreate={() => {
                         handleComponentTransition('Start', 'Buttons');
-                        setIsMainPage('Start');
-                        setCurrentComponent('Buttons');
+  
                         router.push('Lobby');
                       }}
                     />

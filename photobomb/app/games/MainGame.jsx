@@ -17,6 +17,7 @@ import Winner from '../../components/GameComponent/Winner';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import LoadingPhotobomb from '../../components/GameComponent/PhotobombLoading';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 
 const Main = () => {
@@ -638,16 +639,15 @@ const Main = () => {
           const fileName = uri.split('/').pop(); 
           const fileType = fileName.split('.').pop().toLowerCase(); 
           const mimeType = fileType === 'jpg' ? 'image/jpeg' : `image/${fileType}`;
-      
-          const fileContent = await FileSystem.readAsStringAsync(uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-      
-          
-          const fileBuffer = Uint8Array.from(atob(fileContent), (c) =>
-            c.charCodeAt(0)
+
+          // Downscale and compress the image before upload
+          const manipulated = await ImageManipulator.manipulateAsync(
+            uri,
+            [{ resize: { width: 800 } }],  // adjust width as needed
+            { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG, base64: true }
           );
-      
+          const fileBuffer = Uint8Array.from(atob(manipulated.base64), c => c.charCodeAt(0));
+
           const { data, error } = await supabase.storage
             .from('uploads')
             .upload(`gamesubmissions/${fileName}`, fileBuffer, {
@@ -660,8 +660,6 @@ const Main = () => {
           }
       
           return {success: true, message: data}
-
-          
         } catch (error) {
           console.log('Image upload failed:', error.message);
           return {success: false, message: error.message};
