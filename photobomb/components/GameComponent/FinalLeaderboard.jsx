@@ -4,8 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { getSupabaseUrl } from '../../service/imageService'
 import Profile from '../Profile'
 import ConfettiCannon from 'react-native-confetti-cannon'
+import { theme } from '../../constants/theme'
 
-const FinalLeaderboard = ({ playerData }) => {
+const FinalLeaderboard = ({ playerData, promptText }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [winners, setWinners] = useState([]);
   
@@ -55,7 +56,7 @@ const FinalLeaderboard = ({ playerData }) => {
 
         <Profile 
         image_url={getSupabaseUrl(item.users?.image_url)}
-        profileSize={40}
+        style={styles.profileImage}
         />
         <Text style={styles.playerName}>{item.users?.username || 'Unknown Player'}</Text>
         <View style={styles.scoreContainer}>
@@ -70,6 +71,10 @@ const FinalLeaderboard = ({ playerData }) => {
       </LinearGradient>
     );
   };
+
+  // Prepare top 3 players for the new UI
+  const sortedPlayers = playerData ? [...playerData].sort((a, b) => b.score - a.score) : [];
+  const top3 = sortedPlayers.slice(0, 3);
   
   return (
     <SafeAreaView style={styles.container}>
@@ -80,24 +85,54 @@ const FinalLeaderboard = ({ playerData }) => {
           <Text style={styles.winnerTitle}>
             {winners.length > 1 ? 'It\'s a Tie!' : 'Winner'}
           </Text>
-          
+
           {winners.length > 1 && (
             <Text style={styles.tieMessage}>
               Multiple winners with the same score!
             </Text>
           )}
+
+          {/* Show the prompter's original prompt */}
+          {promptText && (
+            <Text style={styles.promptText}>
+              {promptText}
+            </Text>
+          )}
         </View>
       )}
-      <Text style={styles.leaderboardTitle}>Final Leaderboard</Text>
-      
-      <FlatList
-        data={playerData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPlayerItem}
-        style={styles.leaderboardList}
-        contentContainerStyle={styles.listContent}
-      />
-      
+
+        {/* Top 3 Players UI */}
+        <View style={styles.topThreeContainer}>
+          {top3.map((player, idx) => {
+            const isCenter = idx === 1;
+            return (
+              <View
+                key={player.id}
+                style={[
+                  styles.topPlayerContainer,
+                  isCenter && styles.topPlayerCenter,
+                ]}
+              >
+
+                {/* Player avatar */}
+                <Image
+                  source={{ uri: getSupabaseUrl(player.users?.image_url) }}
+                  style={[
+                    styles.topPlayerImage,
+                    isCenter && styles.topPlayerImageCenter,
+                  ]}
+                />
+                <Text style={styles.topPlayerUsername}>
+                  {player.users?.username}
+                </Text>
+                <Text style={styles.topPlayerScore}>
+                  {player.score}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
       {showConfetti && (
         <ConfettiCannon
           count={200}
@@ -116,9 +151,15 @@ export default FinalLeaderboard
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: theme.background,
     paddingHorizontal: 16,
     alignItems: 'center',
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    marginRight: 10,
   },
   titleText: {
     color: 'white',
@@ -169,7 +210,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   tieMessage: {
-    color: '#FFD700',
+    color: 'white',
     fontWeight: '600',
     fontSize: 14,
     marginTop: 10,
@@ -206,7 +247,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     width: 30,
     height: 30,
-    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -263,5 +303,64 @@ const styles = StyleSheet.create({
   homeButton: {
     marginVertical: 20,
     width: '80%',
-  }
+  },
+  promptText: {
+    color: 'white',
+    fontSize: 16,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  topThreeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    width: '100%',
+    marginVertical: 20,
+  },
+  topPlayerContainer: {
+    alignItems: 'center',
+  },
+  topPlayerCenter: {
+    marginBottom: 0,
+  },
+  crown: {
+    width: 40,
+    height: 30,
+    marginBottom: -10,
+  },
+  triangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 12,
+    borderRightWidth: 12,
+    borderBottomWidth: 15,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'white',
+    marginBottom: -5,
+  },
+  topPlayerImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: '#8A2BE2',
+  },
+  topPlayerImageCenter: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 4,
+    borderColor: '#8A2BE2',
+  },
+  topPlayerUsername: {
+    color: 'white',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  topPlayerScore: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 })
