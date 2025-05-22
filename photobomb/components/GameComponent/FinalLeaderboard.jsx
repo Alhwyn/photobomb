@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View, SafeAreaView, Image } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { LinearGradient } from 'expo-linear-gradient'
+import { useEffect, useState } from 'react'
 import { getSupabaseUrl } from '../../service/imageService'
 import ConfettiCannon from 'react-native-confetti-cannon'
 import { theme } from '../../constants/theme'
