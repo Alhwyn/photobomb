@@ -1,28 +1,23 @@
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, SafeAreaView, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, SafeAreaView, Alert } from 'react-native';
 import { theme } from '../constants/theme';
-import BackButton from '../components/BackButton';
-import NumberInput from '../components/NumberInput';
-import Button from '../components/Button';
-import { useRouter } from 'expo-router';
+import NumberInput from './NumberInput';
+import Button from './Button';
 import { checkGamePin, addUserToLobby } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
 import { checkDuplicateGameId } from '../service/gameStartService';
 
-
-const joinGame = () => {
-  const router = useRouter();
+const JoinGameComponent = ({ onBack, onSuccessfulJoin }) => {
   const [gamePin, setGamePin] = useState('');
-  const [isLoading, setisLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-
   const handleJoinGame = async () => {
     if (!gamePin) {
       Alert.alert('Error', 'Please Enter a game Pin');
       return;
     }
 
-    setisLoading(true);
+    setIsLoading(true);
 
     try {
       const isValidPin = await checkGamePin(gamePin);
@@ -31,27 +26,21 @@ const joinGame = () => {
 
       if (!isValidPin.success) {
         Alert.alert('Invalid game Pin: ', 'The game entered does not exist,')
-        setisLoading(false);
+        setIsLoading(false);
         return;
       }
 
       const userPayload = await getUserPayloadFromStorage();
-      console.log(isValidPin?.data?.[0]?.id);
-
-
-      console.log(checkDuplicateGameId(userPayload?.id));
-
 
       const result = await addUserToLobby(userPayload?.id, isValidPin?.data?.[0]?.id, false);
     
       if (result?.success) {
-
-        router.push({
-          pathname: 'Lobby'
-        })
+        // Call the success callback instead of navigating
+        onSuccessfulJoin && onSuccessfulJoin();
       }
     } catch(error) {
-      console.error('joinGame.jsx Could not join game: ', error.message);
+      console.error('JoinGameComponent Could not join game: ', error.message);
+      setIsLoading(false);
       return;
     }
   }
@@ -59,49 +48,49 @@ const joinGame = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.bigContainer}>
-        <BackButton/>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>
-            Join Game  
-          </Text>
-        </View>
         <View style={styles.inputContainer}>
           <NumberInput value={gamePin} onChangeText={setGamePin} />
           <Button 
-            title='Join' 
-            colors={theme.buttonGradient.secondary} 
+            title={isLoading ? 'Joining...' : 'Join'} 
+            colors={theme.buttonGradient.primary} 
             onPress={handleJoinGame}
+            disabled={isLoading}
+          />
+          <Button 
+            title="Back" 
+            colors={theme.buttonGradient.secondary} 
+            onPress={onBack}
+            style={styles.backButton}
           />
         </View>
-       
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
 
-export default joinGame;
+export default JoinGameComponent;
 
 const styles = StyleSheet.create({
   bigContainer: {
-    flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: 'transparent',
   },
   title: {
     color: '#ffffff', 
     fontWeight: theme.fonts.extraBold,
     fontSize: 32,
   },
-  headerContainer: {
-    alignItems: 'center',
-    paddingTop: 10,
-  }, 
   inputContainer: {
-    flex: 1,
     justifyContent: 'center',
-    gap: 20,
+    gap: 10,
     paddingLeft: 20,
-    paddingRight: 20,
+    paddingRight: 10,
     marginBottom: 80, 
+  },
+  backButtonContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  backButton: {
+    width: 80,
   }
-
 });

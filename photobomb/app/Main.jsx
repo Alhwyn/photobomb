@@ -1,7 +1,6 @@
 import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Button from '../components/Button'
-import { LinearGradient } from 'expo-linear-gradient';
 import { getSupabaseUrl } from '../service/imageService';
 import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
@@ -14,85 +13,146 @@ import Animated, {
   withSpring, 
   withDelay, 
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated'
 import LottieView from 'lottie-react-native';
-
+import JoinGameComponent from '../components/JoinGameComponent';
+import GameSelectorComponent from '../components/GameSelectorComponent';
 const Main = () => {
     const router = useRouter();
     const [userPayload, setUserPayload] = useState(null); 
     const [profileImage, setProfileImage] = useState(null);
+    const [IsMainPage, setIsMainPage] = useState('Start'); // Start, Join, Create, Joining
+    const [currentComponent, setCurrentComponent] = useState('Buttons'); // Buttons, JoinGame, GameSelector, Lobby
+    const animationRef = React.useRef(null);
 
     // Animation values
-    const logoY = useSharedValue(-40);
+    const logoY = useSharedValue(-80);
+    const logoScale = useSharedValue(0.7);
     const logoOpacity = useSharedValue(0);
     const titleOpacity = useSharedValue(0);
-    const buttonsY = useSharedValue(30);
+    const titleScale = useSharedValue(0.7);
+    const buttonsY = useSharedValue(60);
     const buttonsOpacity = useSharedValue(0);
+    const buttonsScale = useSharedValue(0.7);
+    
+    // Helper for smooth transition between components
+    const handleComponentTransition = (mainPage, component) => {
+      // Fade out buttons, then switch component, then fade in
+      buttonsOpacity.value = withTiming(0, { duration: 200 }, () => {
+        runOnJS(setIsMainPage)(mainPage);
+        runOnJS(setCurrentComponent)(component);
+        buttonsOpacity.value = withTiming(1, { duration: 200 });
+      });
+    };
 
-    // Define animated styles
-    const logoAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ translateY: logoY.value }],
-            opacity: logoOpacity.value
-        };
-    });
+    const handleMainAnimationComponent = () => {
+      if (IsMainPage === 'Start') { 
+        return (
+          <LottieView
+              source={require('../assets/json/Wake_up.json')}
+              autoPlay
+              loop={false}
+              style={styles.lottieAnimation}
+          />
+        );
+      } else if (IsMainPage === 'Join' || IsMainPage === 'Create') {
+        return (
+          <LottieView
+              ref={animationRef}
+              source={require('../assets/json/Excited.json')}
+              autoPlay
+              loop={false}
+              style={styles.lottieAnimation}
+              onAnimationFinish={() => {
+                runOnJS(setIsMainPage)(IsMainPage === 'Join' ? 'Joining' : 'Creating');
+              }}
+          />
+        );
+      } else if (
+        IsMainPage === 'Joining' ||
+        IsMainPage === 'Creating' ||
+        currentComponent === 'JoinGame' ||
+        currentComponent === 'GameSelector' ||
+        currentComponent === 'Lobby'
+      ) {
+        return (
+          <LottieView
+              source={require('../assets/json/Exciited_State.json')}
+              autoPlay
+              loop={true}
+              style={styles.lottieAnimation}
+          />
+        );
+      }
+    };
 
-    const titleAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: titleOpacity.value
-        };
-    });
-
-    const buttonsAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ translateY: buttonsY.value }],
-            opacity: buttonsOpacity.value
-        };
-    });
+    // Animated styles
+    const logoAnimatedStyle = useAnimatedStyle(() => ({
+      transform: [
+        { translateY: logoY.value },
+        { scale: logoScale.value },
+        { rotate: `${logoY.value * 0.5}deg` }, // playful tilt
+      ],
+      opacity: logoOpacity.value,
+    }));
+    const titleAnimatedStyle = useAnimatedStyle(() => ({
+      opacity: titleOpacity.value,
+      transform: [{ scale: titleScale.value }],
+    }));
+    const buttonsAnimatedStyle = useAnimatedStyle(() => ({
+      transform: [
+        { translateY: buttonsY.value },
+        { scale: buttonsScale.value },
+      ],
+      opacity: buttonsOpacity.value,
+    }));
 
     useEffect(() => {
         // Animate logo
-        logoY.value = withSpring(0, { damping: 10, stiffness: 80 });
-        logoOpacity.value = withTiming(1, { duration: 800 });
-        
-        // Animate title with delay
-        titleOpacity.value = withDelay(500, withTiming(1, { duration: 600 }));
-        
-        // Animate buttons with more delay
-        buttonsY.value = withDelay(800, withSpring(0, { damping: 12, stiffness: 80 }));
-        buttonsOpacity.value = withDelay(800, withTiming(1, { duration: 500 }));
+        logoY.value = withSpring(0, { damping: 7, stiffness: 120 });
+        logoScale.value = withSpring(1, { damping: 7, stiffness: 120 });
+        logoOpacity.value = withTiming(1, { duration: 600 });
+
+        // Title: pop in after logo
+        setTimeout(() => {
+          titleOpacity.value = withTiming(1, { duration: 400 });
+          titleScale.value = withSpring(1, { damping: 7, stiffness: 120 });
+        }, 350);
+
+        // Buttons: bounce up and fade in after title
+        setTimeout(() => {
+          buttonsY.value = withSpring(0, { damping: 8, stiffness: 120 });
+          buttonsOpacity.value = withTiming(1, { duration: 400 });
+          buttonsScale.value = withSpring(1, { damping: 8, stiffness: 120 });
+        }, 700);
 
         // Fetch user data
         const fetchUserData = async () => {
             const data = await getUserPayloadFromStorage();
-
             if (data) {
                 setUserPayload(data);
                 const imageSource = await getSupabaseUrl(data?.image_url);
                 setProfileImage(imageSource);
             }
         };
-    
         fetchUserData();
-    
         const intervalId = setInterval(async () => {
             const updatedData = await getUserPayloadFromStorage();
             if (updatedData && JSON.stringify(updatedData) !== JSON.stringify(userPayload)) {
                 setUserPayload(updatedData); 
             }
         }, 1000);
-    
         return () => clearInterval(intervalId);
     }, []); 
 
   return (
     <SafeAreaView style={styles.container}>
-        <StatusBar style="light-content" />
         <SafeAreaView style={styles.safeArea}>
             {/* Header with Profile */}
             <View style={styles.header}> 
                 {/* Profile Pic Component */}
-                <TouchableOpacity style={styles.profileButton} onPress={() => router.push('userProfile')}>
+                <TouchableOpacity style={styles.profileButton} onPress={() => router.push('UpdateUser')}>
                     <Profile 
                         profileSize={48}
                         image_url={profileImage}
@@ -105,38 +165,48 @@ const Main = () => {
                 {/* Animated Logo */}
                 <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
                     <View style={styles.lottieClipContainer}>
-                        <LottieView
-                            source={require('../assets/json/Wake_up.json')}
-                            autoPlay
-                            loop={false}
-                            style={styles.lottieAnimation}
-                        />
+                        {handleMainAnimationComponent()}
                     </View>
                 </Animated.View>
 
                 {/* Animated Title */}
                 <Animated.View style={[styles.titleContainer, titleAnimatedStyle]}>
-                    <Text style={[styles.titleText, { color: 'white' }]}>Photo</Text>
-                    <Text style={[styles.titleText, { color: 'white' }]}>Bomb</Text>
+                    <Text style={[styles.titleText, { color: 'white' }]}>PhotoBomb</Text>
                 </Animated.View>
-                
-                {/* Animated Button Container */}
+                 {/* Animated Button Container */}
                 <Animated.View style={[styles.buttonContainer, buttonsAnimatedStyle]}>
-                    <Button
-                        title="Create Game"
-                        colors={theme.buttonGradient.primary} 
-                        textColor="#fff"
-                        onPress={() => router.push('gameSelector')}
-                        style={styles.createButton}
+                  {currentComponent === 'Buttons' ? (
+                    <>
+                      <Button
+                          title="Create Game"
+                          colors={theme.buttonGradient.primary} 
+                          textColor="#fff"
+                          onPress={() => handleComponentTransition('Create', 'GameSelector')}
+                          style={styles.createButton}
+                      />
+                      
+                      <Button 
+                          title="Join Game" 
+                          colors={theme.buttonGradient.secondary}
+                          textColor="#fff"
+                          onPress={() => handleComponentTransition('Join', 'JoinGame')}
+                          style={styles.joinButton}
+                      />
+                    </>
+                  ) : currentComponent === 'JoinGame' ? (
+                    <JoinGameComponent 
+                      onBack={() => handleComponentTransition('Start', 'Buttons')}
+                      onSuccessfulJoin={() => handleComponentTransition('Start', 'Lobby')}
                     />
-                    
-                    <Button 
-                        title="Join Game" 
-                        colors={theme.buttonGradient.secondary}
-                        textColor="#fff"
-                        onPress={() => router.push('joinGame')}
-                        style={styles.joinButton}
+                  ) : currentComponent === 'GameSelector' ? (
+                    <GameSelectorComponent 
+                      onBack={() => handleComponentTransition('Start', 'Buttons')}
+                      onSuccessfulCreate={() => {
+                        handleComponentTransition('Start', 'Buttons');
+                        router.push('Lobby');
+                      }}
                     />
+                  ) : null}
                 </Animated.View>
             </View>
      </SafeAreaView>
@@ -197,7 +267,6 @@ const styles = StyleSheet.create({
     titleContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 50,
         marginTop: 20,
     },
     titleText: {
@@ -218,6 +287,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
       width: '100%',
       gap: 16,
+      flex: 1,  // Added flex to make it expandable for components
     },
     createButton: {
       marginBottom: 10,

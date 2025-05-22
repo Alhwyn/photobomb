@@ -87,7 +87,7 @@ const Lobby = () => {
             if (UserIsCreator !== localPlayerData?.id) {
                 alert('The game has been ended by the creator');
             }
-            router.back();
+            router.replace('Main');
         } else {
             setIsLoading(false);
         }
@@ -284,10 +284,10 @@ const Lobby = () => {
                 }
             }
 
-            router.back();
+            router.replace('Main');
         } catch(error) {
             console.error('Error in handleExitLobby:', error.message);
-            router.back();
+            router.replace('Main');
         }
     };
     const handleStartGame = async () => {

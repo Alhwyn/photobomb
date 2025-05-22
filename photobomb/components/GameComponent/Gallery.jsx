@@ -408,7 +408,6 @@ const Gallery = ({ gameId, currentPrompt, prompter }) => {
                         onLoad={() => handleImageLoaded(imageUri)}
                     />
                 </View>
-                <Text style={styles.description}>{image.description || `Photo by ${playerName}`}</Text>
             </TouchableOpacity>
         );
     };
