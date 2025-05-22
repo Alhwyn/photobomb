@@ -11,9 +11,10 @@ import Animated, {
   useSharedValue, 
   useAnimatedStyle, 
   withSpring, 
-  withDelay, 
   withTiming,
   runOnJS,
+  withRepeat,
+  withSequence,
 } from 'react-native-reanimated'
 import LottieView from 'lottie-react-native';
 import JoinGameComponent from '../components/JoinGameComponent';
@@ -36,13 +37,16 @@ const Main = () => {
     const buttonsOpacity = useSharedValue(0);
     const buttonsScale = useSharedValue(0.7);
     
+    const pulse = useSharedValue(1);
+    const shake = useSharedValue(0);
+
     // Helper for smooth transition between components
     const handleComponentTransition = (mainPage, component) => {
       // Fade out buttons, then switch component, then fade in
-      buttonsOpacity.value = withTiming(0, { duration: 200 }, () => {
+      buttonsOpacity.value = withTiming(0, { duration: 100 }, () => {
         runOnJS(setIsMainPage)(mainPage);
         runOnJS(setCurrentComponent)(component);
-        buttonsOpacity.value = withTiming(1, { duration: 200 });
+        buttonsOpacity.value = withTiming(1, { duration: 100 });
       });
     };
 
@@ -90,8 +94,10 @@ const Main = () => {
     // Animated styles
     const logoAnimatedStyle = useAnimatedStyle(() => ({
       transform: [
+        { translateX: shake.value },
         { translateY: logoY.value },
         { scale: logoScale.value },
+        { scale: pulse.value },
         { rotate: `${logoY.value * 0.5}deg` }, // playful tilt
       ],
       opacity: logoOpacity.value,
@@ -126,6 +132,7 @@ const Main = () => {
           buttonsOpacity.value = withTiming(1, { duration: 400 });
           buttonsScale.value = withSpring(1, { damping: 8, stiffness: 120 });
         }, 700);
+
 
         // Fetch user data
         const fetchUserData = async () => {
@@ -181,7 +188,17 @@ const Main = () => {
                           title="Create Game"
                           colors={theme.buttonGradient.primary} 
                           textColor="#fff"
-                          onPress={() => handleComponentTransition('Create', 'GameSelector')}
+                          onPress={() => {
+                            shake.value = withRepeat(
+                              withSequence(
+                                withTiming(-5, { duration: 150 }),
+                                withTiming(5,  { duration: 150 })
+                              ),
+                              -1,
+                              true
+                            );
+                            handleComponentTransition('Create', 'GameSelector');
+                          }}
                           style={styles.createButton}
                       />
                       
@@ -189,20 +206,45 @@ const Main = () => {
                           title="Join Game" 
                           colors={theme.buttonGradient.secondary}
                           textColor="#fff"
-                          onPress={() => handleComponentTransition('Join', 'JoinGame')}
+                          onPress={() => {
+                            shake.value = withRepeat(
+                              withSequence(
+                                withTiming(-5, { duration: 150 }),
+                                withTiming(5,  { duration: 150 })
+                              ),
+                              -1,
+                              true
+                            );
+                            handleComponentTransition('Join', 'JoinGame');
+                          }}
                           style={styles.joinButton}
                       />
                     </>
                   ) : currentComponent === 'JoinGame' ? (
                     <JoinGameComponent 
-                      onBack={() => handleComponentTransition('Start', 'Buttons')}
-                      onSuccessfulJoin={() => handleComponentTransition('Start', 'Lobby')}
+                      onBack={() => {
+                        // stop shaking when going back
+                        shake.value = withTiming(0);
+                        handleComponentTransition('Start', 'Buttons');
+                      }}
+                      onSuccessfulJoin={() => {
+                        handleComponentTransition('Start', 'Lobby')
+                        setIsMainPage('Start');
+                        setCurrentComponent('Buttons');
+                        router.push('Lobby');
+                      }}
                     />
                   ) : currentComponent === 'GameSelector' ? (
                     <GameSelectorComponent 
-                      onBack={() => handleComponentTransition('Start', 'Buttons')}
+                      onBack={() => {
+                        // stop shaking when going back
+                        shake.value = withTiming(0);
+                        handleComponentTransition('Start', 'Buttons');
+                      }}
                       onSuccessfulCreate={() => {
                         handleComponentTransition('Start', 'Buttons');
+                        setIsMainPage('Start');
+                        setCurrentComponent('Buttons');
                         router.push('Lobby');
                       }}
                     />
@@ -239,12 +281,16 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 20,
+      marginTop: 100,
     },
     lottieClipContainer: {
-        width: 200,  // Increased from 120
-        height: 160, // Increased from 100
+        width: 200, 
+        height: 160,
         overflow: 'hidden',
         borderRadius: 12, // Slightly larger radius for the larger container
+        shadowColor: '#ffffff',
+        shadowRadius: 10,
+        elevation: 10,
     },
     logoCircle: {
       width: 100,    
@@ -300,10 +346,10 @@ const styles = StyleSheet.create({
       fontSize: 16,
     },
     lottieAnimation: {
-        width: 250,  // Increased from 150
-        height: 250, // Increased from 150
-        top: -10,    // Adjusted to maintain proper positioning
-        left: -25,   // Adjusted to keep animation centered
+        width: 250, 
+        height: 250,
+        top: -10,    
+        left: -25,   
         position: 'absolute',
     },
   });

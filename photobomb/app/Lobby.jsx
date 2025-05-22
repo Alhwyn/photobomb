@@ -296,7 +296,7 @@ const Lobby = () => {
          * 
          */
         try {
-            if (onlineUsers.length < 2) {
+            if (onlineUsers.length < 3) {
                 alert('You need at least 2 players to start the game');
                 return;
             }

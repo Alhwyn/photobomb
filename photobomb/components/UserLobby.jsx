@@ -1,5 +1,6 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
 import Profile from './Profile';
 import { getSupabaseUrl } from '../service/imageService';
@@ -14,7 +15,11 @@ const UserLobby = ({ lobbyData }) => {
     const getImageUri = getSupabaseUrl(image_url);
 
     return (
-      <View style={styles.itemContainer}>
+      <Animated.View
+        entering={FadeInDown.duration(300)}
+        exiting={FadeOutUp.duration(300)}
+        style={styles.itemContainer}
+      >
         {/* Profile Picture */}
         <Profile image_url={getImageUri} style={styles.profileImage} />
 
@@ -23,7 +28,7 @@ const UserLobby = ({ lobbyData }) => {
           <Text style={styles.username}>{username}</Text>
           {is_creator && <Text style={styles.creatorBadge}>Creator</Text>}
         </View>
-      </View>
+      </Animated.View>
     );
   };
   return (

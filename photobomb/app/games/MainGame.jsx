@@ -212,9 +212,11 @@ const Main = () => {
             }
                 
             if (data?.playergame && data.playergame.length > 0) {
-                const gameId = data.playergame[0].game_id;
-                console.log('Setting game ID to:', gameId);
-                setGameId(gameId);
+                // Sort entries by created_at descending to get the latest
+                const sortedGames = [...data.playergame].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                const latestGameId = sortedGames[0].game_id;
+                console.log('Setting game ID to latest:', latestGameId);
+                setGameId(latestGameId);
             } else {
                 console.log('No player game data found for this user');
             }
@@ -291,7 +293,7 @@ const Main = () => {
                 
                 // Reset all the states for a new round
                 setSelectedPrompt(null);
-                setPromptSubmitted(false);
+                setIsPrompterSubmit(false);
                 setImagesSelected(false);
                 setWinnerData(null);
                 
@@ -933,39 +935,46 @@ const Main = () => {
         const initiallizeGameData = async () => {
             try {
                 await fetchUserData();
-                
-                // Ensure we have a valid gameID before proceeding with dependent operations
+
+                // Wait for gameID to be set, up to 10 times (2 seconds max)
+                let waitCount = 0;
+                while (!gameID && waitCount < 10) {
+                    console.log('Waiting for gameID to be set...');
+                    await new Promise(res => setTimeout(res, 200)); // Wait for 200ms
+                    waitCount++;
+                }
+
                 if (!gameID) {
-                    console.log('GameID not available yet, waiting...');
+                    console.log('GameID still not set after waiting. Exiting initialization.');
                     return;
                 }
-                
+
                 console.log('Initializing game data for game ID:', gameID);
-                
+
                 // Load all important game data in parallel for better performance
                 const [roundResult, playersResult, submissionsResult] = await Promise.all([
                     // Get current round data
                     getRoundData(gameID),
-                    
+
                     // Get all players in this game
                     supabase
                         .from('playergame')
                         .select(`*, users(username, image_url)`)
                         .eq('game_id', gameID),
-                        
+
                     // Get all submissions for the current game
                     getSubmissionData(gameID)
                 ]);
-                
+
                 // Process round data
                 if (roundResult?.success && roundResult?.data?.prompter_id) {
                     // Cache the round data
                     setCurrentRoundData(roundResult.data);
-                    
+
                     // Get prompter details
                     const prompterPayload = await viewPlayerGameTable(roundResult.data.prompter_id);
                     setShowPrompterPayload(prompterPayload);
-                    
+
                     // Check if current user is the prompter
                     const rolePayload = await checkUserRole();
                     setIsPrompter(rolePayload?.data?.is_prompter);
@@ -973,37 +982,37 @@ const Main = () => {
                     console.log('Unable to retrieve valid round data or prompter_id is missing');
                     setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
                 }
-                
+
                 // Cache players data if available
                 if (playersResult?.data && !playersResult.error) {
                     setAllPlayersData(playersResult.data);
                 }
-                
+
                 // Cache submissions data if available
                 if (submissionsResult?.success && submissionsResult?.data) {
                     setSubmissionsData(submissionsResult.data);
                 }
-                
+
                 // Set up real-time subscriptions
                 console.log('Setting up Supabase subscriptions for game ID:', gameID);
-                
+
                 // Combine subscriptions into a single channel when possible to reduce overhead
                 const gameChannel = supabase
                     .channel(`game-${gameID}`)
                     .on('postgres_changes',
-                        { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, 
+                        { event: 'UPDATE', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` },
                         mainRoundUpdateHandler)
                     .on('postgres_changes',
-                        { event: 'INSERT', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` }, 
+                        { event: 'INSERT', schema: 'public', table: 'round', filter: `game_id=eq.${gameID}` },
                         mainRoundUpdateHandler)
-                    .on('postgres_changes', 
-                        { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}`}, 
+                    .on('postgres_changes',
+                        { event: 'UPDATE', schema: 'public', table: 'submissions', filter: `game_id=eq.${gameID}`},
                         mainSubmissionUpdateHandler)
                     .on('postgres_changes',
-                        { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` }, 
+                        { event: 'UPDATE', schema: 'public', table: 'playergame', filter: `game_id=eq.${gameID}` },
                         mainPlayerGameUpdateHandler)
                     .subscribe();
-                
+
                 // Store the subscription reference for cleanup
                 return () => {
                     console.log('Cleaning up Supabase subscription');
@@ -1013,10 +1022,10 @@ const Main = () => {
                 console.log('Error in Use Effect: ' + error.message);
             };
         };
-        
+
         // Start initialization
         const cleanup = initiallizeGameData();
-        
+
         // Return cleanup function if available
         return () => {
             if (cleanup && typeof cleanup === 'function') {
