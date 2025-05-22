@@ -1,4 +1,3 @@
-import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
