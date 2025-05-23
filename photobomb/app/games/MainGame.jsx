@@ -1,5 +1,5 @@
-import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity, Modal, Image } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { SafeAreaView, StyleSheet, Text, View, Platform, Modal, Image } from 'react-native'
+import { useEffect, useState } from 'react'
 import Button from '../../components/Button';
 import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
@@ -11,11 +11,10 @@ import { supabase } from '../../lib/supabase';
 import { getRoundData } from '../../service/gameService';
 import Prompter from '../../components/GameComponent/Prompter';
 import ImageSubmission from '../../components/GameComponent/ImageSubmission';
-import { getSubmissionData } from '../../service/gameService'
+import { getSubmissionData, getGameDataOptimized } from '../../service/gameService'
 import { getSupabaseUrl } from '../../service/imageService';
 import Winner from '../../components/GameComponent/Winner';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
 import LoadingPhotobomb from '../../components/GameComponent/PhotobombLoading';
 import * as ImageManipulator from 'expo-image-manipulator';
 
@@ -515,6 +514,7 @@ const Main = () => {
                 console.log('Using cached round data');
             } else {
                 // Get the current round data to check if this player is the prompter
+                console.log('⭐️ BEFORE ROUND QUERY - gameID:', gameID);
                 const {data: roundDataArray, error: roundError} = await supabase
                     .from('round')
                     .select('prompter_id, round, id')
@@ -523,7 +523,7 @@ const Main = () => {
                     .order('created_at', { ascending: false })
                     .limit(1);
                     
-                console.log('Current round data in checkUserRole:', roundDataArray);
+                console.log('⭐️ AFTER ROUND QUERY - Current round data in checkUserRole:', roundDataArray);
                     
                 if (roundError) {
                     console.log('Error fetching round data in checkUserRole:', roundError.message);
@@ -538,11 +538,19 @@ const Main = () => {
                 roundData = roundDataArray[0];
                 // Cache the round data for future use
                 setCurrentRoundData(roundData);
+
             }
             
             // Add a flag to indicate if this player is the prompter in the current round
+            // In the round table, prompter_id refers to the playergame.id, not the player_id
+            // So we need to compare fetchPlayerGameData.id with roundData.prompter_id
             fetchPlayerGameData.is_prompter = (fetchPlayerGameData.id === roundData.prompter_id);
             console.log(`Player ${fetchPlayerGameData.id} is prompter: ${fetchPlayerGameData.is_prompter}`);
+            
+            // Debugging the prompter detection
+            console.log('Comparing ids to determine prompter:');
+            console.log('Player Game ID:', fetchPlayerGameData.id, 'Type:', typeof fetchPlayerGameData.id);
+            console.log('Round Prompter ID:', roundData.prompter_id, 'Type:', typeof roundData.prompter_id);
             
             return {success: true, data: fetchPlayerGameData};
 
@@ -949,46 +957,80 @@ const Main = () => {
 
                 console.log('Initializing game data for game ID:', gameID);
 
-                // Load all important game data in parallel for better performance
-                const [roundResult, playersResult, submissionsResult] = await Promise.all([
-                    // Get current round data
-                    getRoundData(gameID),
+                // Use the new optimized function to get all game data in a single query
+                const gameDataResult = await getGameDataOptimized(gameID);
+                
+                if (gameDataResult?.success && gameDataResult?.data) {
+                    const { game, currentRound, submissions, players } = gameDataResult.data;
+                    
+                    // Process round data
+                    if (currentRound?.prompter_id) {
+                        // Cache the round data
+                        setCurrentRoundData(currentRound);
 
-                    // Get all players in this game
-                    supabase
-                        .from('playergame')
-                        .select(`*, users(username, image_url)`)
-                        .eq('game_id', gameID),
+                        // Get prompter details
+                        const prompterPayload = await viewPlayerGameTable(currentRound.prompter_id);
+                        setShowPrompterPayload(prompterPayload);
 
-                    // Get all submissions for the current game
-                    getSubmissionData(gameID)
-                ]);
+                        // Check if current user is the prompter
+                        const rolePayload = await checkUserRole();
+                        setIsPrompter(rolePayload?.data?.is_prompter);
+                    } else {
+                        console.log('Unable to retrieve valid round data or prompter_id is missing');
+                        setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
+                    }
 
-                // Process round data
-                if (roundResult?.success && roundResult?.data?.prompter_id) {
-                    // Cache the round data
-                    setCurrentRoundData(roundResult.data);
+                    // Cache players data
+                    setAllPlayersData(players);
 
-                    // Get prompter details
-                    const prompterPayload = await viewPlayerGameTable(roundResult.data.prompter_id);
-                    setShowPrompterPayload(prompterPayload);
-
-                    // Check if current user is the prompter
-                    const rolePayload = await checkUserRole();
-                    setIsPrompter(rolePayload?.data?.is_prompter);
+                    // Cache submissions data
+                    setSubmissionsData(submissions);
+                    
+                    console.log('Optimized game data loaded successfully');
                 } else {
-                    console.log('Unable to retrieve valid round data or prompter_id is missing');
-                    setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
-                }
+                    console.log('Failed to load optimized game data, falling back to individual queries');
+                    
+                    // Fallback to original method if optimized fails
+                    const [roundResult, playersResult, submissionsResult] = await Promise.all([
+                        // Get current round data
+                        getRoundData(gameID),
 
-                // Cache players data if available
-                if (playersResult?.data && !playersResult.error) {
-                    setAllPlayersData(playersResult.data);
-                }
+                        // Get all players in this game
+                        supabase
+                            .from('playergame')
+                            .select(`*, users(username, image_url)`)
+                            .eq('game_id', gameID),
 
-                // Cache submissions data if available
-                if (submissionsResult?.success && submissionsResult?.data) {
-                    setSubmissionsData(submissionsResult.data);
+                        // Get all submissions for the current game
+                        getSubmissionData(gameID)
+                    ]);
+
+                    // Process round data
+                    if (roundResult?.success && roundResult?.data?.prompter_id) {
+                        // Cache the round data
+                        setCurrentRoundData(roundResult.data);
+
+                        // Get prompter details
+                        const prompterPayload = await viewPlayerGameTable(roundResult.data.prompter_id);
+                        setShowPrompterPayload(prompterPayload);
+
+                        // Check if current user is the prompter
+                        const rolePayload = await checkUserRole();
+                        setIsPrompter(rolePayload?.data?.is_prompter);
+                    } else {
+                        console.log('Unable to retrieve valid round data or prompter_id is missing');
+                        setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
+                    }
+
+                    // Cache players data if available
+                    if (playersResult?.data && !playersResult.error) {
+                        setAllPlayersData(playersResult.data);
+                    }
+
+                    // Cache submissions data if available
+                    if (submissionsResult?.success && submissionsResult?.data) {
+                        setSubmissionsData(submissionsResult.data);
+                    }
                 }
 
                 // Set up real-time subscriptions

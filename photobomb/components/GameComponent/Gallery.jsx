@@ -4,7 +4,6 @@ import { getSupabaseUrl } from '../../service/imageService';
 import Loading from '../Loading';
 import Button from '../Button';
 import { LinearGradient } from 'expo-linear-gradient'
-import { getSubmissionData, getPlayerGame, updateUserScore } from '../../service/gameService';
 import * as FileSystem from 'expo-file-system';
 import { supabase } from '../../lib/supabase';
 import Winner from './Winner';

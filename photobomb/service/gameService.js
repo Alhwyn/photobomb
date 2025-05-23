@@ -276,81 +276,79 @@ export const deletePlayerGame = async (playerId, gameId) => {
 
 export const getRoundData = async (gameId) => {
     /**
-     * fetches data for a specific game round from the round table
+     * fetches data for a specific game round with optimized query
      * @param {string} gameId - The ID of the game to fetch round data for.
-     * @returns {Promise<Object>} - an object indicating the success of the operationor an error message
+     * @returns {Promise<Object>} - an object indicating the success of the operation or an error message
      */
     try {
-        const {data, error } = await supabase
-          .from('round')
-          .select('*')
-          .eq('game_id', gameId)
-          .order('round', { ascending: false })
-          .limit(1);
+        const { data: gameData, error } = await supabase
+            .from('games')
+            .select(`*,
+                    round (id, round, prompter_id, created_at)`)
+            .eq('id', gameId)
+            .order('round', { foreignTable: 'round', ascending: false })
+            .limit(1, { foreignTable: 'round' });
 
         if (error) {
-            console.log('Error on fetching the data on the round table gameService.js', error.message);
-            return {success: false, message: error.message};
+            console.error('Error fetching round data:', error.message);
+            return { success: false, message: error.message };
         }
         
-        if (!data || data.length === 0) {
-            console.log('No round data found for this game');
-            return {success: false, message: 'No round data found'};
+        if (!gameData || gameData.length === 0 || !gameData[0].round || gameData[0].round.length === 0) {
+            console.error('No round data found for this game');
+            return { success: false, message: 'No round data found' };
         }
 
         console.log('Successfully fetched the data from the rounds table');
 
-        return {success: true, data: data[0]};
+        return { success: true, data: gameData[0].round[0] };
     } catch (error) {
         console.log('Error on fetching the data on the round table gameService.js', error.message);
-        return {success: false, message: error.message};
+        return { success: false, message: error.message };
     }
 }
 
 
 export const getSubmissionData = async (game_id) => {
     /**
-     * fetches data for a specific submission round from the round table
-     * @param {string} gameId - The ID of the game to fetch round data for.
-     * @returns {Promise<Object>} - an object indicating the success of the operationor an error message
+     * fetches data for a specific submission round from the round table with optimized single query
+     * @param {string} game_id - The ID of the game to fetch round data for.
+     * @returns {Promise<Object>} - an object indicating the success of the operation or an error message
      */
 
     try {
-        // First get the current round for this game
-        const { data: roundDataArray, error: roundError } = await supabase
-            .from('round')
-            .select('id, round')
-            .eq('game_id', game_id)
-            .order('round', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(1);
+        // Single optimized query to fetch game, round, and submissions data
+        const { data: gameData, error: roundError } = await supabase
+            .from('games')
+            .select(`*,
+                    round (id, round, prompter_id, created_at),
+                    submissions (id, player_id, photo_uri, created_at, round_id)`)
+            .eq('id', game_id)
+            .order('round', { foreignTable: 'round', ascending: false })
+            .limit(1, { foreignTable: 'round' });
 
         if (roundError) {
-            console.error('Error fetching current round:', roundError.message);
+            console.error('Error fetching game and round data:', roundError.message);
             return { success: false, message: roundError.message };
         }
         
-        if (!roundDataArray || roundDataArray.length === 0) {
+        if (!gameData || gameData.length === 0 || !gameData[0].round || gameData[0].round.length === 0) {
             console.error('No round data found for this game');
             return { success: false, message: 'No round data found' };
         }
         
-        const roundData = roundDataArray[0];
+        const roundData = gameData[0].round[0];
+        const allSubmissions = gameData[0].submissions || [];
         console.log(`Getting submissions for game ${game_id}, round ${roundData.round}, round ID: ${roundData.id}`);
 
-        // First check if there are duplicate submissions for the same player in this round
-        const { data: allSubmissions, error: checkError } = await supabase
-          .from('submissions')
-          .select(`id, player_id, photo_uri, created_at`)
-          .eq('round_id', roundData.id)
-          .order('created_at', { ascending: false });
-          
-        if (checkError) {
-            console.error('Error checking submissions:', checkError.message);
-        } else if (allSubmissions && allSubmissions.length > 0) {
+        // Filter submissions for the current round from the fetched data
+        const currentRoundSubmissions = allSubmissions.filter(sub => sub.round_id === roundData.id);
+
+        // Check for duplicate submissions for the same player in this round
+        if (currentRoundSubmissions && currentRoundSubmissions.length > 0) {
             // Group submissions by player_id to find duplicates
             const submissionsByPlayer = {};
-            allSubmissions.forEach(sub => {
+            currentRoundSubmissions.forEach(sub => {
                 if (!submissionsByPlayer[sub.player_id]) {
                     submissionsByPlayer[sub.player_id] = [];
                 }
@@ -391,8 +389,7 @@ export const getSubmissionData = async (game_id) => {
             }
         }
 
-        // Now get submissions for the current round with detailed information
-        // After cleaning up duplicates
+        // Now get submissions for the current round with detailed player information
         const { data, error } = await supabase
           .from('submissions')
           .select(`*,
@@ -518,6 +515,81 @@ export const checkAndDeleteExistingGames = async (userId) => {
     } catch (error) {
         console.error('Unexpected error in checkAndDeleteExistingGames:', error.message);
         return {success: false, message: error.message};
+    }
+};
+
+export const getGameDataOptimized = async (game_id) => {
+    /**
+     * Fetches all game data (round, submissions, players) in a single optimized query
+     * @param {string} game_id - The ID of the game to fetch data for.
+     * @returns {Promise<Object>} - Complete game data or error message
+     */
+    try {
+        const { data: gameData, error } = await supabase
+            .from('games')
+            .select(`*,
+                    round (id, round, prompter_id, created_at),
+                    submissions (
+                        id, 
+                        player_id, 
+                        photo_uri, 
+                        created_at, 
+                        round_id,
+                        playergame (
+                            id, 
+                            score, 
+                            player_id, 
+                            is_creator, 
+                            users(username, image_url)
+                        )
+                    ),
+                    playergame (
+                        id,
+                        player_id,
+                        score,
+                        is_creator,
+                        users(id, username, image_url)
+                    )`)
+            .eq('id', game_id)
+            .order('round', { foreignTable: 'round', ascending: false })
+            .limit(1, { foreignTable: 'round' });
+
+        if (error) {
+            console.error('Error fetching optimized game data:', error.message);
+            return { success: false, message: error.message };
+        }
+
+        if (!gameData || gameData.length === 0) {
+            console.error('No game data found');
+            return { success: false, message: 'Game not found' };
+        }
+
+        const game = gameData[0];
+        const currentRound = game.round?.[0];
+        const allSubmissions = game.submissions || [];
+        const players = game.playergame || [];
+
+        // Filter submissions for current round
+        const currentRoundSubmissions = currentRound 
+            ? allSubmissions.filter(sub => sub.round_id === currentRound.id)
+            : [];
+
+        console.log(`Optimized fetch: Game ${game_id}, Round ${currentRound?.round}, ${currentRoundSubmissions.length} submissions, ${players.length} players`);
+
+        return {
+            success: true,
+            data: {
+                game,
+                currentRound,
+                submissions: currentRoundSubmissions,
+                players,
+                allSubmissions
+            }
+        };
+
+    } catch (error) {
+        console.log('Error in optimized game data fetch:', error.message);
+        return { success: false, message: error.message };
     }
 };
 

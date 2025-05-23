@@ -19,6 +19,8 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
   const [gameEnded, setGameEnded] = useState(false);
   const [allPlayerData, setAllPlayerData] = useState([]);
   const timerRef = useRef(null);
+  const transitionInProgress = useRef(false); // Prevent multiple simultaneous transitions
+  const roundTransitionLock = useRef(false); // Add global lock for round transitions
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -198,7 +200,16 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
   };
   
   const handleNextRound = async () => {
+    // Enhanced protection against multiple calls
+    if (transitionInProgress.current || roundTransitionLock.current) {
+      console.log("Round transition already in progress, skipping duplicate call");
+      return;
+    }
+    
     try {
+      // Set both locks
+      transitionInProgress.current = true;
+      roundTransitionLock.current = true;
       setIsTransitioning(true);
       
       if (!gameId) {
@@ -206,19 +217,52 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
         return;
       }
       
+      console.log("Starting next round transition for game:", gameId);
+      
+      // Clear any existing timers first
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Add a small delay to prevent race conditions
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       // Call our new startNextRound function to advance to the next round
-      // This handles finding the next prompter, updating the round table, and creating new submissions
       const result = await startNextRound(gameId);
       
       if (!result.success) {
         console.error("Error advancing to next round:", result.message);
+        Alert.alert("Error", "Failed to start next round. Please try again.");
       } else {
         console.log("Advanced to next round successfully:", result);
+        // Add a delay before releasing the lock to ensure database operations complete
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     } catch (error) {
-      console.error("Error in handleNextRound:", error.message);
+      console.error("Unexpected error in handleNextRound:", error);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+    } finally {
+      // Always release locks
+      setTimeout(() => {
+        transitionInProgress.current = false;
+        roundTransitionLock.current = false;
+        setIsTransitioning(false);
+      }, 1000); // Extended delay to ensure all operations complete
     }
   };
+
+  // Add cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      // Reset locks on unmount
+      transitionInProgress.current = false;
+      roundTransitionLock.current = false;
+    };
+  }, []);
 
   if (!winnerData) {
     return (

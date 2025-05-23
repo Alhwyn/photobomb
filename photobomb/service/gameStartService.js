@@ -422,16 +422,43 @@ export const startNextRound = async (gameId) => {
     try {
         console.log("Starting next round for game:", gameId);
         
-        // Get current game data
+        // Get current game data with status check
         const { data: gameData, error: gameError } = await supabase
             .from("games")
-            .select("current_round")
+            .select("current_round, status")
             .eq("id", gameId)
             .single();
 
         if (gameError) {
             console.log("Error fetching game data:", gameError.message);
             return { success: false, message: gameError.message };
+        }
+        
+        // Early exit if game is completed or not active
+        if (gameData.status === 'completed' || gameData.status === 'terminated') {
+            console.log("Game is already completed or terminated, skipping round transition");
+            return { success: false, message: "Game is not active" };
+        }
+        
+        // Check if the next round already exists (indicating another process already created it)
+        const nextRoundCheck = gameData.current_round + 1;
+        const { data: existingNextRound, error: existingRoundError } = await supabase
+            .from("round")
+            .select("id, round, prompter_id")
+            .eq("game_id", gameId)
+            .eq("round", nextRoundCheck)
+            .limit(1);
+            
+        if (!existingRoundError && existingNextRound && existingNextRound.length > 0) {
+            console.log(`Round ${nextRoundCheck} already exists, another process has already started it`);
+            return { 
+                success: true, 
+                message: "Round already created by another process",
+                data: {
+                    newPrompter: existingNextRound[0].prompter_id,
+                    round: existingNextRound[0].round
+                }
+            };
         }
         
         // First, check for and clean up any duplicate rounds for the current round
