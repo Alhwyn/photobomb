@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Keyboard, SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Keyboard, SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import BackButton from '../components/BackButton';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -189,9 +189,8 @@ const UpdateUser = () => {
           </View>
           {isUploading && <ActivityIndicator size="large" color="#fff" style={{ marginVertical: 10 }} />}
           <Input
-            placeholder="Enter your Username..."
+            placeholder={username}
             onChangeText={(text) => setUsername(text)}
-            value={username}
           />
           <Button
             title={isUploading ? 'Updating...' : 'Update'}

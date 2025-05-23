@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View, Platform, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Button from '../components/Button'
 import { getSupabaseUrl } from '../service/imageService';
@@ -158,7 +158,9 @@ const Main = () => {
     }, []); 
 
   return (
+    
     <SafeAreaView style={styles.container}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <SafeAreaView style={styles.safeArea}>
             {/* Header with Profile */}
             <View style={styles.header}> 
@@ -254,6 +256,7 @@ const Main = () => {
                 </Animated.View>
             </View>
      </SafeAreaView>
+     </TouchableWithoutFeedback>
     </SafeAreaView>
   )
 }
@@ -283,7 +286,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 20,
-      marginTop: 100,
+      marginTop: 60,
     },
     lottieClipContainer: {
         width: 200, 

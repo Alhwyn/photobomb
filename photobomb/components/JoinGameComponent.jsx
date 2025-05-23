@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, SafeAreaView, Alert } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, TouchableWithoutFeedback, Keyboard, SafeAreaView, Alert } from 'react-native';
 import { theme } from '../constants/theme';
 import NumberInput from './NumberInput';
 import Button from './Button';
 import { checkGamePin, addUserToLobby } from '../service/gameService';
 import { getUserPayloadFromStorage } from '../service/userService';
-import { checkDuplicateGameId } from '../service/gameStartService';
 
 const JoinGameComponent = ({ onBack, onSuccessfulJoin }) => {
   const [gamePin, setGamePin] = useState('');

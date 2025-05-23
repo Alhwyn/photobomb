@@ -11,9 +11,10 @@ const _layout = () => {
     >
       {/* Disable back gesture for these game-related screens */}
       <Stack.Screen
-        name="Lobby"
+        name="Main"
         options={{
           gestureEnabled: false, 
+          
         }}
       />
       <Stack.Screen
@@ -23,23 +24,14 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
-        name="games/LeaderBoard"
+        name="Lobby"
         options={{
           gestureEnabled: false, 
+
         }}
       />
-      <Stack.Screen
-        name="gameSelector"
-        options={{
-          gestureEnabled: false, 
-        }}
-      />
-      <Stack.Screen
-        name="joinGame"
-        options={{
-          gestureEnabled: false, 
-        }}
-      />
+      
+      
     </Stack>
   );
 };
