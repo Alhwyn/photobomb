@@ -339,10 +339,10 @@ const Main = () => {
                             sub.id === updatedSubmission.id ? {...sub, photo_uri: updatedSubmission.photo_uri} : sub
                         );
                         setSubmissionsData(updatedCache);
-                        
-                        // Check if all submissions now have photos
+                        // Debug: print the updated cache and allSubmitted result
+                        console.log('Updated submissions cache:', updatedCache);
                         const allSubmitted = updatedCache.every(submission => submission.photo_uri !== null);
-                        
+                        console.log('allSubmitted:', allSubmitted, 'cache length:', updatedCache.length);
                         if (allSubmitted) {
                             console.log('All players have submitted their photos. Moving to GalleryTime stage.');
                             setCurrentStage('GalleryTime');
@@ -625,13 +625,16 @@ const Main = () => {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaType,
-                allowsEditing: true,
                 quality: 0.6,
             });
 
-            if (!result.cancelled) {   
-                setSelectedImageUri(result?.assets?.[0]?.uri);
-                setIsModalVisible(true);
+            if (!result.cancelled && result.assets && result.assets[0]?.uri) {
+            setSelectedImageUri(result.assets[0].uri);
+            setIsModalVisible(true);
+            } else {
+                
+                setIsModalVisible(false);
+                setSelectedImageUri(null);
             }
 
         } catch (error) {

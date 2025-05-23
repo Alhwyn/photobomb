@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import UserLobby from '../components/UserLobby'

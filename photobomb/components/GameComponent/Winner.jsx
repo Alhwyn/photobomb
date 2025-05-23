@@ -7,6 +7,7 @@ import Profile from '../Profile'
 import { startNextRound, endGame } from '../../service/gameStartService'
 import { supabase } from '../../lib/supabase'
 import FinalLeaderboard from './FinalLeaderboard'
+import { getUserPayloadFromStorage } from '../../service/userService'
 
 const Winner = ({ winnerData, currentPrompt, gameId }) => {
   const scaleAnim = useRef(new Animated.Value(0.2)).current;
@@ -18,6 +19,8 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
   const [allPlayerData, setAllPlayerData] = useState([]);
+  const [userPayload, setUserPayload] = useState(null);
+  const [isWinner, setIsWinner] = useState(false);
   const timerRef = useRef(null);
   const transitionInProgress = useRef(false); // Prevent multiple simultaneous transitions
   const roundTransitionLock = useRef(false); // Add global lock for round transitions
@@ -54,6 +57,18 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
     };
   }, []);
   
+  useEffect(() => {
+    // Fetch user payload and check if this user is the winner
+    const fetchUser = async () => {
+      const payload = await getUserPayloadFromStorage();
+      setUserPayload(payload);
+      if (payload && winnerData && winnerData.player_id) {
+        setIsWinner(payload.id === winnerData.player_id);
+      }
+    };
+    fetchUser();
+  }, [winnerData]);
+
   const checkIfGameShouldEnd = async () => {
     try {
       if (!gameId) return;
@@ -191,7 +206,9 @@ const Winner = ({ winnerData, currentPrompt, gameId }) => {
       setTimeRemaining((prevTime) => {
         if (prevTime <= 1) {
           clearInterval(timerRef.current);
-          handleNextRound();
+          if (isWinner) {
+            handleNextRound();
+          }
           return 0;
         }
         return prevTime - 1;
