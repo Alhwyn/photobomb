@@ -3,10 +3,13 @@ import { useEffect, useState } from 'react'
 import { getSupabaseUrl } from '../../service/imageService'
 import ConfettiCannon from 'react-native-confetti-cannon'
 import { theme } from '../../constants/theme'
+import Button from '../Button'
+import { useRouter } from 'expo-router'
 
 const FinalLeaderboard = ({ playerData, promptText }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [winners, setWinners] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(true), 500);
@@ -21,6 +24,10 @@ const FinalLeaderboard = ({ playerData, promptText }) => {
   // Prepare top 3 players for the new UI
   const sortedPlayers = playerData ? [...playerData].sort((a, b) => b.score - a.score) : [];
   const top3 = sortedPlayers.slice(0, 3);
+
+  const handleBackToMain = () => {
+    router.replace('/Main');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -49,6 +56,14 @@ const FinalLeaderboard = ({ playerData, promptText }) => {
             </View>
           );
         })}
+      </View>
+      <View style={styles.buttonContainer}>
+        <Button
+          title="Back to Main Lobby"
+          colors={theme.buttonGradient.primary}
+          onPress={handleBackToMain}
+          width="80%"
+        />
       </View>
       {showConfetti && (
         <ConfettiCannon
@@ -119,16 +134,28 @@ const styles = StyleSheet.create({
   topPlayerImage: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
-    borderColor: '#8A2BE2',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
   topPlayerImageCenter: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: '#8A2BE2',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   topPlayerUsername: {
     color: 'white',
@@ -139,5 +166,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 30,
   },
 })

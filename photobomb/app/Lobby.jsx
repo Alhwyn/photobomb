@@ -171,7 +171,8 @@ const Lobby = () => {
                 supabase.removeChannel(presenceChannelRef.current);
             }
 
-            const channel = supabase.channel(`lobby-presence-${gameId}`, {
+            // Use a consistent channel name so that both lobby and game screens can connect to the same presence channel
+            const channel = supabase.channel(`presence-${gameId}`, {
                 config: { presence: { key: userPayload.id.toString() } }
             });
 
@@ -192,9 +193,9 @@ const Lobby = () => {
                     console.log('Online users (presence sync):', onlineUserObjects);
                     if (isMounted) setOnlineUsers(onlineUserObjects);
                 })
-                .on('presence', { event: 'leave' }, ({ key, newPresences }) => {
+                .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
                     console.log(`User ${key} has left the lobby`);
-                    // The sync event will automatically update the list, but we could update manually here if needed
+                    // The sync event will automatically update the list
                 })
                 .subscribe(async (status) => {
                     if (status === 'SUBSCRIBED') {
@@ -202,8 +203,9 @@ const Lobby = () => {
                             user_id: userPayload.id,
                             username: userPayload.username,
                             image_url: userPayload.image_url,
-                            is_creator: UserIsCreator,
+                            is_creator: userPayload.id === UserIsCreator,
                         });
+                        console.log('Successfully tracking presence in lobby. User is creator:', userPayload.id === UserIsCreator);
                     }
                 });
             presenceChannelRef.current = channel;
@@ -221,6 +223,29 @@ const Lobby = () => {
         };
     
     }, [gameId]); 
+
+    // Function to delete the game when the lobby is empty
+    const deleteEmptyGame = async () => {
+        try {
+            if (!gameId) return;
+            
+            console.log('Deleting empty game:', gameId);
+            
+            // Delete the game
+            const result = await deleteGame(gameId);
+            
+            if (result.success) {
+                console.log('Game successfully deleted because room was empty');
+                if (UserIsCreator) {
+                    router.replace('Main');
+                }
+            } else {
+                console.error('Failed to delete empty game:', result.message);
+            }
+        } catch (error) {
+            console.error('Error deleting empty game:', error.message);
+        }
+    };
 
     const handleExitLobby = async () => {
         /*

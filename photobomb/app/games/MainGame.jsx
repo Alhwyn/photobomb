@@ -1,5 +1,5 @@
 import { SafeAreaView, StyleSheet, Text, View, Platform, Modal, Image } from 'react-native'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Button from '../../components/Button';
 import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
@@ -41,6 +41,7 @@ const Main = () => {
     const [currentRoundData, setCurrentRoundData] = useState(null);
     const [allPlayersData, setAllPlayersData] = useState(null);
     const [submissionsData, setSubmissionsData] = useState(null);
+    
 
     const handlePromptSelect = (promptData) => {
         setSelectedPrompt(promptData);
@@ -970,7 +971,7 @@ const Main = () => {
                     if (currentRound?.prompter_id) {
                         // Cache the round data
                         setCurrentRoundData(currentRound);
-
+                        
                         // Get prompter details
                         const prompterPayload = await viewPlayerGameTable(currentRound.prompter_id);
                         setShowPrompterPayload(prompterPayload);
