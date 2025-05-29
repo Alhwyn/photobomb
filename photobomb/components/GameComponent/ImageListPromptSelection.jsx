@@ -6,9 +6,6 @@ import { getSupabaseUrl } from '../../service/imageService';
 
 
 const ImageListPromptSelection = ({ lobbyData, submissionData }) => {
-  // No need to filter here as we're already filtering in the parent component
-  // The lobbyData already excludes the prompter
-
 
   const renderItem = ({ item }) => {
     const { users } = item;
@@ -93,6 +90,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   username: {
+    paddingLeft: 8,
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',

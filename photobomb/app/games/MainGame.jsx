@@ -143,10 +143,8 @@ const Main = () => {
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
                     <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
-                    
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picking the prompt...</Text>
-                    
                 </View>
             )
         } else if (currentStage === 'ImageGallery') {
@@ -154,7 +152,6 @@ const Main = () => {
                 <View style={styles.header}> 
                     {/* Profile Pic Component */}
                     <Profile image_url={getSupabaseUrl(showPrompterPayload?.data?.users?.image_url)}/>
-                    
                     <Text style={styles.usernameText}>{showPrompterPayload?.data?.users?.username}</Text>
                     <Text style={styles.text}>picked the prompt...</Text>
                     
@@ -255,10 +252,6 @@ const Main = () => {
                 if (roundData?.data?.prompter_id) {
                     const prompterPayload = await viewPlayerGameTable(roundData.data.prompter_id);
                     setShowPrompterPayload(prompterPayload);
-                } else {
-                    console.log('No valid prompter_id found in round data');
-                    // Set a default empty payload to avoid UI errors
-                    setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
                 }
                 
                 // Check if current user is the prompter
@@ -1021,9 +1014,6 @@ const Main = () => {
                         // Check if current user is the prompter
                         const rolePayload = await checkUserRole();
                         setIsPrompter(rolePayload?.data?.is_prompter);
-                    } else {
-                        console.log('Unable to retrieve valid round data or prompter_id is missing');
-                        setShowPrompterPayload({success: false, data: { users: {}, score: 0 }});
                     }
 
                     // Cache players data if available
