@@ -74,9 +74,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   animationContainer: {
-    width: 220,
-    height: 220,
-    borderRadius: 80,
+    width: 400,
+    height: 210,
     overflow: 'hidden', // This hides any watermarks or content outside the container
     justifyContent: 'center',
     alignItems: 'center',
