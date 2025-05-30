@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, Animated, Easing } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
@@ -7,6 +7,17 @@ import { getSubmissionData } from '../../service/gameService';
 
 
 const ImageSubmission = ({currentPrompt, gameId }) => {
+
+  const fadeAnim = useState(new Animated.Value(0))[0];
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const [playerGamesList, setPlayerGamesList] = useState([]);
   const [playersubmissionsList, setPlayersubmissionsList] = useState([]);
@@ -99,7 +110,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
   }
   
   return (
-    <View style={styles.container}> 
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}> 
       <LinearGradient
         colors={['#d3d3d3', '#e8e8e8']}
         style={[styles.card]}
@@ -113,7 +124,7 @@ const ImageSubmission = ({currentPrompt, gameId }) => {
         </View>
       </LinearGradient>
       <ImageListPromptSelection lobbyData={playerGamesList} submissionData={playersubmissionsList} />
-    </View>
+    </Animated.View>
   )
 }
 
